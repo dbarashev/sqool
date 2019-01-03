@@ -1,0 +1,108 @@
+buildscript {
+	ext {
+		kotlinVersion = '1.3.+'
+	}
+	repositories {
+		mavenCentral()
+		jcenter()
+	}
+	dependencies {
+		classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:${kotlinVersion}")
+		classpath("org.jetbrains.kotlin:kotlin-allopen:${kotlinVersion}")
+	}
+}
+plugins {
+	id 'com.google.cloud.tools.jib' version '0.10.1'
+}
+
+apply plugin: 'application'
+apply plugin: 'kotlin'
+
+version = '1.0.0'
+sourceCompatibility = 1.8
+
+repositories {
+	mavenCentral()
+	jcenter()
+}
+
+mainClassName = 'com.bardsoftware.sqool.contest.AppSparkKt'
+
+dependencies {
+	compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:${kotlinVersion}"
+    	compile "org.jetbrains.kotlin:kotlin-reflect:${kotlinVersion}"
+
+	compile "com.xenomachina:kotlin-argparser:2.+"
+
+	// PubSub stuff
+	compile 'com.google.cloud:google-cloud-pubsub:0.26.+'
+
+	// Postgres stuff
+	compile group: 'org.postgresql', name: 'postgresql', version: '42.1.1'
+	compile 'com.zaxxer:HikariCP:2.7.+'
+	compile 'org.jetbrains.exposed:exposed:0.8.+'
+
+	// Spark stuff
+	compile "com.sparkjava:spark-kotlin:1.+"
+	compile "com.fasterxml.jackson.module:jackson-module-kotlin:2.+"
+	compile "com.sparkjava:spark-template-freemarker:2.+"
+
+	compile 'org.apache.httpcomponents:fluent-hc:4.5.3'
+}
+
+sourceSets {
+	sql {
+		resources {
+			srcDir "$projectDir/src/main/sql"
+		}
+	}
+}
+
+task compileCoffeeScript {
+	inputs.files "src/main/coffee"
+	description = 'Compiles CoffeeScript'
+	def sourceDir = "src/main/coffee"
+	def includedFiles = fileTree("src/main/coffee") {
+		include "*.coffee"
+	}
+	def targetDir = "build/resources/main/public/js"
+	doLast {
+		file(targetDir).mkdirs()
+		includedFiles.each {file ->
+			def filename = file.name
+			exec {
+				workingDir "$projectDir"
+				executable 'coffee'
+				args "-o", "$targetDir/" + replaceExtension(filename, "js"), "$sourceDir/$filename"
+			}
+		}
+	}
+}
+
+assemble {
+	dependsOn compileCoffeeScript
+}
+
+jib {
+	to.image = 'dbarashev/sqool-frontend'
+}
+
+task docker {
+	doLast {
+		mkdir "$buildDir/docker/workspace"
+		copy {
+			from sourceSets.sql.resources.srcDirs
+			into "$buildDir/docker/workspace"
+			include "*.sql"
+		}
+		exec {
+			workingDir "$projectDir"
+			executable 'docker'
+			args 'build','-t', 'dbarashev/sqool-frontend-database', '-f', 'sqool-frontend-database.dockerfile', '.'
+		}
+	}
+}
+
+static def replaceExtension(filename, newExt) {
+	return filename.substring(0, filename.lastIndexOf('.')) + '.' + newExt
+}

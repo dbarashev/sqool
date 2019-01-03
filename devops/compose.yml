@@ -1,0 +1,40 @@
+version: '2.2'
+services:
+  sql:
+    image: dbarashev/sqool-frontend-database
+
+  postgres:
+    image: postgres:10
+    cpus: 0.8
+    mem_limit: 256M
+    volumes_from:
+      - sql
+    environment:
+      - POSTGRES_PASSWORD=c0nt3sts3rv3r
+    ports:
+      - '5430:5432'
+
+  app:
+    image: dbarashev/sqool-frontend
+    depends_on:
+      - postgres
+    ports:
+      - '8080:8080'
+    cpus: 0.2
+    mem_limit: 512M
+    command: --pg-address postgres --pg-password c0nt3sts3rv3r --contest au2018
+    environment:
+      - GOOGLE_CLOUD_PROJECT=dbms-class-2017
+      - GOOGLE_APPLICATION_CREDENTIALS=/opt/gce.json
+
+  init:
+    image: postgres:10
+    depends_on:
+      - postgres
+    cpus: 0.1
+    mem_limit: 256M
+    volumes_from:
+      - sql
+    environment:
+      - PGPASSWORD=c0nt3sts3rv3r
+    command: bash -c 'sleep 15s && psql -h postgres -U postgres -f /workspace/sqool-frontend-database.sql'
