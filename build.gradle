@@ -73,7 +73,7 @@ task compileCoffeeScript {
 			exec {
 				workingDir "$projectDir"
 				executable 'coffee'
-				args "-o", "$targetDir/" + replaceExtension(filename, "js"), "$sourceDir/$filename"
+				args "-o", "$targetDir/", "$sourceDir/$filename"
 			}
 		}
 	}
