@@ -2,13 +2,13 @@ package com.bardsoftware.sqool.codegen
 
 data class TaskCheckCode(val staticCode: String, val perSubmissionCode: String)
 
-fun generateCode(taskName: String,
-                 spec: TaskResultSpec,
-                 contestName: String,
-                 pathToSchema: String,
-                 robotQuery: String
+fun generateSingleColumnQueryRobot(taskName: String,
+                                   spec: TaskResultColumn,
+                                   contestName: String,
+                                   pathToSchema: String,
+                                   robotQuery: String
 ): TaskCheckCode {
-    val taskResultType = "TABLE(${spec.setName} ${spec.setType})"
+    val taskResultType = "TABLE(${spec.name} ${spec.type})"
     val robotQueryFunName = "${taskName}_Robot"
     val userQueryFunName = "${taskName}_User"
     val userQueryMock = "SELECT NULL::TEXT"
@@ -24,15 +24,15 @@ fun generateCode(taskName: String,
         |BEGIN
         |
         |SELECT COUNT(1) INTO intxn_size FROM (
-        |   SELECT ${spec.setName} FROM $mergedView WHERE query_id = 0
+        |   SELECT ${spec.name} FROM $mergedView WHERE query_id = 0
         |   INTERSECT
-        |   SELECT ${spec.setName} FROM $mergedView WHERE query_id = 1
+        |   SELECT ${spec.name} FROM $mergedView WHERE query_id = 1
         |) AS T;
         |
         |SELECT COUNT(1) INTO union_size FROM (
-        |   SELECT ${spec.setName} FROM $mergedView WHERE query_id = 0
+        |   SELECT ${spec.name} FROM $mergedView WHERE query_id = 0
         |   UNION
-        |   SELECT ${spec.setName} FROM $mergedView WHERE query_id = 1
+        |   SELECT ${spec.name} FROM $mergedView WHERE query_id = 1
         |) AS T;
         |
         |IF intxn_size != union_size THEN
@@ -65,13 +65,13 @@ fun generateCode(taskName: String,
         |SET search_path=$contestName;
         |\i $pathToSchema;
         |
-        |${generateFunDef(funName = robotQueryFunName, returnType = taskResultType, body = robotQuery, language = "SQL")}
+        |${generateFunDef(funName = robotQueryFunName, returnType = taskResultType, body = robotQuery, language = Language.SQL)}
         |
-        |${generateFunDef(funName = userQueryFunName, returnType = taskResultType, body = userQueryMock, language = "SQL")}
+        |${generateFunDef(funName = userQueryFunName, returnType = taskResultType, body = userQueryMock, language = Language.SQL)}
         |
         |$viewCreation
         |
-        |${generateFunDef(funName = matcherFunName, returnType = "SETOF TEXT", body = matcherCode, language = "plpgsql")}
+        |${generateFunDef(funName = matcherFunName, returnType = "SETOF TEXT", body = matcherCode, language = Language.plpgsql)}
         |
         |DROP FUNCTION $userQueryFunName() CASCADE;
         """.trimMargin()
@@ -82,7 +82,7 @@ fun generateCode(taskName: String,
         |   false
         |);
         |
-        |${generateFunDef(funName = userQueryFunName, returnType = taskResultType, body = "{1}", language = "SQL")}
+        |${generateFunDef(funName = userQueryFunName, returnType = taskResultType, body = "{1}", language = Language.SQL)}
         |
         |$viewCreation
         """.trimMargin()
@@ -90,9 +90,13 @@ fun generateCode(taskName: String,
     return TaskCheckCode(staticCode, perSubmissionCode)
 }
 
-private fun generateFunDef(funName: String, returnType: String, body: String, language: String) =
+private fun generateFunDef(funName: String, returnType: String, body: String, language: Language) =
         """CREATE OR REPLACE FUNCTION $funName()
-    |RETURNS $returnType AS $$
-    |$body
-    |$$ LANGUAGE $language;
-    """.trimMargin()
+        |RETURNS $returnType AS $$
+        |$body
+        |$$ LANGUAGE $language;
+        """.trimMargin()
+
+private enum class Language {
+    SQL, plpgsql
+}

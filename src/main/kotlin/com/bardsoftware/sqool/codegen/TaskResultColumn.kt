@@ -1,6 +1,6 @@
 package com.bardsoftware.sqool.codegen
 
-data class TaskResultSpec(val setName: String, val setType: SqlDataType)
+data class TaskResultColumn(val name: String, val type: SqlDataType)
 
 /**
  * Basic data types occurred in task results.
