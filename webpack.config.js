@@ -1,0 +1,38 @@
+const VueLoaderPlugin = require('vue-loader/lib/plugin')
+
+module.exports = {
+  mode: "development",
+  devtool: "inline-source-map",
+  entry: {
+    "Dashboard": "./src/main/ts/Dashboard.ts"
+  },
+  output: {
+    filename: '[name].bundle.js',
+  },
+  resolve: {
+    // Add `.ts` and `.tsx` as a resolvable extension.
+    extensions: [".ts", ".tsx", ".js"],
+    alias: {
+      'vue$': 'vue/dist/vue.esm.js'
+    }
+  },
+  module: {
+    rules: [
+      // all files with a `.ts` or `.tsx` extension will be handled by `ts-loader`
+      {
+        test: /\.tsx?$/,
+        loader: "ts-loader",
+        options: {
+          appendTsSuffixTo: [/\.vue$/]
+        }
+      },
+      { test: /\.vue$/, loader: "vue-loader" }
+    ]
+  },
+  watchOptions: {
+    ignored: /node_modules/
+  },
+  plugins: [
+    new VueLoaderPlugin()
+  ]
+};

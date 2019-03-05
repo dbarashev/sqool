@@ -1,0 +1,21 @@
+{
+    "compilerOptions": {
+        "baseUrl": "/public/js",
+        "rootDirs": [ "src/main/ts" ],
+        "typeRoots": ["node_modules" ],
+        "types": [],
+        "allowJs": true,
+        "target": "es2015",
+        "module": "commonjs",
+        "moduleResolution": "node",
+        "noUnusedParameters": true,
+        "removeComments": true,
+        "preserveConstEnums": true,
+        "strictNullChecks": true,
+        "experimentalDecorators": true
+    },
+    "include": [
+      "src/main/ts/**/*.ts",
+      "src/main/ts/**/*.vue"
+    ]
+}

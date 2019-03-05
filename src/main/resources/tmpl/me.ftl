@@ -145,5 +145,6 @@
 </div>
 
 <script src="/js/me.js"></script>
+<script src="/js/Dashboard.bundle.js" async></script>
 </body>
 </html>

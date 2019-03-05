@@ -79,10 +79,62 @@ task compileCoffeeScript {
 	}
 }
 
-assemble {
-	dependsOn compileCoffeeScript
+// Configures webpack to build development mode bundles
+task configTypeScriptDev {
+	doFirst {
+		println("== TypeScript compiles in dev ==")
+		project.ext["webpackConfig"] = "webpack.config.js"
+	}
 }
 
+// Configures webpack to build production
+task configTypeScriptProd {
+	doFirst {
+		println("== TypeScript compiles in prod ==")
+		project.ext["webpackConfig"] = "webpack-prod.config.js"
+	}
+}
+
+// Runs tslint against TypeScript sources
+task tslint(type: Exec) {
+	workingDir = "$projectDir"
+	commandLine = "node_modules/tslint/bin/tslint"
+	args = ["-p", "."]
+	ignoreExitValue = true
+}
+
+// Compiles TypeScript sources and makes webpack bundle
+task compileTypeScript(type: Exec) {
+	inputs.files "src/main/ts"
+	shouldRunAfter(configTypeScriptProd, configTypeScriptDev)
+	workingDir = "$projectDir"
+	doFirst {
+		def webpackConfig = project.ext["webpackConfig"]
+		def webpackOutput = "$buildDir/resources/main/public/js"
+		if (project.ext.has("webpackOutput")) {
+			webpackOutput = project.ext["webpackOutput"]
+		}
+
+		println("Webpacking JavaScripts using $webpackConfig")
+		commandLine = 'npx'
+		args = ['webpack', '--config', webpackConfig,
+				'--output-path', webpackOutput]
+	}
+	doLast {
+		println("TypeScript and Webpack done")
+	}
+}
+
+assemble {
+	dependsOn compileCoffeeScript
+	dependsOn tslint
+	dependsOn compileTypeScript
+}
+
+run {
+	dependsOn configTypeScriptDev
+	dependsOn assemble
+}
 jib {
 	to.image = 'dbarashev/sqool-frontend'
 }
@@ -101,8 +153,4 @@ task docker {
 			args 'build','-t', 'dbarashev/sqool-frontend-database', '-f', 'sqool-frontend-database.dockerfile', '.'
 		}
 	}
-}
-
-static def replaceExtension(filename, newExt) {
-	return filename.substring(0, filename.lastIndexOf('.')) + '.' + newExt
 }
