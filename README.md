@@ -1,7 +1,7 @@
 ## Prerequisites
 
 * Install `gradle` version 5+, `docker`, `npm`.
-* Run `sudo npm install -g coffeescript typescript tslint ts-loader webpack webpack-cli vue vue-class-component vue-loader` 
+* Run `npm install && npm install webpack && sudo npm install -g @vue/cli-service-global` 
 
 ## Building and running locally
 

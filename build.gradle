@@ -21,6 +21,9 @@ apply plugin: 'kotlin'
 version = '1.0.0'
 sourceCompatibility = 1.8
 
+ext {
+	buildMode = findProperty('buildMode') ?: 'development'
+}
 repositories {
 	mavenCentral()
 	jcenter()
@@ -79,46 +82,18 @@ task compileCoffeeScript {
 	}
 }
 
-// Configures webpack to build development mode bundles
-task configTypeScriptDev {
-	doFirst {
-		println("== TypeScript compiles in dev ==")
-		project.ext["webpackConfig"] = "webpack.config.js"
-	}
-}
-
-// Configures webpack to build production
-task configTypeScriptProd {
-	doFirst {
-		println("== TypeScript compiles in prod ==")
-		project.ext["webpackConfig"] = "webpack-prod.config.js"
-	}
-}
-
-// Runs tslint against TypeScript sources
-task tslint(type: Exec) {
-	workingDir = "$projectDir"
-	commandLine = "node_modules/tslint/bin/tslint"
-	args = ["-p", "."]
-	ignoreExitValue = true
-}
-
 // Compiles TypeScript sources and makes webpack bundle
-task compileTypeScript(type: Exec) {
+task buildClient(type: Exec) {
 	inputs.files "src/main/ts"
-	shouldRunAfter(configTypeScriptProd, configTypeScriptDev)
 	workingDir = "$projectDir"
 	doFirst {
-		def webpackConfig = project.ext["webpackConfig"]
-		def webpackOutput = "$buildDir/resources/main/public/js"
-		if (project.ext.has("webpackOutput")) {
-			webpackOutput = project.ext["webpackOutput"]
+		println("Building client")
+		commandLine = 'npm'
+		if (project.buildMode == "development") {
+			args = ['run', 'build', '--', '--mode', project.buildMode, "--dest", "$buildDir/resources/main/public/js"]
+		} else {
+			args = ['run', 'build', '--', '--mode', project.buildMode]
 		}
-
-		println("Webpacking JavaScripts using $webpackConfig")
-		commandLine = 'npx'
-		args = ['webpack', '--config', webpackConfig,
-				'--output-path', webpackOutput]
 	}
 	doLast {
 		println("TypeScript and Webpack done")
@@ -127,14 +102,13 @@ task compileTypeScript(type: Exec) {
 
 assemble {
 	dependsOn compileCoffeeScript
-	dependsOn tslint
-	dependsOn compileTypeScript
+	dependsOn buildClient
 }
 
 run {
-	dependsOn configTypeScriptDev
-	dependsOn assemble
+	dependsOn buildClient
 }
+
 jib {
 	to.image = 'dbarashev/sqool-frontend'
 }
