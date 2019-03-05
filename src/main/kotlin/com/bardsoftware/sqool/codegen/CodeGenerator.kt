@@ -71,7 +71,7 @@ fun generateSingleColumnQueryRobot(taskName: String,
         |
         |$viewCreation
         |
-        |${generateFunDef(funName = matcherFunName, returnType = "SETOF TEXT", body = matcherCode, language = Language.plpgsql)}
+        |${generateFunDef(funName = matcherFunName, returnType = "SETOF TEXT", body = matcherCode, language = Language.PLPGSQL)}
         |
         |DROP FUNCTION $userQueryFunName() CASCADE;
         """.trimMargin()
@@ -98,5 +98,5 @@ private fun generateFunDef(funName: String, returnType: String, body: String, la
         """.trimMargin()
 
 private enum class Language {
-    SQL, plpgsql
+    SQL, PLPGSQL
 }
