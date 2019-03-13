@@ -92,6 +92,9 @@ fun main(args: Array<String>) {
   get("/login") {
     freemarker.render(ModelAndView(emptyMap<String,String>(), "login.ftl"))
   }
+  get("/dashboard") {
+    freemarker.render(ModelAndView(emptyMap<String,String>(), "dashboard.ftl"))
+  }
   post("/login.do") {
     val handler = LoginHandler()
     val loginResp = handler.handle(

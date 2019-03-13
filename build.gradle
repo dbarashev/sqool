@@ -21,6 +21,9 @@ apply plugin: 'kotlin'
 version = '1.0.0'
 sourceCompatibility = 1.8
 
+ext {
+	buildMode = findProperty('buildMode') ?: 'development'
+}
 repositories {
 	mavenCentral()
 	jcenter()
@@ -79,8 +82,31 @@ task compileCoffeeScript {
 	}
 }
 
+// Compiles TypeScript sources and makes webpack bundle
+task buildClient(type: Exec) {
+	inputs.files "src/main/ts"
+	workingDir = "$projectDir"
+	doFirst {
+		println("Building client")
+		commandLine = 'npm'
+		if (project.buildMode == "development") {
+			args = ['run', 'build', '--', '--mode', project.buildMode, "--dest", "$buildDir/resources/main/public/js"]
+		} else {
+			args = ['run', 'build', '--', '--mode', project.buildMode]
+		}
+	}
+	doLast {
+		println("TypeScript and Webpack done")
+	}
+}
+
 assemble {
 	dependsOn compileCoffeeScript
+	dependsOn buildClient
+}
+
+run {
+	dependsOn buildClient
 }
 
 jib {
@@ -101,8 +127,4 @@ task docker {
 			args 'build','-t', 'dbarashev/sqool-frontend-database', '-f', 'sqool-frontend-database.dockerfile', '.'
 		}
 	}
-}
-
-static def replaceExtension(filename, newExt) {
-	return filename.substring(0, filename.lastIndexOf('.')) + '.' + newExt
 }
