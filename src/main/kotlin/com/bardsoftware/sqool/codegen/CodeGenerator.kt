@@ -11,7 +11,7 @@ fun generateSingleColumnQueryRobot(taskName: String,
     val taskResultType = "TABLE(${spec.name} ${spec.type})"
     val robotQueryFunName = "${taskName}_Robot"
     val userQueryFunName = "${taskName}_User"
-    val userQueryMock = "SELECT NULL::TEXT"
+    val userQueryMock = "SELECT NULL::${spec.type}"
 
     val mergedView = "${taskName}_Merged"
     val matcherFunName = "${taskName}_Matcher"
@@ -61,9 +61,7 @@ fun generateSingleColumnQueryRobot(taskName: String,
         |   SELECT 1 AS query_id, * FROM $userQueryFunName();
         """.trimMargin()
 
-    val staticCode = """CREATE SCHEMA $contestName;
-        |SET search_path=$contestName;
-        |\i $pathToSchema;
+    val staticCode = """${generateStaticCodeHeader(contestName, pathToSchema)}
         |
         |${generateFunDef(funName = robotQueryFunName, returnType = taskResultType, body = robotQuery, language = Language.SQL)}
         |
@@ -76,15 +74,59 @@ fun generateSingleColumnQueryRobot(taskName: String,
         |DROP FUNCTION $userQueryFunName() CASCADE;
         """.trimMargin()
 
-    val perSubmissionCode = """SELECT set_config(
-        |   ''search_path'',
-        |   ''$contestName,'' || current_setting(''search_path''),
-        |   false
-        |);
+    val perSubmissionCode = """${generatePerSubmissionCodeHeader(contestName)}
         |
         |${generateFunDef(funName = userQueryFunName, returnType = taskResultType, body = "{1}", language = Language.SQL)}
         |
         |$viewCreation
+        """.trimMargin()
+
+    return TaskCheckCode(staticCode, perSubmissionCode)
+}
+
+fun generateScalarValueQueryRobot(taskName: String,
+                                  resultType: SqlDataType,
+                                  contestName: String,
+                                  pathToSchema: String,
+                                  robotQuery: String
+): TaskCheckCode {
+    val robotQueryFunName = "${taskName}_Robot"
+    val userQueryFunName = "${taskName}_User"
+    val matcherFunName = "${taskName}_Matcher"
+    val userQueryMock = "SELECT NULL::$resultType"
+
+    val matcherCode = """DECLARE
+        |   result_robot $resultType;
+        |   result_user $resultType;
+        |BEGIN
+        |SELECT $robotQueryFunName() into result_robot;
+        |SELECT $userQueryFunName() into result_user;
+        |
+        |IF (result_robot < result_user) THEN
+        |   RETURN NEXT 'Нет, у робота получилось меньше. Ваш результат: ' || result_user::TEXT;
+        |   RETURN;
+        |END IF;
+        |
+        |IF (result_robot > result_user) THEN
+        |   RETURN NEXT 'Нет, у робота получилось больше. Ваш результат: ' || result_user::TEXT;
+        |   RETURN;
+        |END IF;
+        |
+        |END;
+        """.trimMargin()
+    val staticCode = """${generateStaticCodeHeader(contestName, pathToSchema)}
+        |
+        |${generateFunDef(funName = robotQueryFunName, returnType = resultType.toString(), body = robotQuery, language = Language.SQL)}
+        |
+        |${generateFunDef(funName = userQueryFunName, returnType = resultType.toString(), body = userQueryMock, language = Language.SQL)}
+        |
+        |${generateFunDef(funName = matcherFunName, returnType = "SETOF TEXT", body = matcherCode, language = Language.PLPGSQL)}
+        |
+        |DROP FUNCTION $userQueryFunName() CASCADE;
+        """.trimMargin()
+    val perSubmissionCode = """${generatePerSubmissionCodeHeader(contestName)}
+        |
+        |${generateFunDef(funName = userQueryFunName, returnType = resultType.toString(), body = "{1}", language = Language.SQL)}
         """.trimMargin()
 
     return TaskCheckCode(staticCode, perSubmissionCode)
@@ -95,6 +137,20 @@ private fun generateFunDef(funName: String, returnType: String, body: String, la
         |RETURNS $returnType AS $$
         |$body
         |$$ LANGUAGE $language;
+        """.trimMargin()
+
+private fun generateStaticCodeHeader(contestName: String, pathToSchema: String) =
+        """CREATE SCHEMA $contestName;
+        |SET search_path=$contestName;
+        |\i $pathToSchema;
+        """.trimMargin()
+
+private fun generatePerSubmissionCodeHeader(contestName: String) =
+        """SELECT set_config(
+        |   'search_path',
+        |   '$contestName,' || current_setting('search_path'),
+        |   false
+        |);
         """.trimMargin()
 
 private enum class Language {
