@@ -109,7 +109,7 @@ fun generateScalarValueQueryRobot(taskName: String,
         |
         |IF (result_robot > result_user) THEN
         |   RETURN NEXT 'Нет, у робота получилось больше. Ваш результат: ' || result_user::TEXT;
-        |    RETURN;
+        |   RETURN;
         |END IF;
         |
         |END;
