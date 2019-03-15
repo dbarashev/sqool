@@ -111,6 +111,10 @@ run {
 	dependsOn buildClient
 }
 
+test {
+	useJUnitPlatform()
+}
+
 jib {
 	to.image = 'dbarashev/sqool-frontend'
 }
