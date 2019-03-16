@@ -1,5 +1,6 @@
 package com.bardsoftware.sqool.contest
 
+import com.bardsoftware.sqool.contest.admin.TaskAllHandler
 import com.xenomachina.argparser.ArgParser
 import com.zaxxer.hikari.HikariDataSource
 import org.apache.http.client.utils.URLEncodedUtils
@@ -85,6 +86,10 @@ fun main(args: Array<String>) {
   port(8080)
   staticFiles.location("/public")
 
+  val adminTaskAllHandler = TaskAllHandler(flags)
+  get("/admin/task/all") {
+    adminTaskAllHandler.handle(Http(request, response, session(), freemarker))()
+  }
   val challengeHandler = ChallengeHandler()
   get("/") {
     freemarker.render(ModelAndView(emptyMap<String,String>(), "index.ftl"))
