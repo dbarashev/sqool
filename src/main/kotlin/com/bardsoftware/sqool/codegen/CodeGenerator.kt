@@ -102,6 +102,10 @@ fun generateScalarValueQueryRobot(taskName: String,
         |SELECT $robotQueryFunName() into result_robot;
         |SELECT $userQueryFunName() into result_user;
         |
+        |IF (result_robot = result_user) THEN
+        |   RETURN;
+        |END IF;
+        |
         |IF (result_robot < result_user) THEN
         |   RETURN NEXT 'Нет, у робота получилось меньше. Ваш результат: ' || result_user::TEXT;
         |   RETURN;
