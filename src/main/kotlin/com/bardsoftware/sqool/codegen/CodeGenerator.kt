@@ -2,13 +2,80 @@ package com.bardsoftware.sqool.codegen
 
 data class TaskCheckCode(val staticCode: String, val perSubmissionCode: String)
 
+fun generateMultipleColumnQueryRobot(taskName: String,
+                                     matcherSpec: MatcherSpec,
+                                     contestName: String,
+                                     pathToSchema: String,
+                                     robotQuery: String
+): TaskCheckCode {
+    val taskResultType = matcherSpec.relationSpec.getAllColsList().joinToString(", ", "TABLE(", ")")
+    val robotQueryFunName = "${taskName}_Robot"
+    val userQueryFunName = "${taskName}_User"
+    val userQueryMock = matcherSpec.relationSpec.getAllColsList().joinToString(", ", "SELECT ") { "NULL::${it.type}" }
+
+    val mergedView = "${taskName}_Merged"
+    val colNamesList = matcherSpec.relationSpec.getAllColsList().map { it.name }
+    val maxAbsDiffChecks = matcherSpec.relationSpec.cols
+            .filter { it.type.isNumeric }
+            .map { generateMaxAbsDiffCheck(maxAbsDiffVar = "max_abs_diff", colToCheck = it.name, mergedView = mergedView,
+                    allCols = colNamesList, failedCheckMessage = matcherSpec.getDiffErrorMessage(it)) }
+            .joinToString("\n\n")
+    val matcherFunName = "${taskName}_Matcher"
+    val keyColNamesString = matcherSpec.relationSpec.keyCols.joinToString(", ") { it.name }
+    val matcherCode = """DECLARE
+        |   intxn_size INT;
+        |   union_size INT;
+        |   max_abs_diff BIGINT;
+        |BEGIN
+        |
+        |IF NOT EXISTS (
+        |       SELECT SUM(query_id) FROM Task213_Merged
+        |       GROUP BY ${matcherSpec.relationSpec.getAllColsList().joinToString(", ") { it.name }}
+        |       HAVING SUM(query_id) <> 3
+        |   ) THEN
+        |   RETURN;
+        |END IF;
+        |
+        |${generateUnionIntersectionCheck(unionSizeVar = "union_size", intxnSizeVar = "intxn_size", colNames = keyColNamesString,
+            mergedView = mergedView, failedCheckMessage = matcherSpec.wrongKeyColsProjMessage)}
+        |
+        |RETURN NEXT '${matcherSpec.rightKeyColsProjMessage}';
+        |
+        |$maxAbsDiffChecks
+        |
+        |END;
+        """.trimMargin()
+
+    val staticCode = """${generateStaticCodeHeader(contestName, pathToSchema)}
+        |
+        |${generateFunDef(funName = robotQueryFunName, returnType = taskResultType, body = robotQuery, language = Language.SQL)}
+        |
+        |${generateFunDef(funName = userQueryFunName, returnType = taskResultType, body = userQueryMock, language = Language.SQL)}
+        |
+        |${generateMergedViewCreation(taskName)}
+        |
+        |${generateFunDef(funName = matcherFunName, returnType = "SETOF TEXT", body = matcherCode, language = Language.PLPGSQL)}
+        |
+        |DROP FUNCTION $userQueryFunName() CASCADE;
+        """.trimMargin()
+
+    val perSubmissionCode = """${generatePerSubmissionCodeHeader(contestName)}
+        |
+        |${generateFunDef(funName = userQueryFunName, returnType = taskResultType, body = "{1}", language = Language.SQL)}
+        |
+        |${generateMergedViewCreation(taskName)}
+        """.trimMargin()
+
+    return TaskCheckCode(staticCode, perSubmissionCode)
+}
+
 fun generateSingleColumnQueryRobot(taskName: String,
                                    spec: TaskResultColumn,
                                    contestName: String,
                                    pathToSchema: String,
                                    robotQuery: String
 ): TaskCheckCode {
-    val taskResultType = "TABLE(${spec.name} ${spec.type})"
+    val taskResultType = "TABLE($spec)"
     val robotQueryFunName = "${taskName}_Robot"
     val userQueryFunName = "${taskName}_User"
     val userQueryMock = "SELECT NULL::${spec.type}"
@@ -23,24 +90,7 @@ fun generateSingleColumnQueryRobot(taskName: String,
         |
         |BEGIN
         |
-        |SELECT COUNT(1) INTO intxn_size FROM (
-        |   SELECT ${spec.name} FROM $mergedView WHERE query_id = 0
-        |   INTERSECT
-        |   SELECT ${spec.name} FROM $mergedView WHERE query_id = 1
-        |) AS T;
-        |
-        |SELECT COUNT(1) INTO union_size FROM (
-        |   SELECT ${spec.name} FROM $mergedView WHERE query_id = 0
-        |   UNION
-        |   SELECT ${spec.name} FROM $mergedView WHERE query_id = 1
-        |) AS T;
-        |
-        |IF intxn_size != union_size THEN
-        |   RETURN NEXT 'Ваши результаты отличаются от результатов робота';
-        |   RETURN NEXT 'Размер пересечения результатов робота и ваших: ' || intxn_size::TEXT || ' строк';
-        |   RETURN NEXT 'Размер объединения результатов робота и ваших: ' || union_size::TEXT || ' строк';
-        |   RETURN;
-        |end if;
+        |${generateUnionIntersectionCheck("union_size", "intxn_size", spec.name, mergedView)}
         |
         |SELECT COUNT(*) INTO robot_size FROM $mergedView WHERE query_id = 0;
         |SELECT COUNT(*) INTO user_size FROM $mergedView WHERE query_id = 1;
@@ -55,19 +105,13 @@ fun generateSingleColumnQueryRobot(taskName: String,
         |END;
         """.trimMargin()
 
-    val viewCreation = """CREATE OR REPLACE VIEW $mergedView AS
-        |   SELECT 0 AS query_id, * FROM $robotQueryFunName()
-        |   UNION ALL
-        |   SELECT 1 AS query_id, * FROM $userQueryFunName();
-        """.trimMargin()
-
     val staticCode = """${generateStaticCodeHeader(contestName, pathToSchema)}
         |
         |${generateFunDef(funName = robotQueryFunName, returnType = taskResultType, body = robotQuery, language = Language.SQL)}
         |
         |${generateFunDef(funName = userQueryFunName, returnType = taskResultType, body = userQueryMock, language = Language.SQL)}
         |
-        |$viewCreation
+        |${generateMergedViewCreation(taskName)}
         |
         |${generateFunDef(funName = matcherFunName, returnType = "SETOF TEXT", body = matcherCode, language = Language.PLPGSQL)}
         |
@@ -78,7 +122,7 @@ fun generateSingleColumnQueryRobot(taskName: String,
         |
         |${generateFunDef(funName = userQueryFunName, returnType = taskResultType, body = "{1}", language = Language.SQL)}
         |
-        |$viewCreation
+        |${generateMergedViewCreation(taskName)}
         """.trimMargin()
 
     return TaskCheckCode(staticCode, perSubmissionCode)
@@ -156,6 +200,53 @@ private fun generatePerSubmissionCodeHeader(contestName: String) =
         |   false
         |);
         """.trimMargin()
+
+private fun generateMergedViewCreation(taskName: String) =
+        """CREATE OR REPLACE VIEW ${taskName}_Merged AS
+        |   SELECT 0 AS query_id, * FROM ${taskName}_Robot()
+        |   UNION ALL
+        |   SELECT 1 AS query_id, * FROM ${taskName}_User();
+        """.trimMargin()
+
+private fun generateUnionIntersectionCheck(unionSizeVar: String,
+                                           intxnSizeVar: String,
+                                           colNames: String,
+                                           mergedView: String,
+                                           failedCheckMessage: String = "Ваши результаты отличаются от результатов робота"
+): String = """
+        |SELECT COUNT(1) INTO $intxnSizeVar FROM (
+        |   SELECT $colNames FROM $mergedView WHERE query_id = 0
+        |   INTERSECT
+        |   SELECT $colNames FROM $mergedView WHERE query_id = 1
+        |) AS T;
+        |
+        |SELECT COUNT(1) INTO $unionSizeVar FROM (
+        |   SELECT $colNames FROM $mergedView WHERE query_id = 0
+        |   UNION
+        |   SELECT $colNames FROM $mergedView WHERE query_id = 1
+        |) AS T;
+        |
+        |IF $intxnSizeVar != $unionSizeVar THEN
+        |   RETURN NEXT '$failedCheckMessage';
+        |   RETURN NEXT 'Размер пересечения результатов робота и ваших: ' || $intxnSizeVar::TEXT || ' строк';
+        |   RETURN NEXT 'Размер объединения результатов робота и ваших: ' || $unionSizeVar::TEXT || ' строк';
+        |   RETURN;
+        |end if;
+        """.trimIndent()
+
+private fun generateMaxAbsDiffCheck(maxAbsDiffVar: String,
+                                    colToCheck: String,
+                                    mergedView: String,
+                                    allCols: List<String>,
+                                    failedCheckMessage: String
+): String = """
+            |SELECT MAX(ABS(diff)) INTO $maxAbsDiffVar FROM (
+            |  SELECT SUM($colToCheck * CASE query_id WHEN 1 THEN 1 ELSE -1 END) AS diff
+            |  FROM $mergedView
+            |  GROUP BY ${allCols.filter { it == colToCheck }.joinToString(", ")}
+            |) T;
+            |RETURN NEXT '$failedCheckMessage ' || $maxAbsDiffVar::TEXT;
+            """.trimIndent()
 
 private enum class Language {
     SQL, PLPGSQL

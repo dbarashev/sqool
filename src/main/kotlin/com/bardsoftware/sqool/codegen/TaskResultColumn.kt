@@ -1,15 +1,15 @@
 package com.bardsoftware.sqool.codegen
 
-data class TaskResultColumn(val name: String, val type: SqlDataType)
+data class TaskResultColumn(val name: String, val type: SqlDataType) {
+    override fun toString(): String = "$name $type"
+}
 
 /**
  * Basic data types occurred in task results.
  */
-enum class SqlDataType {
-    INT, BIGINT, NUMERIC, TEXT, BOOLEAN,
+enum class SqlDataType(val isNumeric: Boolean = true) {
+    INT, BIGINT, NUMERIC, TEXT(false), BOOLEAN(false),
     DOUBLE_PRECISION {
-        override fun toString(): String {
-            return "DOUBLE PRECISION"
-        }
+        override fun toString(): String = "DOUBLE PRECISION"
     }
 }
