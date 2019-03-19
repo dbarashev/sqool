@@ -16,22 +16,37 @@
         <a class="navbar-brand"></a>
       </header>
       <div class="list-group" id="list-tab" role="tablist">
-        <a class="list-group-item list-group-item-action active"
-           data-toggle="list" href="#list-contest" role="tab"
-           aria-controls="contest">Contests</a>
         <a class="list-group-item list-group-item-action"
+           data-toggle="list" href="#list-schemes" role="tab"
+           aria-controls="schemes">Схемы</a>
+        <a class="list-group-item list-group-item-action active"
            data-toggle="list" href="#list-tasks" role="tab"
-           aria-controls="tasks">Tasks</a>
+           aria-controls="tasks">Задачи</a>
+        <a class="list-group-item list-group-item-action"
+           data-toggle="list" href="#list-variants" role="tab"
+           aria-controls="variants">Варианты</a>
+        <a class="list-group-item list-group-item-action"
+           data-toggle="list" href="#list-contest" role="tab"
+           aria-controls="contest">Соревнования</a>
       </div>
     </div>
     <main class="bmd-layout-content">
       <div class="container">
-        <div class="tab-content" id="nav-tabContent">
-          <div class="tab-pane fade show active" id="list-contest" role="tabpanel">
-            Contests go here
+        <div class="pt-4 tab-content" id="nav-tabContent">
+          <div class="tab-pane fade" id="list-contest" role="tabpanel">
+            Здесь будут соревнования
           </div>
-          <div class="tab-pane fade" id="list-tasks" role="tabpanel">
-            Tasks go here
+          <div class="tab-pane fade show active" id="list-tasks" role="tabpanel">
+            <TaskToolbar>
+            </TaskToolbar>
+            <TaskTable>
+            </TaskTable>
+          </div>
+          <div class="tab-pane fade" id="list-variants" role="tabpanel">
+            Здесь будут варианты
+          </div>
+          <div class="tab-pane fade" id="list-schemes" role="tabpanel">
+            Здесь будут схемы БД
           </div>
         </div>
       </div>
@@ -41,11 +56,13 @@
 
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator';
-import HelloWorld from './components/HelloWorld.vue';
+import TaskTable from './components/TaskTable.vue';
+import TaskToolbar from './components/TaskToolbar.vue';
+
 
 @Component({
   components: {
-    HelloWorld,
+    TaskTable, TaskToolbar,
   },
 })
 export default class App extends Vue {}

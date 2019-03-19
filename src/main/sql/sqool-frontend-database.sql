@@ -23,6 +23,19 @@ CREATE TABLE Contest.Task(
     author_id INT REFERENCES Contest.ContestUser
 );
 
+CREATE TABLE Contest.TaskSignature(
+    task_id INT NOT NULL REFERENCES Task,
+    col_num INT NOT NULL check ( col_num > 0 ),
+    col_name TEXT NOT NULL,
+    col_type TEXT NOT NULL DEFAULT 'TEXT'
+);
+
+CREATE OR REPLACE VIEW Contest.TaskDto AS
+SELECT id, name, COALESCE(description, '') AS description,
+  COALESCE(json_object_agg(col_name, col_type)::TEXT, '{}') AS signature_json
+FROM Contest.Task T JOIN Contest.TaskSignature S ON T.id=S.task_id
+GROUP BY T.id;
+
 CREATE TYPE AttemptStatus AS ENUM('success', 'failure', 'testing', 'virgin');
 CREATE TABLE Contest.Attempt(
     task_id INT REFERENCES Contest.Task ON UPDATE CASCADE ON DELETE CASCADE,

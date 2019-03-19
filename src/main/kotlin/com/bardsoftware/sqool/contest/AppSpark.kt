@@ -88,7 +88,12 @@ fun main(args: Array<String>) {
 
   val adminTaskAllHandler = TaskAllHandler(flags)
   get("/admin/task/all") {
-    adminTaskAllHandler.handle(Http(request, response, session(), freemarker))()
+    try {
+      adminTaskAllHandler.handle(Http(request, response, session(), freemarker))()
+    } catch (e: Throwable) {
+      e.printStackTrace()
+      throw e
+    }
   }
   val challengeHandler = ChallengeHandler()
   get("/") {
