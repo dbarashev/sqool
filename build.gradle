@@ -57,6 +57,8 @@ dependencies {
 
 	compile 'org.apache.httpcomponents:fluent-hc:4.5.3'
 	compile "com.squareup.sqldelight:sqlite-driver:1.1.1"
+
+        testCompile group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: '5.4.0'
 }
 
 sourceSets {
@@ -128,6 +130,10 @@ assemble {
 
 run {
 	dependsOn buildClient
+}
+
+test {
+	useJUnitPlatform()
 }
 
 jib {
