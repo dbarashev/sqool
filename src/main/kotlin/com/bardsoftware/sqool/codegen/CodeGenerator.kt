@@ -14,12 +14,13 @@ fun generateMultipleColumnQueryRobot(taskName: String,
     val userQueryMock = matcherSpec.relationSpec.getAllColsList().joinToString(", ", "SELECT ") { "NULL::${it.type}" }
 
     val mergedView = "${taskName}_Merged"
-    val colNamesList = matcherSpec.relationSpec.getAllColsList().map { it.name }
+    val keyColNamesList = matcherSpec.relationSpec.keyCols.map { it.name }
     val maxAbsDiffChecks = matcherSpec.relationSpec.cols
             .filter { it.type.isNumeric }
-            .map { generateMaxAbsDiffCheck(maxAbsDiffVar = "max_abs_diff", colToCheck = it.name, mergedView = mergedView,
-                    allCols = colNamesList, failedCheckMessage = matcherSpec.getDiffErrorMessage(it)) }
-            .joinToString("\n\n")
+            .joinToString("\n\n") {
+                generateMaxAbsDiffCheck(maxAbsDiffVar = "max_abs_diff", colToCheck = it.name, mergedView = mergedView,
+                        keyCols = keyColNamesList, failedCheckMessage = matcherSpec.getDiffErrorMessage(it))
+            }
     val matcherFunName = "${taskName}_Matcher"
     val keyColNamesString = matcherSpec.relationSpec.keyCols.joinToString(", ") { it.name }
     val matcherCode = """DECLARE
@@ -29,7 +30,7 @@ fun generateMultipleColumnQueryRobot(taskName: String,
         |BEGIN
         |
         |IF NOT EXISTS (
-        |       SELECT SUM(query_id) FROM Task213_Merged
+        |       SELECT SUM(query_id) FROM $mergedView
         |       GROUP BY ${matcherSpec.relationSpec.getAllColsList().joinToString(", ") { it.name }}
         |       HAVING SUM(query_id) <> 3
         |   ) THEN
@@ -237,14 +238,14 @@ private fun generateUnionIntersectionCheck(unionSizeVar: String,
 private fun generateMaxAbsDiffCheck(maxAbsDiffVar: String,
                                     colToCheck: String,
                                     mergedView: String,
-                                    allCols: List<String>,
+                                    keyCols: List<String>,
                                     failedCheckMessage: String
 ): String = """
             |SELECT MAX(ABS(diff)) INTO $maxAbsDiffVar FROM (
-            |  SELECT SUM($colToCheck * CASE query_id WHEN 1 THEN 1 ELSE -1 END) AS diff
-            |  FROM $mergedView
-            |  GROUP BY ${allCols.filter { it == colToCheck }.joinToString(", ")}
-            |) T;
+            |   SELECT SUM($colToCheck * CASE query_id WHEN 1 THEN 1 ELSE -1 END) AS diff
+            |   FROM $mergedView
+            |   GROUP BY ${keyCols.joinToString(", ")}
+            |) AS T;
             |RETURN NEXT '$failedCheckMessage ' || $maxAbsDiffVar::TEXT;
             """.trimIndent()
 

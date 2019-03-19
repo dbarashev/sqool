@@ -2,8 +2,8 @@ package com.bardsoftware.sqool.codegen
 
 import java.lang.IllegalArgumentException
 
-class RelationSpec(val keyCols: Set<TaskResultColumn>,
-                   val cols: Set<TaskResultColumn> = emptySet()
+class RelationSpec(val keyCols: List<TaskResultColumn>,
+                   val cols: List<TaskResultColumn> = emptyList()
 ) {
     init {
         if (keyCols.isEmpty()) {
