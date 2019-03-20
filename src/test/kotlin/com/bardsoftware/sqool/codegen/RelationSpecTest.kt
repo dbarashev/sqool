@@ -3,7 +3,6 @@ package com.bardsoftware.sqool.codegen
 import org.junit.jupiter.api.Test
 
 import org.junit.jupiter.api.Assertions.*
-import java.lang.IllegalArgumentException
 
 class RelationSpecTest {
     @Test

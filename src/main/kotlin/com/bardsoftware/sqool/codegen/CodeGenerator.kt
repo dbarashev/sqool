@@ -16,9 +16,10 @@ fun generateMultipleColumnQueryRobot(taskName: String,
     val mergedView = "${taskName}_Merged"
     val keyColNamesList = matcherSpec.relationSpec.keyCols.map { it.name }
     val maxAbsDiffChecks = matcherSpec.relationSpec.cols
-            .filter { it.type.isNumeric }
+            .filter { it.type.kind != SqlDataType.Kind.NON_NUMERIC }
             .joinToString("\n\n") {
-                generateMaxAbsDiffCheck(maxAbsDiffVar = "max_abs_diff", colToCheck = it.name, mergedView = mergedView,
+                val diffVar = if (it.type.kind == SqlDataType.Kind.INTEGER) "max_abs_int_diff" else "max_abs_rational_diff"
+                generateMaxAbsDiffCheck(maxAbsDiffVar = diffVar, colToCheck = it.name, mergedView = mergedView,
                         keyCols = keyColNamesList, failedCheckMessage = matcherSpec.getDiffErrorMessage(it))
             }
     val matcherFunName = "${taskName}_Matcher"
@@ -26,7 +27,8 @@ fun generateMultipleColumnQueryRobot(taskName: String,
     val matcherCode = """DECLARE
         |   intxn_size INT;
         |   union_size INT;
-        |   max_abs_diff BIGINT;
+        |   max_abs_int_diff BIGINT;
+        |   max_abs_rational_diff DOUBLE PRECISION;
         |BEGIN
         |
         |IF NOT EXISTS (

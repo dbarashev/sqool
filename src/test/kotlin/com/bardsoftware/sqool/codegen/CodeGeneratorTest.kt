@@ -90,8 +90,8 @@ class CodeGeneratorTest {
             """.trimMargin()
 
         val spec = TaskResultColumn("id", SqlDataType.INT)
-        val result = generateSingleColumnQueryRobot("Task3", spec,
-                "cw1", "/hse/cw1/schema.sql", "SELECT 11;")
+        val result = generateSingleColumnQueryRobot(
+                "Task3", spec, "cw1", "/hse/cw1/schema.sql", "SELECT 11;")
         assertEquals(expectedStaticCode, result.staticCode)
         assertEquals(expectedPerSubmissionCode, result.perSubmissionCode)
     }
@@ -154,8 +154,9 @@ class CodeGeneratorTest {
             |$$ LANGUAGE SQL;
             """.trimMargin()
 
-        val result = generateScalarValueQueryRobot("Task12", SqlDataType.TEXT,
-                "cw2", "/hse/cw2/schema.sql", "SELECT 'Some text';")
+        val result = generateScalarValueQueryRobot(
+                "Task12", SqlDataType.TEXT, "cw2", "/hse/cw2/schema.sql",
+                "SELECT 'Some text';")
         assertEquals(expectedStaticCode, result.staticCode)
         assertEquals(expectedPerSubmissionCode, result.perSubmissionCode)
     }
@@ -168,13 +169,13 @@ class CodeGeneratorTest {
             |\i /cw3/schema.sql;
             |
             |CREATE OR REPLACE FUNCTION Task05_Robot()
-            |RETURNS TABLE(ship TEXT, port INT, transfers_num INT, transfer_size INT, product TEXT) AS $$
-            |SELECT 'ship', 1, 10, 500, 'prod'
+            |RETURNS TABLE(ship TEXT, port INT, transfers_num INT, transfer_size DOUBLE PRECISION, product TEXT) AS $$
+            |SELECT 'ship', 1, 10, 500::DOUBLE PRECISION, 'prod'
             |$$ LANGUAGE SQL;
             |
             |CREATE OR REPLACE FUNCTION Task05_User()
-            |RETURNS TABLE(ship TEXT, port INT, transfers_num INT, transfer_size INT, product TEXT) AS $$
-            |SELECT NULL::TEXT, NULL::INT, NULL::INT, NULL::INT, NULL::TEXT
+            |RETURNS TABLE(ship TEXT, port INT, transfers_num INT, transfer_size DOUBLE PRECISION, product TEXT) AS $$
+            |SELECT NULL::TEXT, NULL::INT, NULL::INT, NULL::DOUBLE PRECISION, NULL::TEXT
             |$$ LANGUAGE SQL;
             |
             |CREATE OR REPLACE VIEW Task05_Merged AS
@@ -187,7 +188,8 @@ class CodeGeneratorTest {
             |DECLARE
             |   intxn_size INT;
             |   union_size INT;
-            |   max_abs_diff BIGINT;
+            |   max_abs_int_diff BIGINT;
+            |   max_abs_rational_diff DOUBLE PRECISION;
             |BEGIN
             |
             |IF NOT EXISTS (
@@ -219,19 +221,19 @@ class CodeGeneratorTest {
             |
             |RETURN NEXT 'Кортежи (ship, port) найдены верно';
             |
-            |SELECT MAX(ABS(diff)) INTO max_abs_diff FROM (
+            |SELECT MAX(ABS(diff)) INTO max_abs_int_diff FROM (
             |   SELECT SUM(transfers_num * CASE query_id WHEN 1 THEN 1 ELSE -1 END) AS diff
             |   FROM Task05_Merged
             |   GROUP BY ship, port
             |) AS T;
-            |RETURN NEXT 'Максимальное расхождение transfers_num равно  ' || max_abs_diff::TEXT;
+            |RETURN NEXT 'Максимальное расхождение transfers_num равно  ' || max_abs_int_diff::TEXT;
             |
-            |SELECT MAX(ABS(diff)) INTO max_abs_diff FROM (
+            |SELECT MAX(ABS(diff)) INTO max_abs_rational_diff FROM (
             |   SELECT SUM(transfer_size * CASE query_id WHEN 1 THEN 1 ELSE -1 END) AS diff
             |   FROM Task05_Merged
             |   GROUP BY ship, port
             |) AS T;
-            |RETURN NEXT 'Максимальное расхождение transfer_size равно  ' || max_abs_diff::TEXT;
+            |RETURN NEXT 'Максимальное расхождение transfer_size равно  ' || max_abs_rational_diff::TEXT;
             |
             |END;
             |$$ LANGUAGE PLPGSQL;
@@ -246,7 +248,7 @@ class CodeGeneratorTest {
             |);
             |
             |CREATE OR REPLACE FUNCTION Task05_User()
-            |RETURNS TABLE(ship TEXT, port INT, transfers_num INT, transfer_size INT, product TEXT) AS $$
+            |RETURNS TABLE(ship TEXT, port INT, transfers_num INT, transfer_size DOUBLE PRECISION, product TEXT) AS $$
             |{1}
             |$$ LANGUAGE SQL;
             |
@@ -256,15 +258,19 @@ class CodeGeneratorTest {
             |   SELECT 1 AS query_id, * FROM Task05_User();
             """.trimMargin()
 
-        val keyAttribute = listOf(TaskResultColumn("ship", SqlDataType.TEXT),
+        val keyAttribute = listOf(
+                TaskResultColumn("ship", SqlDataType.TEXT),
                 TaskResultColumn("port", SqlDataType.INT))
-        val nonKeyAttributes = listOf(TaskResultColumn("transfers_num", SqlDataType.INT),
-                TaskResultColumn("transfer_size", SqlDataType.INT), TaskResultColumn("product", SqlDataType.TEXT))
+        val nonKeyAttributes = listOf(
+                TaskResultColumn("transfers_num", SqlDataType.INT),
+                TaskResultColumn("transfer_size", SqlDataType.DOUBLE_PRECISION),
+                TaskResultColumn("product", SqlDataType.TEXT))
         val relationSpec = RelationSpec(keyAttribute, nonKeyAttributes)
         val matcherSpec = MatcherSpec(relationSpec, "Множество пар (корабль, порт) отличается от результатов робота")
 
-        val result = generateMultipleColumnQueryRobot("Task05", matcherSpec, "cw3",
-                "/cw3/schema.sql", "SELECT 'ship', 1, 10, 500, 'prod'")
+        val result = generateMultipleColumnQueryRobot(
+                "Task05", matcherSpec, "cw3", "/cw3/schema.sql",
+                "SELECT 'ship', 1, 10, 500::DOUBLE PRECISION, 'prod'")
         assertEquals(expectedPerSubmissionCode, result.perSubmissionCode)
         assertEquals(expectedStaticCode, result.staticCode)
     }

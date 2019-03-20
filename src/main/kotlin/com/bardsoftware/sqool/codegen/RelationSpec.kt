@@ -1,7 +1,5 @@
 package com.bardsoftware.sqool.codegen
 
-import java.lang.IllegalArgumentException
-
 class RelationSpec(val keyCols: List<TaskResultColumn>,
                    val cols: List<TaskResultColumn> = emptyList()
 ) {
@@ -16,5 +14,5 @@ class RelationSpec(val keyCols: List<TaskResultColumn>,
         }
     }
 
-    fun getAllColsList(): List<TaskResultColumn> = keyCols.toList() + cols.toList()
+    fun getAllColsList(): List<TaskResultColumn> = keyCols + cols
 }

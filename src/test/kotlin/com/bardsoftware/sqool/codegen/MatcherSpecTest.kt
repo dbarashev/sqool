@@ -3,24 +3,26 @@ package com.bardsoftware.sqool.codegen
 import org.junit.jupiter.api.Test
 
 import org.junit.jupiter.api.Assertions.*
-import java.lang.IllegalArgumentException
 
 class MatcherSpecTest {
     private val relationSpec: RelationSpec
     private val matcherSpec : MatcherSpec
 
     init {
-        val keyAttribute = listOf(TaskResultColumn("ship", SqlDataType.TEXT),
+        val keyAttribute = listOf(
+                TaskResultColumn("ship", SqlDataType.TEXT),
                 TaskResultColumn("port", SqlDataType.INT))
-        val nonKeyAttributes = listOf(TaskResultColumn("transfers_num", SqlDataType.INT),
-                TaskResultColumn("transfer_size", SqlDataType.BIGINT), TaskResultColumn("product", SqlDataType.TEXT))
+        val nonKeyAttributes = listOf(
+                TaskResultColumn("transfers_num", SqlDataType.INT),
+                TaskResultColumn("transfer_size", SqlDataType.BIGINT),
+                TaskResultColumn("product", SqlDataType.TEXT))
         relationSpec = RelationSpec(keyAttribute, nonKeyAttributes)
         matcherSpec = MatcherSpec(relationSpec)
     }
 
     @Test
     fun testWrongKeyColsProjectionDefaultMessage() {
-        assertEquals("Множество кортежей (ship, port) отличется от результатов робота", matcherSpec.wrongKeyColsProjMessage)
+        assertEquals("Множество кортежей (ship, port) отличается от результатов робота", matcherSpec.wrongKeyColsProjMessage)
     }
 
     @Test
