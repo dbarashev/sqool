@@ -57,20 +57,19 @@
 
 <script lang="ts">
 import {Component, Provide, Vue} from 'vue-property-decorator';
-  import TaskTable from './components/TaskTable.vue';
-  import TaskToolbar from './components/TaskToolbar.vue';
-  import TaskPropertiesModal from './components/TaskPropertiesModal.vue';
+import TaskTable from './components/TaskTable.vue';
+import TaskToolbar from './components/TaskToolbar.vue';
+import TaskPropertiesModal from './components/TaskPropertiesModal.vue';
 
-  @Component({
+@Component({
   components: {
     TaskTable, TaskToolbar, TaskPropertiesModal,
   },
 })
 export default class App extends Vue {
   @Provide()
-  public showTaskProperties() {
-    const modal = this.$refs.taskPropertiesModal as TaskPropertiesModal;
-    modal.show();
+  public taskProperties(): TaskPropertiesModal {
+    return this.$refs.taskPropertiesModal as TaskPropertiesModal;
   }
 }
 </script>

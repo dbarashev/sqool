@@ -5,7 +5,7 @@
             <th scope="col"><input type="checkbox"></th>
             <th scope="col">Задача</th>
             <th scope="col">Описание</th>
-            <th scope="col">Сигнатура</th>
+            <th scope="col">Столбцы результата</th>
         </tr>
         </thead>
         <tbody>
@@ -13,7 +13,7 @@
                 <td><input type="checkbox"></td>
                 <td>{{ t.name }}</td>
                 <td>{{ t.description }}</td>
-                <td>{{ t.signature_json }}</td>
+                <td>{{ t.result_json }}</td>
             </tr>
         </tbody>
     </table>
@@ -21,14 +21,8 @@
 
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator';
+import {TaskDto} from '../Task';
 
-class TaskDto  {
-    constructor(readonly id: number,
-                readonly name: string,
-                readonly description: string,
-                // tslint:disable-next-line
-                readonly signature_json: string) {}
-}
 @Component
 export default class TaskTable extends Vue {
   public tasks: TaskDto[] = [];

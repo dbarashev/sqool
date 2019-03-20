@@ -1,6 +1,7 @@
 package com.bardsoftware.sqool.contest
 
 import com.bardsoftware.sqool.contest.admin.TaskAllHandler
+import com.bardsoftware.sqool.contest.admin.TaskNewHandler
 import com.xenomachina.argparser.ArgParser
 import com.zaxxer.hikari.HikariDataSource
 import org.apache.http.client.utils.URLEncodedUtils
@@ -95,6 +96,17 @@ fun main(args: Array<String>) {
       throw e
     }
   }
+
+  val adminTaskNewHandler = TaskNewHandler(flags)
+  post("/admin/task/new") {
+    try {
+      adminTaskNewHandler.handle(Http(request, response, session(), freemarker))()
+    } catch (e: Throwable) {
+      e.printStackTrace()
+      throw e
+    }
+  }
+
   val challengeHandler = ChallengeHandler()
   get("/") {
     freemarker.render(ModelAndView(emptyMap<String,String>(), "index.ftl"))

@@ -3,17 +3,42 @@
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Modal title</h5>
+                    <h5 class="modal-title">Задача {{ taskName }}</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
                 <div class="modal-body">
-                    <p>Modal body text goes here.</p>
+                    <form>
+                        <div class="form-group">
+                            <label for="task-properties-name">Название задачи</label>
+                            <input type="text" class="form-control" id="task-properties-name" aria-describedby="task-properties-name-help" v-model="taskName">
+                            <small id="task-properties-name-help"
+                                   class="form-text text-muted">Обычно это номер.</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="task-properties-description">Описание</label>
+                            <textarea class="form-control"
+                                      v-model="taskDescription"
+                                      id="task-properties-description" rows="5">
+                            </textarea>
+                            <small id="task-properties-description-help"
+                                   class="form-text text-muted">Можно использовать Markdown</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="task-properties-name">Столбцы результата</label>
+                            <input type="text" class="form-control"
+                                   id="task-properties-result"
+                                   aria-describedby="task-properties-result-help"
+                                   v-model="taskResult"
+                            >
+                            <small id="task-properties-result-help"
+                                   class="form-text text-muted"><code>id INT, name TEXT, ...</code></small>
+                        </div>
+                    </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-primary">Save changes</button>
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" @click="submit">OK</button>
                 </div>
             </div>
         </div>
@@ -22,15 +47,36 @@
 
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator';
+import {TaskDto} from '../Task';
 
 @Component
 export default class TaskPropertiesModal extends Vue {
-    public show() {
+    public taskName: string = '';
+    public taskResult: string = '';
+    public taskDescription: string = '';
+
+    private taskId: number = -1;
+    private deferred: JQueryDeferred<TaskDto> | undefined;
+
+    public show(task: TaskDto): JQueryDeferred<TaskDto> {
         $('#task-properties').modal();
+        this.taskId = task.id;
+        this.taskName = task.name;
+        this.taskDescription = task.description;
+        this.taskResult = task.result_json;
+
+        this.deferred = $.Deferred<TaskDto>();
+        return this.deferred;
+    }
+
+    public hide() {
+        $('#task-properties').modal('hide');
+    }
+
+    public submit() {
+        if (this.deferred) {
+            this.deferred.resolve(new TaskDto(this.taskId, this.taskName, this.taskDescription, this.taskResult));
+        }
     }
 }
 </script>
-
-<!-- Add "scoped" attribute to limit CSS to this component only -->
-<style scoped lang="scss">
-</style>
