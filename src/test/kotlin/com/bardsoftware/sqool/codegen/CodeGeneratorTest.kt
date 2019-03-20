@@ -189,7 +189,7 @@ class CodeGeneratorTest {
             |   intxn_size INT;
             |   union_size INT;
             |   max_abs_int_diff BIGINT;
-            |   max_abs_rational_diff DOUBLE PRECISION;
+            |   max_abs_decimal_diff DOUBLE PRECISION;
             |BEGIN
             |
             |IF NOT EXISTS (
@@ -228,12 +228,12 @@ class CodeGeneratorTest {
             |) AS T;
             |RETURN NEXT 'Максимальное расхождение transfers_num равно  ' || max_abs_int_diff::TEXT;
             |
-            |SELECT MAX(ABS(diff)) INTO max_abs_rational_diff FROM (
+            |SELECT MAX(ABS(diff)) INTO max_abs_decimal_diff FROM (
             |   SELECT SUM(transfer_size * CASE query_id WHEN 1 THEN 1 ELSE -1 END) AS diff
             |   FROM Task05_Merged
             |   GROUP BY ship, port
             |) AS T;
-            |RETURN NEXT 'Максимальное расхождение transfer_size равно  ' || max_abs_rational_diff::TEXT;
+            |RETURN NEXT 'Максимальное расхождение transfer_size равно  ' || max_abs_decimal_diff::TEXT;
             |
             |END;
             |$$ LANGUAGE PLPGSQL;

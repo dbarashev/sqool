@@ -10,14 +10,14 @@ data class TaskResultColumn(val name: String, val type: SqlDataType) {
 enum class SqlDataType(val kind: Kind) {
     INT(Kind.INTEGER),
     BIGINT(Kind.INTEGER),
-    NUMERIC(Kind.RATIONAL),
+    NUMERIC(Kind.DECIMAL),
     TEXT(Kind.NON_NUMERIC),
     BOOLEAN(Kind.NON_NUMERIC),
-    DOUBLE_PRECISION(Kind.RATIONAL) {
+    DOUBLE_PRECISION(Kind.DECIMAL) {
         override fun toString(): String = "DOUBLE PRECISION"
     };
 
     enum class Kind {
-        NON_NUMERIC, RATIONAL, INTEGER
+        NON_NUMERIC, DECIMAL, INTEGER
     }
 }
