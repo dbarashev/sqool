@@ -51,21 +51,28 @@
         </div>
       </div>
     </main>
+    <TaskPropertiesModal ref="taskPropertiesModal"></TaskPropertiesModal>
   </div>
 </template>
 
 <script lang="ts">
-import { Component, Vue } from 'vue-property-decorator';
-import TaskTable from './components/TaskTable.vue';
-import TaskToolbar from './components/TaskToolbar.vue';
+import {Component, Provide, Vue} from 'vue-property-decorator';
+  import TaskTable from './components/TaskTable.vue';
+  import TaskToolbar from './components/TaskToolbar.vue';
+  import TaskPropertiesModal from './components/TaskPropertiesModal.vue';
 
-
-@Component({
+  @Component({
   components: {
-    TaskTable, TaskToolbar,
+    TaskTable, TaskToolbar, TaskPropertiesModal,
   },
 })
-export default class App extends Vue {}
+export default class App extends Vue {
+  @Provide()
+  public showTaskProperties() {
+    const modal = this.$refs.taskPropertiesModal as TaskPropertiesModal;
+    modal.show();
+  }
+}
 </script>
 
 <style lang="scss">

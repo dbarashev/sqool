@@ -15,6 +15,7 @@
     "webpack": "^4.29.6"
   },
   "devDependencies": {
+    "@types/bootstrap": "^4.3.0",
     "@types/chai": "^4.1.0",
     "@types/jquery": "^3.3.29",
     "@types/mocha": "^5.2.4",
