@@ -1,0 +1,30 @@
+CREATE TABLE ContestUser(
+  id INTEGER PRIMARY KEY,
+  name TEXT UNIQUE,
+  nick TEXT,
+  passwd TEXT
+);
+
+CREATE TABLE Task(
+    id INTEGER PRIMARY KEY,
+    name TEXT,
+    real_name TEXT UNIQUE,
+    signature TEXT,
+    description TEXT,
+    score INTEGER CHECK(score BETWEEN 1 AND 10),
+    difficulty INTEGER CHECK(difficulty BETWEEN 1 AND 3),
+    author_id INTEGER REFERENCES ContestUser
+);
+
+CREATE TABLE TaskDto(
+    id INTEGER PRIMARY KEY,
+    name TEXT NOT NULL,
+    description TEXT NOT NULL,
+    result_json TEXT NOT NULL
+);
+
+selectAllTasks:
+SELECT * FROM TaskDto;
+
+createNewTask:
+INSERT INTO TaskDto(name, description, result_json) VALUES (?, ?, ?);

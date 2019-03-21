@@ -12,7 +12,9 @@
     "sourceMap": true,
     "baseUrl": ".",
     "types": [
+      "bootstrap",
       "webpack-env",
+      "jquery",
       "mocha",
       "chai"
     ],
