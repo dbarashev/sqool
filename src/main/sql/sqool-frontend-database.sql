@@ -31,10 +31,23 @@ CREATE TABLE Contest.TaskResult(
 );
 
 CREATE OR REPLACE VIEW Contest.TaskDto AS
-SELECT id, name, COALESCE(description, '') AS description,
-  json_object_agg(COALESCE(col_name, ''), col_type)::TEXT AS result_json
+-- All tasks with non-empty results will have result_json looking like this:
+-- [{"name": "col1", "type": "INT"}, {"name": "col2", type: "TEXT"}]
+SELECT id, name,
+  COALESCE(description, '') AS description,
+  array_to_json(array_agg(json_object('{name, type}', ARRAY[col_name, col_type])))::TEXT AS result_json
+FROM Contest.Task T JOIN Contest.TaskResult R ON T.id=R.task_id
+GROUP BY T.id
+UNION ALL
+-- All tasks with empty results will have empty array in the result_json:
+-- []
+SELECT id, name,
+  COALESCE(description, '') AS description,
+  '[]' AS result_json
 FROM Contest.Task T LEFT JOIN Contest.TaskResult R ON T.id=R.task_id
+WHERE R.task_id IS NULL
 GROUP BY T.id;
+
 
 CREATE OR REPLACE FUNCTION TaskDto_Insert()
 RETURNS TRIGGER AS $$
