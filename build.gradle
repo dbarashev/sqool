@@ -11,7 +11,7 @@ buildscript {
 		classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:${kotlinVersion}")
 		classpath("org.jetbrains.kotlin:kotlin-allopen:${kotlinVersion}")
 		classpath('com.squareup.sqldelight:gradle-plugin:1.1.1')
-    }
+	}
 }
 plugins {
 	id 'com.google.cloud.tools.jib' version '1.0.2'
@@ -36,30 +36,30 @@ mainClassName = 'com.bardsoftware.sqool.contest.AppSparkKt'
 
 
 dependencies {
-    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:${kotlinVersion}"
-    compile "org.jetbrains.kotlin:kotlin-reflect:${kotlinVersion}"
-    
-    compile "com.xenomachina:kotlin-argparser:2.+"
-    
-    compile 'com.google.cloud.tools:jib-core:0.1.2'
-    
-    // PubSub stuff
-    compile 'com.google.cloud:google-cloud-pubsub:0.26.+'
-    
-    // Postgres stuff
-    compile group: 'org.postgresql', name: 'postgresql', version: '42.1.1'
-    compile 'com.zaxxer:HikariCP:2.7.+'
-    compile 'org.jetbrains.exposed:exposed:0.8.+'
+	compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:${kotlinVersion}"
+	compile "org.jetbrains.kotlin:kotlin-reflect:${kotlinVersion}"
+	
+	compile "com.xenomachina:kotlin-argparser:2.+"
+	
+	compile 'com.google.cloud.tools:jib-core:0.1.2'
+	
+	// PubSub stuff
+	compile 'com.google.cloud:google-cloud-pubsub:0.26.+'
+	
+	// Postgres stuff
+	compile group: 'org.postgresql', name: 'postgresql', version: '42.1.1'
+	compile 'com.zaxxer:HikariCP:2.7.+'
+	compile 'org.jetbrains.exposed:exposed:0.8.+'
 
 	// Spark stuff
-    compile "com.sparkjava:spark-kotlin:1.+"
-    compile "com.fasterxml.jackson.module:jackson-module-kotlin:2.+"
-    compile "com.sparkjava:spark-template-freemarker:2.+"
+	compile "com.sparkjava:spark-kotlin:1.+"
+	compile "com.fasterxml.jackson.module:jackson-module-kotlin:2.+"
+	compile "com.sparkjava:spark-template-freemarker:2.+"
 
-    compile 'org.apache.httpcomponents:fluent-hc:4.5.3'
-    compile "com.squareup.sqldelight:sqlite-driver:1.1.1"
+	compile 'org.apache.httpcomponents:fluent-hc:4.5.3'
+	compile "com.squareup.sqldelight:sqlite-driver:1.1.1"
 
-    testCompile group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: '5.4.0'
+	testCompile group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: '5.4.0'
 }
 
 sourceSets {
