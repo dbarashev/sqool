@@ -52,9 +52,9 @@ dependencies {
     compile 'org.jetbrains.exposed:exposed:0.8.+'
 
 	// Spark stuff
-	compile "com.sparkjava:spark-kotlin:1.+"
-	compile "com.fasterxml.jackson.module:jackson-module-kotlin:2.+"
-	compile "com.sparkjava:spark-template-freemarker:2.+"
+    compile "com.sparkjava:spark-kotlin:1.+"
+    compile "com.fasterxml.jackson.module:jackson-module-kotlin:2.+"
+    compile "com.sparkjava:spark-template-freemarker:2.+"
 
     compile 'org.apache.httpcomponents:fluent-hc:4.5.3'
     compile "com.squareup.sqldelight:sqlite-driver:1.1.1"
