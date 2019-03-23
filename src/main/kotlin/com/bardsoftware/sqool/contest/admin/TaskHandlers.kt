@@ -1,8 +1,6 @@
 package com.bardsoftware.sqool.contest.admin
 
-import com.bardsoftware.sqool.contest.Flags
-import com.bardsoftware.sqool.contest.HttpApi
-import com.bardsoftware.sqool.contest.HttpResponse
+import com.bardsoftware.sqool.contest.*
 import com.bardsoftware.sqool.db.ContestDb
 import com.squareup.sqldelight.sqlite.driver.JdbcSqliteDriver
 import java.util.*
@@ -10,7 +8,7 @@ import java.util.*
 /**
  * @author dbarashev@bardsoftware.com
  */
-open class DbHandler(private val flags: Flags) {
+abstract class DbHandler<T: RequestArgs>(private val flags: Flags) : RequestHandler<T>(){
 
   val driver = JdbcSqliteDriver(
       name = "jdbc:postgresql://${flags.postgresAddress}:${flags.postgresPort}/${flags.postgresDatabase}",
@@ -27,16 +25,23 @@ open class DbHandler(private val flags: Flags) {
   }
 }
 
-class TaskAllHandler(flags: Flags) : DbHandler(flags) {
-  fun handle(http: HttpApi): HttpResponse {
+class TaskAllHandler(flags: Flags) : DbHandler<RequestArgs>(flags) {
+  override fun handle(http: HttpApi, argValues: RequestArgs): HttpResponse {
     return withDatabase { db ->
       http.json(db.contestQueries.selectAllTasks().executeAsList())
     }
   }
+
+  override fun args(): RequestArgs {
+    return RequestArgs()
+  }
 }
 
-class TaskNewHandler(flags: Flags) : DbHandler(flags) {
-  fun handle(http: HttpApi): HttpResponse {
+data class TaskNewArgs(var name: String, var description: String, var result: String) : RequestArgs()
+class TaskNewHandler(flags: Flags) : DbHandler<TaskNewArgs>(flags) {
+  override fun args(): TaskNewArgs = TaskNewArgs(name = "", description = "", result = "")
+
+  override fun handle(http: HttpApi, argValues: TaskNewArgs): HttpResponse {
     return withDatabase {
       // SQLDelight generates non-standard code which does not work with PostgreSQL
       // so we have to fallback to hand-made SQL here.
@@ -44,9 +49,9 @@ class TaskNewHandler(flags: Flags) : DbHandler(flags) {
         |INSERT INTO TaskDto(name, description, result_json)
         |VALUES (?, ?, ?)
         """.trimMargin(), 3) {
-        bindString(1, http.formValue("name") ?: "")
-        bindString(2, http.formValue("description") ?: "")
-        bindString(3, http.formValue("result") ?: "")
+        bindString(1, argValues.name)
+        bindString(2, argValues.description)
+        bindString(3, argValues.result)
       }
       // This is not error, it just sends HTTP 200
       http.error(200)
