@@ -1,6 +1,6 @@
 package com.bardsoftware.sqool.codegen
 
-class ContestCodeGenerator(private val contestName: String, private val pathToSchema: String) {
+class CodeGenerator(private val contestName: String, private val pathToSchema: String) {
     fun generateStaticCodeHeader() =
             """CREATE SCHEMA $contestName;
             |SET search_path=$contestName;

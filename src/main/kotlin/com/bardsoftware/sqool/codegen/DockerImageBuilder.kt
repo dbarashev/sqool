@@ -16,7 +16,7 @@ fun buildDockerImage(
     val moduleFolder = File(root, "/workspace/$course/$module")
     moduleFolder.mkdirs()
 
-    val codeGenerator = ContestCodeGenerator(module, schemaPath)
+    val codeGenerator = CodeGenerator(module, schemaPath)
     val staticCode = codeGenerator.generateStaticCodeHeader() + "\n\n" +
             tasks.joinToString("\n\n") { codeGenerator.generateStaticCode(it) }
     File(moduleFolder, "$variant-static.sql").writeText(staticCode)

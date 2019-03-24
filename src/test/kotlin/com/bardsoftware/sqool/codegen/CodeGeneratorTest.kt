@@ -4,10 +4,10 @@ import org.junit.jupiter.api.Test
 
 import org.junit.jupiter.api.Assertions.*
 
-class ContestCodeGeneratorTest {
+class CodeGeneratorTest {
     @Test
     fun testStaticCodeHeader() {
-        val generator = ContestCodeGenerator("cw1", "/hse/cw1/schema.sql")
+        val generator = CodeGenerator("cw1", "/hse/cw1/schema.sql")
         val expectedHeader = """
             |CREATE SCHEMA cw1;
             |SET search_path=cw1;
@@ -96,7 +96,7 @@ class ContestCodeGeneratorTest {
             |   SELECT 1 AS query_id, * FROM Task3_User();
             """.trimMargin()
 
-        val generator = ContestCodeGenerator("cw1", "/hse/cw1/schema.sql")
+        val generator = CodeGenerator("cw1", "/hse/cw1/schema.sql")
         val spec = TaskResultColumn("id", SqlDataType.INT)
         val task = SingleColumnTask("Task3", "SELECT 11;", spec)
         assertEquals(expectedStaticCode, generator.generateStaticCode(task))
@@ -157,7 +157,7 @@ class ContestCodeGeneratorTest {
             |$$ LANGUAGE SQL;
             """.trimMargin()
 
-        val generator = ContestCodeGenerator("cw2", "/hse/cw2/schema.sql")
+        val generator = CodeGenerator("cw2", "/hse/cw2/schema.sql")
         val task = ScalarValueTask("Task12", "SELECT 'Some text';", SqlDataType.TEXT)
         assertEquals(expectedStaticCode, generator.generateStaticCode(task))
         assertEquals(expectedPerSubmissionCode, generator.generateDynamicCode(task))
@@ -266,7 +266,7 @@ class ContestCodeGeneratorTest {
         val relationSpec = RelationSpec(keyAttribute, nonKeyAttributes)
         val matcherSpec = MatcherSpec(relationSpec, "Множество пар (корабль, порт) отличается от результатов робота")
 
-        val generator = ContestCodeGenerator("cw3", "/cw3/schema.sql")
+        val generator = CodeGenerator("cw3", "/cw3/schema.sql")
         val task = MultiColumnTask("Task05", "SELECT 'ship', 1, 10, 500::DOUBLE PRECISION, 'prod'", matcherSpec)
         assertEquals(expectedStaticCode, generator.generateStaticCode(task))
         assertEquals(expectedPerSubmissionCode, generator.generateDynamicCode(task))
