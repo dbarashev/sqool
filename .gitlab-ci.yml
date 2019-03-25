@@ -24,4 +24,6 @@ test:
     paths:
       - build
       - .gradle
+  tags:
+    - docker
 
