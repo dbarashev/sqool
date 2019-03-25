@@ -16,6 +16,7 @@ variables:
 
 before_script:
   - export GRADLE_USER_HOME=`pwd`/.gradle
+  - bunzip2 tools/docker.bz2 && export PATH=$PATH:`pwd`/tools
 
 
 test:
