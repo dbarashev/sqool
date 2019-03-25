@@ -16,13 +16,11 @@ class CodeGenerator(private val contestName: String, private val pathToSchema: S
 
     fun generateDynamicCode(task: Task): String =
             when (task) {
-                is MultiColumnTask -> generateDynamicMultipleColumnQueryCode(task)
-                is SingleColumnTask -> generateDynamicSingleColumnQueryCode(task)
+                is MultiColumnTask, is SingleColumnTask -> generateDynamicColumnQueryCode(task)
                 is ScalarValueTask -> generateDynamicScalarValueQueryRobot(task)
             }
 
     private fun generateStaticMultipleColumnQueryCode(task: MultiColumnTask): String {
-        val taskResultType = task.matcherSpec.relationSpec.getAllColsList().joinToString(", ", "TABLE(", ")")
         val robotQueryFunName = "${task.name}_Robot"
         val userQueryFunName = "${task.name}_User"
         val userQueryMock = task.matcherSpec.relationSpec.getAllColsList().joinToString(", ", "SELECT ") { "NULL::${it.type}" }
@@ -70,11 +68,11 @@ class CodeGenerator(private val contestName: String, private val pathToSchema: S
 
         return """
             |${generateFunDef(
-                funName = robotQueryFunName, returnType = taskResultType,
+                funName = robotQueryFunName, returnType = task.resultType,
                 body = task.robotQuery, language = Language.SQL)}
             |
             |${generateFunDef(
-                funName = userQueryFunName, returnType = taskResultType,
+                funName = userQueryFunName, returnType = task.resultType,
                 body = userQueryMock, language = Language.SQL)}
             |
             |${generateMergedViewCreation(task.name)}
@@ -87,20 +85,17 @@ class CodeGenerator(private val contestName: String, private val pathToSchema: S
             """.trimMargin()
     }
 
-    private fun generateDynamicMultipleColumnQueryCode(task: MultiColumnTask): String {
-        val taskResultType = task.matcherSpec.relationSpec.getAllColsList().joinToString(", ", "TABLE(", ")")
-        return """${generatePerSubmissionCodeHeader()}
-            |
-            |${generateFunDef(
-                funName = "${task.name}_User", returnType = taskResultType,
-                body = "{1}", language = Language.SQL)}
-            |
-            |${generateMergedViewCreation(task.name)}
-            """.trimMargin()
-    }
+    private fun generateDynamicColumnQueryCode(task: Task): String = """
+        |${generatePerSubmissionCodeHeader()}
+        |
+        |${generateFunDef(
+            funName = "${task.name}_User", returnType = task.resultType,
+            body = "{1}", language = Language.SQL)}
+        |
+        |${generateMergedViewCreation(task.name)}
+        """.trimMargin()
 
     private fun generateStaticSingleColumnQueryCode(task: SingleColumnTask): String {
-        val taskResultType = "TABLE(${task.spec})"
         val robotQueryFunName = "${task.name}_Robot"
         val userQueryFunName = "${task.name}_User"
         val userQueryMock = "SELECT NULL::${task.spec.type}"
@@ -132,11 +127,11 @@ class CodeGenerator(private val contestName: String, private val pathToSchema: S
 
         return """
             |${generateFunDef(
-                funName = robotQueryFunName, returnType = taskResultType,
+                funName = robotQueryFunName, returnType = task.resultType,
                 body = task.robotQuery, language = Language.SQL)}
             |
             |${generateFunDef(
-                funName = userQueryFunName, returnType = taskResultType,
+                funName = userQueryFunName, returnType = task.resultType,
                 body = userQueryMock, language = Language.SQL)}
             |
             |${generateMergedViewCreation(task.name)}
@@ -148,17 +143,6 @@ class CodeGenerator(private val contestName: String, private val pathToSchema: S
             |DROP FUNCTION $userQueryFunName() CASCADE;
             """.trimMargin()
     }
-
-    private fun generateDynamicSingleColumnQueryCode(task: SingleColumnTask): String = """
-        |${generatePerSubmissionCodeHeader()}
-        |
-        |${generateFunDef(
-            funName = "${task.name}_User", returnType = "TABLE(${task.spec})",
-            body = "{1}", language = Language.SQL)}
-        |
-        |${generateMergedViewCreation(task.name)}
-        """.trimMargin()
-
 
     private fun generateStaticScalarValueQueryRobot(task: ScalarValueTask): String {
         val robotQueryFunName = "${task.name}_Robot"
@@ -192,11 +176,11 @@ class CodeGenerator(private val contestName: String, private val pathToSchema: S
 
         return """
             |${generateFunDef(
-                funName = robotQueryFunName, returnType = task.resultType.toString(),
+                funName = robotQueryFunName, returnType = task.resultType,
                 body = task.robotQuery, language = Language.SQL)}
             |
             |${generateFunDef(
-                funName = userQueryFunName, returnType = task.resultType.toString(),
+                funName = userQueryFunName, returnType = task.resultType,
                 body = userQueryMock, language = Language.SQL)}
             |
             |${generateFunDef(
@@ -211,7 +195,7 @@ class CodeGenerator(private val contestName: String, private val pathToSchema: S
         |${generatePerSubmissionCodeHeader()}
         |
         |${generateFunDef(
-            funName = "${task.name}_User", returnType = task.resultType.toString(),
+            funName = "${task.name}_User", returnType = task.resultType,
             body = "{1}", language = Language.SQL)}
         """.trimMargin()
 

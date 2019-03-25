@@ -8,12 +8,13 @@ import java.io.File
 import java.nio.file.Paths
 
 fun buildDockerImage(
+        imageName: String,
         course: String, module: String,
         variant: String, schemaPath: String,
         tasks: List<Task>
 ) {
     val root = createTempDir()
-    val moduleFolder = File(root, "/workspace/$course/$module")
+    val moduleFolder = File(root, "workspace/$course/$module")
     moduleFolder.mkdirs()
 
     val codeGenerator = CodeGenerator(module, schemaPath)
@@ -28,7 +29,7 @@ fun buildDockerImage(
     Jib.from("busybox")
             .addLayer(listOf(Paths.get(root.toString(), "workspace")), AbsoluteUnixPath.get("/"))
             .containerize(
-                    Containerizer.to(DockerDaemonImage.named("$course/$module/$variant"))
+                    Containerizer.to(DockerDaemonImage.named(imageName))
             )
 
     root.deleteRecursively()
