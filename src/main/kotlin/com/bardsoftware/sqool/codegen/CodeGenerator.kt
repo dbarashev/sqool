@@ -7,6 +7,7 @@ class CodeGenerator(private val contestName: String, private val pathToSchema: S
             |\i $pathToSchema;
             """.trimMargin()
 
+    //TODO: move this method to *Task classes
     fun generateStaticCode(task: Task): String =
             when (task) {
                 is MultiColumnTask -> generateStaticMultipleColumnQueryCode(task)
@@ -14,6 +15,7 @@ class CodeGenerator(private val contestName: String, private val pathToSchema: S
                 is ScalarValueTask -> generateStaticScalarValueQueryRobot(task)
             }
 
+    //TODO: move this method to *Task classes
     fun generateDynamicCode(task: Task): String =
             when (task) {
                 is MultiColumnTask, is SingleColumnTask -> generateDynamicColumnQueryCode(task)
