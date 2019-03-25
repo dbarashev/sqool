@@ -32,7 +32,7 @@ variables:
 
 before_script:
   - export GRADLE_USER_HOME=`pwd`/.gradle
-  - bunzip2 tools/docker.bz2 && chmod 555 tools/docker && export PATH=$PATH:`pwd`/tools
+  - bunzip2 tools/docker.bz2 && chmod 555 tools/docker && export PATH=$PATH:`pwd`/tools && export DOCKER_HOST="tcp://docker:2375/"
 
 
 test:
