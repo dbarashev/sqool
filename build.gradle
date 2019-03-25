@@ -135,6 +135,9 @@ run {
 
 test {
 	useJUnitPlatform()
+	testLogging {
+        	exceptionFormat = 'full'
+	}
 }
 
 jib {
