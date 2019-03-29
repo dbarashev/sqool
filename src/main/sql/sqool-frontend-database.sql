@@ -27,23 +27,54 @@ CREATE TABLE Contest.TaskResult(
     task_id INT NOT NULL REFERENCES Task,
     col_num INT NOT NULL check ( col_num > 0 ),
     col_name TEXT NOT NULL,
-    col_type TEXT NOT NULL DEFAULT 'TEXT'
+    col_type TEXT NOT NULL DEFAULT 'TEXT',
+    PRIMARY KEY(task_id, col_num)
 );
 
 ----------------------------------------------
 -- Updatable view for showing tasks in the admin UI
 CREATE OR REPLACE VIEW Contest.TaskDto AS
-SELECT id, name, COALESCE(description, '') AS description,
-       -- Task result as SQL table definition: <column_name> <column_type>[, ...]
-  json_object_agg(COALESCE(col_name, ''), col_type)::TEXT AS result_json
+-- All tasks with non-empty results will have result_json looking like this:
+-- [{"name": "col1", "type": "INT"}, {"name": "col2", type: "TEXT"}]
+SELECT id, name,
+  COALESCE(description, '') AS description,
+  array_to_json(array_agg(json_object('{name, type}', ARRAY[col_name, col_type])))::TEXT AS result_json
+FROM Contest.Task T JOIN Contest.TaskResult R ON T.id=R.task_id
+GROUP BY T.id
+UNION ALL
+-- All tasks with empty results will have empty array in the result_json:
+-- []
+SELECT id, name,
+  COALESCE(description, '') AS description,
+  '[]' AS result_json
 FROM Contest.Task T LEFT JOIN Contest.TaskResult R ON T.id=R.task_id
+WHERE R.task_id IS NULL
 GROUP BY T.id;
+
 
 CREATE OR REPLACE FUNCTION TaskDto_Insert()
 RETURNS TRIGGER AS $$
+DECLARE
+  new_task_id INT;
 BEGIN
-INSERT INTO Contest.Task(name, real_name, description)
-VALUES (NEW.name, NEW.name, NEW.description);
+  WITH T AS (
+    INSERT INTO Contest.Task(name, real_name, description)
+      VALUES (NEW.name, NEW.name, NEW.description)
+      RETURNING id
+  )
+  SELECT id INTO new_task_id
+  FROM T;
+
+  WITH T AS (
+    SELECT new_task_id AS task_id, X.*
+    FROM json_to_recordset(NEW.result_json::JSON) AS X(col_num INT, col_name TEXT, col_type TEXT)
+  )
+  INSERT INTO Contest.TaskResult(task_id, col_num, col_name, col_type)
+  SELECT task_id, col_num, col_name, col_type
+  FROM T
+  ON CONFLICT ON CONSTRAINT  taskresult_pkey DO
+    UPDATE SET col_num = EXCLUDED.col_num, col_name = EXCLUDED.col_name, col_type = EXCLUDED.col_type;
+
 RETURN NEW;
 end;
 $$ LANGUAGE plpgsql;

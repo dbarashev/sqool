@@ -42,6 +42,15 @@ class TaskNewHandler(flags: Flags) : DbHandler<TaskNewArgs>(flags) {
   override fun args(): TaskNewArgs = TaskNewArgs(name = "", description = "", result = "")
 
   override fun handle(http: HttpApi, argValues: TaskNewArgs): HttpResponse {
+    val resultSpecSql = argValues.result
+    val resultSpecJson = resultSpecSql.split(",").mapIndexed { index, colSpec ->
+      val (name, type) = colSpec.trim().split(Regex("\\s+"), limit = 2)
+      return@mapIndexed """
+        |{ "col_num": ${index + 1},
+        |  "col_name": "$name",
+        |  "col_type": "$type"
+        |}""".trimMargin()
+    }.joinToString(prefix = "[", postfix = "]")
     return withDatabase {
       // SQLDelight generates non-standard code which does not work with PostgreSQL
       // so we have to fallback to hand-made SQL here.
@@ -51,10 +60,9 @@ class TaskNewHandler(flags: Flags) : DbHandler<TaskNewArgs>(flags) {
         """.trimMargin(), 3) {
         bindString(1, argValues.name)
         bindString(2, argValues.description)
-        bindString(3, argValues.result)
+        bindString(3, resultSpecJson)
       }
-      // This is not error, it just sends HTTP 200
-      http.error(200)
+      http.ok()
     }
   }
 }
