@@ -34,7 +34,8 @@
       <div class="container">
         <div class="pt-4 tab-content" id="nav-tabContent">
           <div class="tab-pane fade" id="list-contest" role="tabpanel">
-            Здесь будут соревнования
+            <ContestTable>
+            </ContestTable>
           </div>
           <div class="tab-pane fade show active" id="list-tasks" role="tabpanel">
             <TaskToolbar>
@@ -60,9 +61,11 @@ import {Component, Provide, Vue} from 'vue-property-decorator';
 import TaskTable from './components/TaskTable.vue';
 import TaskToolbar from './components/TaskToolbar.vue';
 import TaskPropertiesModal from './components/TaskPropertiesModal.vue';
+import ContestTable from './components/ContestTable.vue';
 
 @Component({
   components: {
+    ContestTable,
     TaskTable, TaskToolbar, TaskPropertiesModal,
   },
 })

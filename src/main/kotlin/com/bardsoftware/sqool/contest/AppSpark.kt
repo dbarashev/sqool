@@ -1,5 +1,6 @@
 package com.bardsoftware.sqool.contest
 
+import com.bardsoftware.sqool.contest.admin.ContestAllHandler
 import com.bardsoftware.sqool.contest.admin.TaskAllHandler
 import com.bardsoftware.sqool.contest.admin.TaskNewArgs
 import com.bardsoftware.sqool.contest.admin.TaskNewHandler
@@ -174,11 +175,12 @@ class Http(val request : Request,
  */
 fun main(args: Array<String>) {
   val flags = Flags(ArgParser(args, ArgParser.Mode.POSIX))
-  Database.connect(HikariDataSource().apply {
+  val dataSource = HikariDataSource().apply {
     username = flags.postgresUser
     password = flags.postgresPassword
     jdbcUrl = "jdbc:postgresql://${flags.postgresAddress}:${flags.postgresPort}/${flags.postgresDatabase ?: flags.postgresUser}"
-  })
+  }
+  Database.connect(dataSource)
   val assessor = if (flags.taskQueue == "") {
     AssessorApiVoid()
   } else {
@@ -187,6 +189,7 @@ fun main(args: Array<String>) {
     }
   }
 
+  val adminContestAllHandler = ContestAllHandler(dataSource)
   val adminTaskAllHandler = TaskAllHandler(flags)
   val adminTaskNewHandler = TaskNewHandler(flags)
   val challengeHandler = ChallengeHandler()
@@ -197,6 +200,7 @@ fun main(args: Array<String>) {
     staticFiles.location("/public")
 
     Routes(this, freemarker).apply {
+      GET("/admin/contest/all" BY adminContestAllHandler)
       GET("/admin/task/all" BY adminTaskAllHandler)
       POST("/admin/task/new" BY adminTaskNewHandler ARGS mapOf(
           "result"      to TaskNewArgs::result,
