@@ -9,33 +9,48 @@
                     </button>
                 </div>
                 <div class="modal-body">
-                    <form>
-                        <div class="form-group">
-                            <label for="task-properties-name">Название задачи</label>
-                            <input type="text" class="form-control" id="task-properties-name" aria-describedby="task-properties-name-help" v-model="taskName">
-                            <small id="task-properties-name-help"
-                                   class="form-text text-muted">Обычно это номер.</small>
+                    <ul ul class="nav nav-tabs" id="taskTabs" role="tablist">
+                        <li class="nav-item">
+                            <a class="nav-link active" id="main-properties-tab" data-toggle="tab" href="#main-properties" role="tab"
+                               aria-controls="main-properties" aria-selected="true">Основные свойства</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="description-tab" data-toggle="tab" href="#description" role="tab"
+                               aria-controls="description" aria-selected="false">Описание</a>
+                        </li>
+                    </ul>
+                    <div class="tab-content" id="taskTabsContent">
+                        <div class="tab-pane fade show active" id="main-properties" role="tabpanel" aria-labelledby="main-properties-tab">
+                            <form>
+                                <div class="form-group">
+                                    <label for="task-properties-name">Название задачи</label>
+                                    <input type="text" class="form-control" id="task-properties-name" aria-describedby="task-properties-name-help" v-model="taskName">
+                                    <small id="task-properties-name-help"
+                                           class="form-text text-muted">Обычно это номер.</small>
+                                </div>
+                                <div class="form-group">
+                                    <label for="task-properties-description">Описание</label>
+                                    <textarea class="form-control"
+                                              v-model="taskDescription"
+                                              id="task-properties-description" rows="5">
+                                    </textarea>
+                                    <small id="task-properties-description-help"
+                                           class="form-text text-muted">Можно использовать Markdown</small>
+                                </div>
+                                <div class="form-group">
+                                    <label for="task-properties-name">Столбцы результата</label>
+                                    <input type="text" class="form-control"
+                                           id="task-properties-result"
+                                           aria-describedby="task-properties-result-help"
+                                           v-model="taskResult"
+                                    >
+                                    <small id="task-properties-result-help"
+                                           class="form-text text-muted"><code>id INT, name TEXT, ...</code></small>
+                                </div>
+                            </form>
                         </div>
-                        <div class="form-group">
-                            <label for="task-properties-description">Описание</label>
-                            <textarea class="form-control"
-                                      v-model="taskDescription"
-                                      id="task-properties-description" rows="5">
-                            </textarea>
-                            <small id="task-properties-description-help"
-                                   class="form-text text-muted">Можно использовать Markdown</small>
-                        </div>
-                        <div class="form-group">
-                            <label for="task-properties-name">Столбцы результата</label>
-                            <input type="text" class="form-control"
-                                   id="task-properties-result"
-                                   aria-describedby="task-properties-result-help"
-                                   v-model="taskResult"
-                            >
-                            <small id="task-properties-result-help"
-                                   class="form-text text-muted"><code>id INT, name TEXT, ...</code></small>
-                        </div>
-                    </form>
+                        <div class="tab-pane fade" id="description" role="tabpanel" aria-labelledby="description-tab">Markdown</div>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-primary" @click="submit">OK</button>
