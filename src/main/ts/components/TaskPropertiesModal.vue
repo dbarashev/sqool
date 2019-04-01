@@ -49,7 +49,9 @@
                                 </div>
                             </form>
                         </div>
-                        <div class="tab-pane fade" id="description" role="tabpanel" aria-labelledby="description-tab">Markdown</div>
+                        <div class="tab-pane fade" id="description" role="tabpanel" aria-labelledby="description-tab">
+                            <TaskMarkdown></TaskMarkdown>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -63,8 +65,13 @@
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator';
 import {TaskDto} from '../Task';
+import TaskMarkdown from './TaskMarkdown.vue';
 
-@Component
+@Component({
+  components: {
+    TaskMarkdown,
+  },
+})
 export default class TaskPropertiesModal extends Vue {
     public taskName: string = '';
     public taskResult: string = '';
