@@ -8,21 +8,17 @@ class SingleColumnTask(name: String,
         get() = "TABLE($spec)"
 
     override fun generateStaticCode(): String {
-        val robotQueryFunName = "${name}_Robot"
-        val userQueryFunName = "${name}_User"
         val userQueryMock = "SELECT NULL::${spec.type}"
-
-        val mergedView = "${name}_Merged"
         val matcherFunName = "${name}_Matcher"
         val matcherCode = """DECLARE
-            |   intxn_size INT;
-            |   union_size INT;
+            |   $intxnSizeVar INT;
+            |   $unionSizeVar INT;
             |   robot_size INT;
             |   user_size INT;
             |
             |BEGIN
             |
-            |${generateUnionIntersectionCheck("union_size", "intxn_size", spec.name)}
+            |${generateUnionIntersectionCheck(spec.name)}
             |
             |SELECT COUNT(*) INTO robot_size FROM $mergedView WHERE query_id = 0;
             |SELECT COUNT(*) INTO user_size FROM $mergedView WHERE query_id = 1;

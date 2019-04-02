@@ -11,13 +11,11 @@ class ScalarValueTask(name: String,
         |${codeGenerator.generateDynamicCodeHeader()}
         |
         |${generateFunDef(
-            funName = "${name}_User", returnType = resultType,
+            funName = userQueryFunName, returnType = resultType,
             body = "{1}", language = Language.SQL)}
         """.trimMargin()
 
     override fun generateStaticCode(): String {
-        val robotQueryFunName = "${name}_Robot"
-        val userQueryFunName = "${name}_User"
         val matcherFunName = "${name}_Matcher"
         val userQueryMock = "SELECT NULL::$resultType"
 

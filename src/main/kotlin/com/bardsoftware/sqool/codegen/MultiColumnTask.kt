@@ -8,27 +8,23 @@ class MultiColumnTask(name: String,
         get() = matcherSpec.relationSpec.getAllColsList().joinToString(", ", "TABLE(", ")")
 
     override fun generateStaticCode(): String {
-        val robotQueryFunName = "${name}_Robot"
-        val userQueryFunName = "${name}_User"
         val userQueryMock = matcherSpec.relationSpec.getAllColsList().joinToString(", ", "SELECT ") { "NULL::${it.type}" }
-
-        val mergedView = "${name}_Merged"
         val keyColNamesList = matcherSpec.relationSpec.keyCols.map { it.name }
+
         val maxAbsDiffChecks = matcherSpec.relationSpec.cols
                 .filter { it.type.kind != SqlDataType.Kind.NON_NUMERIC }
                 .joinToString("\n\n") {
                     val diffVar = if (it.type.kind == SqlDataType.Kind.INTEGER) "max_abs_int_diff" else "max_abs_decimal_diff"
                     generateMaxAbsDiffCheck(
                             maxAbsDiffVar = diffVar, colToCheck = it.name,
-                            mergedView = mergedView, keyCols = keyColNamesList,
-                            failedCheckMessage = matcherSpec.getDiffErrorMessage(it))
+                            keyCols = keyColNamesList, failedCheckMessage = matcherSpec.getDiffErrorMessage(it))
                 }
         val matcherFunName = "${name}_Matcher"
         val keyColNamesString = matcherSpec.relationSpec.keyCols.joinToString(", ") { it.name }
         val matcherCode = """
             |DECLARE
-            |   intxn_size INT;
-            |   union_size INT;
+            |   $intxnSizeVar INT;
+            |   $unionSizeVar INT;
             |   max_abs_int_diff BIGINT;
             |   max_abs_decimal_diff DOUBLE PRECISION;
             |BEGIN
@@ -42,7 +38,6 @@ class MultiColumnTask(name: String,
             |END IF;
             |
             |${generateUnionIntersectionCheck(
-                unionSizeVar = "union_size", intxnSizeVar = "intxn_size",
                 colNames = keyColNamesString, failedCheckMessage = matcherSpec.wrongKeyColsProjMessage)}
             |
             |RETURN NEXT '${matcherSpec.rightKeyColsProjMessage}';
@@ -73,7 +68,6 @@ class MultiColumnTask(name: String,
 
     private fun generateMaxAbsDiffCheck(maxAbsDiffVar: String,
                                         colToCheck: String,
-                                        mergedView: String,
                                         keyCols: List<String>,
                                         failedCheckMessage: String
     ): String = """
