@@ -41,7 +41,7 @@ dependencies {
 	
 	compile "com.xenomachina:kotlin-argparser:2.+"
 	
-	compile 'com.google.cloud.tools:jib-core:0.1.2'
+	compile 'com.google.cloud.tools:jib-core:0.+'
 	
 	// PubSub stuff
 	compile 'com.google.cloud:google-cloud-pubsub:0.26.+'
