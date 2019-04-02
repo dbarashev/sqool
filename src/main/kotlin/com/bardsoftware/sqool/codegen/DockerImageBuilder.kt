@@ -19,10 +19,10 @@ fun buildDockerImage(
 
     val codeGenerator = CodeGenerator(module, schemaPath)
     val staticCode = codeGenerator.generateStaticCodeHeader() + "\n\n" +
-            tasks.joinToString("\n\n") { codeGenerator.generateStaticCode(it) }
+            tasks.joinToString("\n\n") { it.generateStaticCode() }
     File(moduleFolder, "$variant-static.sql").writeText(staticCode)
     tasks.forEach {
-        val perSubmissionCode = codeGenerator.generateDynamicCode(it)
+        val perSubmissionCode = it.generateDynamicCode(codeGenerator)
         File(moduleFolder, "${it.name}-dynamic.sql").writeText(perSubmissionCode)
     }
 

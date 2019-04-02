@@ -1,29 +1,20 @@
 package com.bardsoftware.sqool.codegen
 
-sealed class Task(val name: String, val robotQuery: String) {
+abstract class Task(val name: String, val robotQuery: String) {
     abstract val resultType: String
-}
 
-class ScalarValueTask(name: String,
-                      robotQuery: String,
-                      private val _resultType: SqlDataType
-) : Task(name, robotQuery) {
-    override val resultType: String
-        get() = _resultType.toString()
-}
+    abstract fun generateStaticCode(): String
 
-class SingleColumnTask(name: String,
-                       robotQuery: String,
-                       val spec: TaskResultColumn
-) : Task(name, robotQuery) {
-    override val resultType: String
-        get() = "TABLE($spec)"
-}
+    abstract fun generateDynamicCode(codeGenerator: CodeGenerator): String
 
-class MultiColumnTask(name: String,
-                      robotQuery: String,
-                      val matcherSpec: MatcherSpec
-) : Task(name, robotQuery) {
-    override val resultType: String
-        get() = matcherSpec.relationSpec.getAllColsList().joinToString(", ", "TABLE(", ")")
+    protected fun generateFunDef(funName: String, returnType: String, body: String, language: Language) = """
+        |CREATE OR REPLACE FUNCTION $funName()
+        |RETURNS $returnType AS $$
+        |$body
+        |$$ LANGUAGE $language;
+        """.trimMargin()
+
+    protected enum class Language {
+        SQL, PLPGSQL
+    }
 }
