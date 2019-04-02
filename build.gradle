@@ -15,6 +15,7 @@ buildscript {
 }
 plugins {
 	id 'com.google.cloud.tools.jib' version '1.0.2'
+
 }
 
 apply plugin: 'application'
@@ -49,7 +50,7 @@ dependencies {
 	// Postgres stuff
 	compile group: 'org.postgresql', name: 'postgresql', version: '42.1.1'
 	compile 'com.zaxxer:HikariCP:2.7.+'
-	compile 'org.jetbrains.exposed:exposed:0.8.+'
+	compile 'org.jetbrains.exposed:exposed:0.13.+'
 
 	// Spark stuff
 	compile "com.sparkjava:spark-kotlin:1.+"

@@ -13,7 +13,7 @@
                 <td><input type="checkbox"></td>
                 <td>{{ t.name }}</td>
                 <td>{{ t.description }}</td>
-                <td>{{ t.result_json }}</td>
+                <td>{{ taskResultSpec(t) }}</td>
             </tr>
         </tbody>
     </table>
@@ -21,7 +21,7 @@
 
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator';
-import {TaskDto} from '../Task';
+import {ColumnSpec, TaskDto} from '../Task';
 
 @Component
 export default class TaskTable extends Vue {
@@ -33,6 +33,11 @@ export default class TaskTable extends Vue {
       }).done((tasks: TaskDto[]) => {
           this.tasks = tasks;
       });
+  }
+
+  public taskResultSpec(task: TaskDto) {
+      return JSON.parse(task.result_json)
+          .map((column: ColumnSpec) => `${column.name} ${column.type}`).join(',');
   }
 }
 </script>
