@@ -1,4 +1,7 @@
-package com.bardsoftware.sqool.codegen
+package com.bardsoftware.sqool.codegen.task
+
+import com.bardsoftware.sqool.codegen.task.spec.MatcherSpec
+import com.bardsoftware.sqool.codegen.task.spec.SqlDataType
 
 class MultiColumnTask(name: String,
                       robotQuery: String,

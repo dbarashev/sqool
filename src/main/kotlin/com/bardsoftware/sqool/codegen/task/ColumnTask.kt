@@ -1,4 +1,6 @@
-package com.bardsoftware.sqool.codegen
+package com.bardsoftware.sqool.codegen.task
+
+import com.bardsoftware.sqool.codegen.CodeGenerator
 
 abstract class ColumnTask(name: String, robotQuery: String) : Task(name, robotQuery) {
     protected val mergedView = "${name}_Merged"

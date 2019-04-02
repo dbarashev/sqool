@@ -1,4 +1,6 @@
-package com.bardsoftware.sqool.codegen
+package com.bardsoftware.sqool.codegen.task
+
+import com.bardsoftware.sqool.codegen.CodeGenerator
 
 abstract class Task(val name: String, val robotQuery: String) {
     protected val robotQueryFunName = "${name}_Robot"

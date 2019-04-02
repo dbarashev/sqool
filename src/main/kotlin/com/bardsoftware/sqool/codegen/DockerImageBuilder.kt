@@ -1,5 +1,6 @@
 package com.bardsoftware.sqool.codegen
 
+import com.bardsoftware.sqool.codegen.task.Task
 import com.google.cloud.tools.jib.api.Containerizer
 import com.google.cloud.tools.jib.api.DockerDaemonImage
 import com.google.cloud.tools.jib.api.Jib

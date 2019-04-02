@@ -1,4 +1,4 @@
-package com.bardsoftware.sqool.codegen
+package com.bardsoftware.sqool.codegen.task.spec
 
 class MatcherSpec(val relationSpec: RelationSpec,
                   val wrongKeyColsProjMessage: String = "Множество кортежей ${relationSpec.keyCols

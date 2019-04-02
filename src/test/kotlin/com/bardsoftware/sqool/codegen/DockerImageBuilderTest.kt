@@ -1,5 +1,8 @@
 package com.bardsoftware.sqool.codegen
 
+import com.bardsoftware.sqool.codegen.task.SingleColumnTask
+import com.bardsoftware.sqool.codegen.task.spec.SqlDataType
+import com.bardsoftware.sqool.codegen.task.spec.TaskResultColumn
 import org.junit.jupiter.api.Test
 
 import org.junit.jupiter.api.Assertions.*

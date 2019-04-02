@@ -1,4 +1,4 @@
-package com.bardsoftware.sqool.codegen
+package com.bardsoftware.sqool.codegen.task.spec
 
 class RelationSpec(val keyCols: List<TaskResultColumn>,
                    val cols: List<TaskResultColumn> = emptyList()

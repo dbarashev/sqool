@@ -1,4 +1,6 @@
-package com.bardsoftware.sqool.codegen
+package com.bardsoftware.sqool.codegen.task
+
+import com.bardsoftware.sqool.codegen.task.spec.TaskResultColumn
 
 class SingleColumnTask(name: String,
                        robotQuery: String,

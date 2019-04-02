@@ -1,5 +1,10 @@
 package com.bardsoftware.sqool.codegen
 
+import com.bardsoftware.sqool.codegen.task.*
+import com.bardsoftware.sqool.codegen.task.spec.MatcherSpec
+import com.bardsoftware.sqool.codegen.task.spec.RelationSpec
+import com.bardsoftware.sqool.codegen.task.spec.SqlDataType
+import com.bardsoftware.sqool.codegen.task.spec.TaskResultColumn
 import org.junit.jupiter.api.Test
 
 import org.junit.jupiter.api.Assertions.*
