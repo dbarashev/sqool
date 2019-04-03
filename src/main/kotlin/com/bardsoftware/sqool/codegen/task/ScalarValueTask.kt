@@ -5,10 +5,10 @@ import com.bardsoftware.sqool.codegen.task.spec.SqlDataType
 
 class ScalarValueTask(name: String,
                       robotQuery: String,
-                      private val _resultType: SqlDataType
+                      private val resultTypeEnum: SqlDataType
 ) : Task(name, robotQuery) {
     override val resultType: String
-        get() = _resultType.toString()
+        get() = resultTypeEnum.toString()
 
     override fun generateDynamicCode(codeGenerator: CodeGenerator): String = """
         |${codeGenerator.generateDynamicCodeHeader()}
