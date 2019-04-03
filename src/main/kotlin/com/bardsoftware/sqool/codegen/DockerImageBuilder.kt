@@ -1,5 +1,6 @@
 package com.bardsoftware.sqool.codegen
 
+import com.bardsoftware.sqool.codegen.task.Task
 import com.google.cloud.tools.jib.api.Containerizer
 import com.google.cloud.tools.jib.api.DockerDaemonImage
 import com.google.cloud.tools.jib.api.Jib
@@ -19,10 +20,10 @@ fun buildDockerImage(
 
     val codeGenerator = CodeGenerator(module, schemaPath)
     val staticCode = codeGenerator.generateStaticCodeHeader() + "\n\n" +
-            tasks.joinToString("\n\n") { codeGenerator.generateStaticCode(it) }
+            tasks.joinToString("\n\n") { it.generateStaticCode() }
     File(moduleFolder, "$variant-static.sql").writeText(staticCode)
     tasks.forEach {
-        val perSubmissionCode = codeGenerator.generateDynamicCode(it)
+        val perSubmissionCode = it.generateDynamicCode(codeGenerator)
         File(moduleFolder, "${it.name}-dynamic.sql").writeText(perSubmissionCode)
     }
 

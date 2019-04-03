@@ -1,5 +1,10 @@
 package com.bardsoftware.sqool.codegen
 
+import com.bardsoftware.sqool.codegen.task.*
+import com.bardsoftware.sqool.codegen.task.spec.MatcherSpec
+import com.bardsoftware.sqool.codegen.task.spec.RelationSpec
+import com.bardsoftware.sqool.codegen.task.spec.SqlDataType
+import com.bardsoftware.sqool.codegen.task.spec.TaskResultColumn
 import org.junit.jupiter.api.Test
 
 import org.junit.jupiter.api.Assertions.*
@@ -99,8 +104,8 @@ class CodeGeneratorTest {
         val generator = CodeGenerator("cw1", "/hse/cw1/schema.sql")
         val spec = TaskResultColumn("id", SqlDataType.INT)
         val task = SingleColumnTask("Task3", "SELECT 11;", spec)
-        assertEquals(expectedStaticCode, generator.generateStaticCode(task))
-        assertEquals(expectedPerSubmissionCode, generator.generateDynamicCode(task))
+        assertEquals(expectedStaticCode, task.generateStaticCode())
+        assertEquals(expectedPerSubmissionCode, task.generateDynamicCode(generator))
     }
 
     @Test
@@ -159,8 +164,8 @@ class CodeGeneratorTest {
 
         val generator = CodeGenerator("cw2", "/hse/cw2/schema.sql")
         val task = ScalarValueTask("Task12", "SELECT 'Some text';", SqlDataType.TEXT)
-        assertEquals(expectedStaticCode, generator.generateStaticCode(task))
-        assertEquals(expectedPerSubmissionCode, generator.generateDynamicCode(task))
+        assertEquals(expectedStaticCode, task.generateStaticCode())
+        assertEquals(expectedPerSubmissionCode, task.generateDynamicCode(generator))
     }
 
     @Test
@@ -268,7 +273,7 @@ class CodeGeneratorTest {
 
         val generator = CodeGenerator("cw3", "/cw3/schema.sql")
         val task = MultiColumnTask("Task05", "SELECT 'ship', 1, 10, 500::DOUBLE PRECISION, 'prod'", matcherSpec)
-        assertEquals(expectedStaticCode, generator.generateStaticCode(task))
-        assertEquals(expectedPerSubmissionCode, generator.generateDynamicCode(task))
+        assertEquals(expectedStaticCode, task.generateStaticCode())
+        assertEquals(expectedPerSubmissionCode, task.generateDynamicCode(generator))
     }
 }
