@@ -9,12 +9,12 @@
         </tr>
         </thead>
         <tbody>
-        <tr v-for="t in tasks">
-            <td><input type="checkbox" :value="t" v-model=selectedTasks></td>
-            <td>{{ t.name }}</td>
-            <td>{{ t.description }}</td>
-            <td>{{ taskResultSpec(t) }}</td>
-        </tr>
+            <tr v-for="t in tasks">
+                <td><input type="checkbox" :value="t" v-model=selectedTasks></td>
+                <td>{{ t.name }}</td>
+                <td>{{ t.description }}</td>
+                <td>{{ taskResultSpec(t) }}</td>
+            </tr>
         </tbody>
     </table>
 </template>
