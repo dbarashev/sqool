@@ -1,7 +1,7 @@
 <template>
     <div class="d-flex">
         <button type="button" class="btn btn-raised btn-danger mr-3" @click="createNewTask">Новая Задача</button>
-        <button type="button" class="btn btn-secondary">Построить вариант</button>
+        <button type="button" class="btn btn-secondary" @click="buildVariant">Построить вариант</button>
     </div>
 </template>
 
@@ -28,6 +28,10 @@ export default class TaskToolbar extends Vue {
         }).then(() => {
             this.taskProperties().hide();
         });
+    }
+
+    public buildVariant() {
+        this.$root.$emit('buildVariant')
     }
 }
 </script>

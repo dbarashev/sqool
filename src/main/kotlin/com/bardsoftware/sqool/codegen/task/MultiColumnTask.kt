@@ -3,8 +3,7 @@ package com.bardsoftware.sqool.codegen.task
 import com.bardsoftware.sqool.codegen.task.spec.MatcherSpec
 import com.bardsoftware.sqool.codegen.task.spec.SqlDataType
 
-class MultiColumnTask(name: String,
-                      robotQuery: String,
+class MultiColumnTask(name: String, robotQuery: String,
                       private val matcherSpec: MatcherSpec
 ) : ColumnTask(name, robotQuery) {
     override val resultType: String

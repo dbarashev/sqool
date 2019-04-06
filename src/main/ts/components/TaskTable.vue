@@ -9,12 +9,12 @@
         </tr>
         </thead>
         <tbody>
-            <tr v-for="t in tasks">
-                <td><input type="checkbox"></td>
-                <td>{{ t.name }}</td>
-                <td>{{ t.description }}</td>
-                <td>{{ taskResultSpec(t) }}</td>
-            </tr>
+        <tr v-for="t in tasks">
+            <td><input type="checkbox" :value="t" v-model=selectedTasks></td>
+            <td>{{ t.name }}</td>
+            <td>{{ t.description }}</td>
+            <td>{{ taskResultSpec(t) }}</td>
+        </tr>
         </tbody>
     </table>
 </template>
@@ -26,6 +26,7 @@ import {ColumnSpec, TaskDto} from '../Task';
 @Component
 export default class TaskTable extends Vue {
   public tasks: TaskDto[] = [];
+  public selectedTasks: TaskDto[] = [];
 
   public mounted() {
       $.ajax({
@@ -33,12 +34,35 @@ export default class TaskTable extends Vue {
       }).done((tasks: TaskDto[]) => {
           this.tasks = tasks;
       });
+      this.$root.$on('buildVariant', () => {
+          this.buildVariant()
+      });
   }
 
   public taskResultSpec(task: TaskDto) {
       return JSON.parse(task.result_json)
           .map((column: ColumnSpec) => `${column.name} ${column.type}`).join(',');
   }
+
+  public buildVariant() {
+      const jsonTasks = this.selectedTasks.map(task => ({
+            name: task.name,
+            keyAttributes: JSON.parse(task.result_json),
+            attributes: [],
+            solution: "Put teacher's query here"
+          })
+      );
+      $.ajax('/admin/variant/new', {
+          method: 'POST',
+          data: {
+              course: "course",
+              module: "module",
+              variant: "variant",
+              schema: "schema",
+              tasks: JSON.stringify(jsonTasks)
+          },
+      });
+    }
 }
 </script>
 

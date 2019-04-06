@@ -3,8 +3,7 @@ package com.bardsoftware.sqool.codegen.task
 import com.bardsoftware.sqool.codegen.CodeGenerator
 import com.bardsoftware.sqool.codegen.task.spec.SqlDataType
 
-class ScalarValueTask(name: String,
-                      robotQuery: String,
+class ScalarValueTask(name: String, robotQuery: String,
                       private val resultTypeEnum: SqlDataType
 ) : Task(name, robotQuery) {
     override val resultType: String
