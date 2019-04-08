@@ -4,48 +4,69 @@ import com.bardsoftware.sqool.codegen.task.spec.MatcherSpec
 import com.bardsoftware.sqool.codegen.task.spec.RelationSpec
 import com.bardsoftware.sqool.codegen.task.spec.SqlDataType
 import com.bardsoftware.sqool.codegen.task.spec.TaskResultColumn
-import com.google.gson.JsonArray
-import com.google.gson.JsonDeserializationContext
-import com.google.gson.JsonDeserializer
-import com.google.gson.JsonElement
-import java.lang.reflect.Type
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.core.type.TypeReference
+import com.fasterxml.jackson.databind.JsonMappingException
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.exc.InvalidDefinitionException
+import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException
+import java.lang.Exception
+import java.lang.IllegalArgumentException
 
-class TaskJsonDeserializer : JsonDeserializer<Task> {
-    override fun deserialize(task: JsonElement, typeOfSrc: Type, context: JsonDeserializationContext): Task {
-        val taskObject = task.asJsonObject
-        val name = taskObject["name"].asString
-        val robotQuery = taskObject["solution"].asString
-        val keyAttributes = taskObject["keyAttributes"].asJsonArray
+fun deserializeJsonTasks(jsonArray: String): List<Task> {
+    val mapper = ObjectMapper()
+    return try {
+        val task = mapper.readValue<List<TaskDto>>(jsonArray, object: TypeReference<List<TaskDto>>() {})
+        task.map { it.toTask() }
+    } catch (exception: TypeCastException) {
+        throw TaskDeserializationException("Attribute's name isn't specified", exception)
+    } catch (exception: UnrecognizedPropertyException) {
+        throw TaskDeserializationException("Unrecognized task field specified", exception)
+    } catch (exception: InvalidDefinitionException) {
+        throw TaskDeserializationException("Required task filed is missing", exception)
+    } catch (exception: JsonMappingException) {
+        throw TaskDeserializationException("Malformed JSON", exception)
+    } catch (exception: IllegalArgumentException) {
+        throw TaskDeserializationException(exception.message, exception)
+    }
+}
 
-        if(keyAttributes.size() == 1 && !keyAttributes[0].asJsonObject.has("name")) {
-            val type = keyAttributes[0].asJsonObject["type"].asString
-            return ScalarValueTask(name, robotQuery, SqlDataType.getEnum(type))
+class TaskDeserializationException(message: String?, cause: Throwable) : Exception(message, cause)
+
+data class TaskDto(@JsonProperty(value = "name") val name: String,
+                   @JsonProperty(value = "solution") val solution: String,
+                   @JsonProperty(value = "keyAttributes") val keyAttributes: List<AttributeDto>,
+                   @JsonProperty(value = "attributes") val attributes: List<AttributeDto>
+) {
+    private constructor() : this("", "", emptyList(), emptyList())
+
+    fun toTask(): Task {
+        if(keyAttributes.size == 1 && keyAttributes[0].name == null) {
+            return ScalarValueTask(name, solution, SqlDataType.getEnum(keyAttributes[0].type))
         }
 
-        val attributes = taskObject["attributes"].asJsonArray
-        if(keyAttributes.size() == 1 && attributes.size()== 0) {
-            val spec = keyAttributes[0].asJsonObject
-            val type = spec["type"].asString
-            val column = TaskResultColumn(spec["name"].asString, SqlDataType.getEnum(type))
-            return SingleColumnTask(name, robotQuery, column)
+        if(keyAttributes.size == 1 && attributes.isEmpty()) {
+            val type = SqlDataType.getEnum(keyAttributes[0].type)
+            val column = TaskResultColumn(keyAttributes[0].name as String, type)
+            return SingleColumnTask(name, solution, column)
         }
 
-        return buildMultiColumnTask(name, robotQuery, parseSpecList(keyAttributes), parseSpecList(attributes))
+        return buildMultiColumnTask()
     }
 
-    private fun parseSpecList(jsonArray: JsonArray): List<TaskResultColumn> = jsonArray
-            .map { it.asJsonObject }
-            .map {
-                val type = it["type"].asString
-                TaskResultColumn(it["name"].asString, SqlDataType.getEnum(type))
-            }
-
-    private fun buildMultiColumnTask(name: String, robotQuery: String,
-                                     keyCols: List<TaskResultColumn>,
-                                     cols: List<TaskResultColumn>
-    ): Task {
-        val relationSpec = RelationSpec(keyCols, cols)
+    private fun buildMultiColumnTask(): Task {
+        val keyAttributes = keyAttributes.map { it.toTaskResultColumn() }
+        val attributes = attributes.map { it.toTaskResultColumn() }
+        val relationSpec = RelationSpec(keyAttributes, attributes)
         val matcherSpec = MatcherSpec(relationSpec)
-        return MultiColumnTask(name, robotQuery, matcherSpec)
+        return MultiColumnTask(name, solution, matcherSpec)
+    }
+
+    data class AttributeDto(@JsonProperty(value = "name") val name: String?,
+                            @JsonProperty(value = "type") val type: String
+    ) {
+        private constructor() : this(null, "")
+
+        fun toTaskResultColumn(): TaskResultColumn = TaskResultColumn(name as String, SqlDataType.getEnum(type))
     }
 }

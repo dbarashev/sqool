@@ -9,10 +9,12 @@
 import {Component, Inject, Vue} from 'vue-property-decorator';
 import {TaskDto} from '../Task';
 import TaskPropertiesModal from './TaskPropertiesModal.vue';
+import TaskTable from "./TaskTable.vue";
 
 @Component
 export default class TaskToolbar extends Vue {
     @Inject() public readonly taskProperties!: () => TaskPropertiesModal;
+    @Inject() public readonly taskTable!: () => TaskTable;
 
     public createNewTask() {
         const newTask = new TaskDto(-1, '000', '', '');
@@ -31,7 +33,7 @@ export default class TaskToolbar extends Vue {
     }
 
     public buildVariant() {
-        this.$root.$emit('buildVariant')
+        this.taskTable().buildVariant();
     }
 }
 </script>

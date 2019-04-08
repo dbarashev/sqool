@@ -34,9 +34,6 @@ export default class TaskTable extends Vue {
       }).done((tasks: TaskDto[]) => {
           this.tasks = tasks;
       });
-      this.$root.$on('buildVariant', () => {
-          this.buildVariant()
-      });
   }
 
   public taskResultSpec(task: TaskDto) {
