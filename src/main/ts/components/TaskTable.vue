@@ -45,7 +45,7 @@ export default class TaskTable extends Vue {
       const jsonTasks = this.selectedTasks.map(task => ({
             name: task.name,
             keyAttributes: JSON.parse(task.result_json),
-            attributes: [],
+            nonKeyAttributes: [],
             solution: "Put teacher's query here"
           })
       );

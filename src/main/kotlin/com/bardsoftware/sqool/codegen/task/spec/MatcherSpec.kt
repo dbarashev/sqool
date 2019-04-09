@@ -25,7 +25,7 @@ class MatcherSpec(val relationSpec: RelationSpec,
         if (relationSpec.keyCols.contains(column)) {
             throw IllegalArgumentException("Non-key attributes can't have a difference error")
         }
-        if (!relationSpec.cols.contains(column)) {
+        if (!relationSpec.nonKeyCols.contains(column)) {
             throw IllegalArgumentException("No such non-key attribute in the relation")
         }
     }

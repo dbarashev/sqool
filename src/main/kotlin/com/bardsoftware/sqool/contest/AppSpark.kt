@@ -190,9 +190,8 @@ fun main(args: Array<String>) {
   val adminContestAllHandler = ContestAllHandler(dataSource)
   val adminTaskAllHandler = TaskAllHandler(flags)
   val adminTaskNewHandler = TaskNewHandler(flags)
-  val challengeHandler = ChallengeHandler()
   val adminVariantNewHandler = VariantNewHandler()
-
+  val challengeHandler = ChallengeHandler()
 
   ignite().apply {
     port(8080)
@@ -206,8 +205,6 @@ fun main(args: Array<String>) {
           "name"        to TaskNewArgs::name,
           "description" to TaskNewArgs::description
       ))
-      GET("/"          TEMPLATE "index.ftl")
-      GET("/dashboard" TEMPLATE "dashboard.ftl")
       POST("/admin/variant/new" BY adminVariantNewHandler ARGS mapOf(
           "course"  to VariantNewArgs::course,
           "module"  to VariantNewArgs::module,
@@ -215,6 +212,8 @@ fun main(args: Array<String>) {
           "schema"  to VariantNewArgs::schema,
           "tasks"   to VariantNewArgs::tasks
       ))
+      GET("/"          TEMPLATE "index.ftl")
+      GET("/dashboard" TEMPLATE "dashboard.ftl")
     }
     get("/login") {
       freemarker.render(ModelAndView(emptyMap<String, String>(), "login.ftl"))

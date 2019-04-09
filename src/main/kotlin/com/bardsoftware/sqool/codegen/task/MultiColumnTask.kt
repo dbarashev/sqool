@@ -13,7 +13,7 @@ class MultiColumnTask(name: String, robotQuery: String,
         val userQueryMock = matcherSpec.relationSpec.getAllColsList().joinToString(", ", "SELECT ") { "NULL::${it.type}" }
         val keyColNamesList = matcherSpec.relationSpec.keyCols.map { it.name }
 
-        val maxAbsDiffChecks = matcherSpec.relationSpec.cols
+        val maxAbsDiffChecks = matcherSpec.relationSpec.nonKeyCols
                 .filter { it.type.kind != SqlDataType.Kind.NON_NUMERIC }
                 .joinToString("\n\n") {
                     val diffVar = if (it.type.kind == SqlDataType.Kind.INTEGER) "max_abs_int_diff" else "max_abs_decimal_diff"

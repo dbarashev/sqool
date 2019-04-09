@@ -11,7 +11,16 @@ import org.junit.jupiter.api.Test
 class TaskJsonDeserializerTest {
     @Test
     fun testDeserializeScalarValueTask() {
-        val json = "[{\"name\":\"task1\", \"keyAttributes\":[{\"type\":\"INT\"}],\"attributes\":[],\"solution\":\"solution\"}]"
+        val json = """
+            [{
+                "name":"task1",
+                "keyAttributes":[
+                    {"type":"INT"}
+                ],
+                "nonKeyAttributes":[],
+                "solution":"solution"
+            }]
+            """
         val expectedTask = ScalarValueTask("task1", "solution", SqlDataType.INT)
 
         val tasks = deserializeJsonTasks(json)
@@ -21,8 +30,16 @@ class TaskJsonDeserializerTest {
 
     @Test
     fun testDeserializeSingleColumnTask() {
-        val json = "[{\"name\":\"task1\", \"keyAttributes\":[{\"name\":\"id\", \"type\":\"DOUBLE PRECISION\"}]," +
-                "\"attributes\":[],\"solution\":\"solution\"}]"
+        val json = """
+            [{
+                "name":"task1",
+                "keyAttributes":[
+                    {"name":"id", "type":"DOUBLE PRECISION"}
+                ],
+                "nonKeyAttributes":[],
+                "solution":"solution"
+            }]
+            """
         val expectedTask = SingleColumnTask(
                 "task1", "solution", TaskResultColumn("id", SqlDataType.DOUBLE_PRECISION))
 
@@ -33,8 +50,19 @@ class TaskJsonDeserializerTest {
 
     @Test
     fun testDeserializeMultiColumnTask() {
-        val json = "[{\"name\":\"task1\", \"keyAttributes\":[{\"name\":\"id\", \"type\":\"DOUBLE PRECISION\"}]," +
-                "\"attributes\":[{\"name\":\"text\", \"type\":\"TEXT\"}, {\"name\":\"num\", \"type\":\"INT\"}],\"solution\":\"solution\"}]"
+        val json = """
+            [{
+                "name":"task1",
+                "keyAttributes":[
+                    {"name":"id", "type":"DOUBLE PRECISION"}
+                ],
+                "nonKeyAttributes":[
+                    {"name":"text", "type":"TEXT"},
+                    {"name":"num", "type":"INT"}
+                ],
+                "solution":"solution"
+            }]
+            """
         val relationSpec = RelationSpec(
                 listOf(TaskResultColumn("id", SqlDataType.DOUBLE_PRECISION)),
                 listOf(TaskResultColumn("text", SqlDataType.TEXT), TaskResultColumn("num", SqlDataType.INT)))
@@ -48,9 +76,24 @@ class TaskJsonDeserializerTest {
 
     @Test
     fun testDeserializeMultipleTask() {
-        val json = "[{\"name\":\"task1\", \"keyAttributes\":[{\"type\":\"INT\"}],\"attributes\":[],\"solution\":\"solution\"}," +
-                "{\"name\":\"task1\", \"keyAttributes\":[{\"name\":\"id\", \"type\":\"DOUBLE PRECISION\"}]," +
-                "\"attributes\":[],\"solution\":\"solution\"}]"
+        val json = """
+            [{
+                "name":"task1",
+                "keyAttributes":[
+                    {"type":"INT"}
+                ],
+                "nonKeyAttributes":[],
+                "solution":"solution"
+            },
+            {
+                "name":"task1",
+                "keyAttributes":[
+                    {"name":"id", "type":"DOUBLE PRECISION"}
+                ],
+                "nonKeyAttributes":[],
+                "solution":"solution"
+            }]
+            """
         val expectedTask1 = ScalarValueTask("task1", "solution", SqlDataType.INT)
         val expectedTask2 = SingleColumnTask("task1", "solution", TaskResultColumn("id", SqlDataType.DOUBLE_PRECISION))
 
@@ -62,42 +105,71 @@ class TaskJsonDeserializerTest {
 
     @Test
     fun testUnexpectedField() {
-        val json = "[{\"name\":\"task1\", \"field\":\"task1\", \"keyAttributes\":[{\"type\":\"INT\"}]," +
-                "\"attributes\":[],\"solution\":\"solution\"}]"
-        val exception = assertThrows(TaskDeserializationException::class.java) {
+        val json = """
+            [{
+                "name":"task1",
+                "field":"task1",
+                "keyAttributes":[
+                    {"type":"INT"}
+                ],
+                "nonKeyAttributes":[],
+                "solution":"solution"
+            }]
+            """
+        assertThrows(TaskDeserializationException::class.java) {
             deserializeJsonTasks(json)
         }
-        assertEquals("Unrecognized task field specified", exception.message)
     }
 
     @Test
     fun testMissingField() {
-        val json = "[{\"keyAttributes\":[{\"type\":\"INT\"}]," +
-                "\"attributes\":[],\"solution\":\"solution\"}]"
-        val exception = assertThrows(TaskDeserializationException::class.java) {
+        val json = """
+            [{
+                "keyAttributes":[
+                    {"type":"INT"}
+                ],
+                "nonKeyAttributes":[],
+                "solution":"solution"
+            }]
+            """
+        assertThrows(TaskDeserializationException::class.java) {
             deserializeJsonTasks(json)
         }
-        assertEquals("Required task filed is missing", exception.message)
     }
 
     @Test
     fun testMalformedJson() {
-        val json = "[{\"name\":\"task1\" \"keyAttributes\":[{\"type\":\"INT\"}]," +
-                "\"attributes\":[],\"solution\":\"solution\"}]"
-        val exception = assertThrows(TaskDeserializationException::class.java) {
+        val json = """
+            [{
+                "name":"task1"
+                "keyAttributes":[
+                    {"type":"INT"}
+                ],
+                "nonKeyAttributes":[],
+                "solution":"solution"
+            }]
+            """
+        assertThrows(TaskDeserializationException::class.java) {
             deserializeJsonTasks(json)
         }
-        assertEquals("Malformed JSON", exception.message)
     }
 
     @Test
     fun testMissingAttributeName() {
-        val json = "[{\"name\":\"task1\", \"keyAttributes\":[{\"name\":\"id\",\"type\":\"INT\"}, {\"type\":\"INT\"}]," +
-                "\"attributes\":[],\"solution\":\"solution\"}]"
-        val exception = assertThrows(TaskDeserializationException::class.java) {
+        val json = """
+            [{
+                "name":"task1",
+                "keyAttributes":[
+                    {"name":"id", "type":"DOUBLE PRECISION"}
+                    {"type":"INT"}
+                ],
+                "nonKeyAttributes":[],
+                "solution":"solution"
+            }]
+            """
+        assertThrows(TaskDeserializationException::class.java) {
             deserializeJsonTasks(json)
         }
-        assertEquals("Attribute's name isn't specified", exception.message)
     }
 
     private fun Task.equalsTo(task: Task): Boolean {
