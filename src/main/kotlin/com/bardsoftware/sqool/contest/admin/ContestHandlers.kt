@@ -38,7 +38,7 @@ object Contests : Table("Contest.ContestDto") {
   }
 }
 
-class ContestAllHandler() : RequestHandler<RequestArgs>() {
+class ContestAllHandler : RequestHandler<RequestArgs>() {
   override fun handle(http: HttpApi, argValues: RequestArgs): HttpResponse {
     return transaction {
       http.json(Contests.selectAll().map(Contests::asJson).toList())
@@ -52,7 +52,7 @@ class ContestAllHandler() : RequestHandler<RequestArgs>() {
 
 data class ContestNewArgs(var code: String, var name: String, var start_ts: String, var end_ts: String) : RequestArgs()
 
-class ContestNewHadler : RequestHandler<ContestNewArgs>() {
+class ContestNewHandler : RequestHandler<ContestNewArgs>() {
   override fun args(): ContestNewArgs = ContestNewArgs("", "", "", "")
 
   override fun handle(http: HttpApi, argValues: ContestNewArgs): HttpResponse {

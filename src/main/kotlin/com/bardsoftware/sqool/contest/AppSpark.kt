@@ -187,7 +187,7 @@ fun main(args: Array<String>) {
   }
 
   val adminContestAllHandler = ContestAllHandler()
-  val adminContestNewHandler = ContestNewHadler()
+  val adminContestNewHandler = ContestNewHandler()
   val adminTaskAllHandler = TaskAllHandler(flags)
   val adminTaskNewHandler = TaskNewHandler(flags)
   val challengeHandler = ChallengeHandler()
