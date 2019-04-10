@@ -1,6 +1,5 @@
 package com.bardsoftware.sqool.codegen.task
 
-import com.bardsoftware.sqool.codegen.CodeGenerator
 import com.bardsoftware.sqool.codegen.task.spec.MatcherSpec
 import com.bardsoftware.sqool.codegen.task.spec.RelationSpec
 import com.bardsoftware.sqool.codegen.task.spec.SqlDataType
@@ -25,7 +24,7 @@ class TaskJsonDeserializerTest {
 
         val tasks = deserializeJsonTasks(json)
         assertEquals(1, tasks.size)
-        assertTrue(expectedTask.equalsTo(tasks[0]))
+        assertEquals(expectedTask, tasks[0])
     }
 
     @Test
@@ -45,7 +44,7 @@ class TaskJsonDeserializerTest {
 
         val tasks = deserializeJsonTasks(json)
         assertEquals(1, tasks.size)
-        assertTrue(expectedTask.equalsTo(tasks[0]))
+        assertEquals(expectedTask, tasks[0])
     }
 
     @Test
@@ -71,7 +70,7 @@ class TaskJsonDeserializerTest {
 
         val tasks = deserializeJsonTasks(json)
         assertEquals(1, tasks.size)
-        assertTrue(expectedTask.equalsTo(tasks[0]))
+        assertEquals(expectedTask, tasks[0])
     }
 
     @Test
@@ -99,8 +98,8 @@ class TaskJsonDeserializerTest {
 
         val tasks = deserializeJsonTasks(json)
         assertEquals(2, tasks.size)
-        assertTrue(expectedTask1.equalsTo(tasks[0]))
-        assertTrue(expectedTask2.equalsTo(tasks[1]))
+        assertEquals(expectedTask1, tasks[0])
+        assertEquals(expectedTask2, tasks[1])
     }
 
     @Test
@@ -170,11 +169,5 @@ class TaskJsonDeserializerTest {
         assertThrows(TaskDeserializationException::class.java) {
             deserializeJsonTasks(json)
         }
-    }
-
-    private fun Task.equalsTo(task: Task): Boolean {
-        val generator = CodeGenerator("hse2019", "/workspace/hse2019/cw2/schema2.sql")
-        return this.generateDynamicCode(generator) == task.generateDynamicCode(generator)
-                && this.generateStaticCode() == task.generateStaticCode()
     }
 }

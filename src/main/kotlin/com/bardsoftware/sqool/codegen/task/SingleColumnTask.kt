@@ -52,4 +52,7 @@ class SingleColumnTask(name: String, robotQuery: String,
             |DROP FUNCTION $userQueryFunName() CASCADE;
             """.trimMargin()
     }
+
+    override fun equals(other: Any?) =
+            other is SingleColumnTask && other.spec == spec && super.equals(other)
 }

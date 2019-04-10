@@ -80,4 +80,7 @@ class MultiColumnTask(name: String, robotQuery: String,
         |) AS T;
         |RETURN NEXT '$failedCheckMessage ' || $maxAbsDiffVar::TEXT;
         """.trimIndent()
+
+    override fun equals(other: Any?) =
+            other is MultiColumnTask && other.matcherSpec == matcherSpec && super.equals(other)
 }

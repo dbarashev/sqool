@@ -29,5 +29,9 @@ class MatcherSpec(val relationSpec: RelationSpec,
             throw IllegalArgumentException("No such non-key attribute in the relation")
         }
     }
+
+    override fun equals(other: Any?) =
+            other is MatcherSpec && other.wrongKeyColsProjMessage == wrongKeyColsProjMessage &&
+                    other.rightKeyColsProjMessage == rightKeyColsProjMessage && other.relationSpec == relationSpec
 }
 

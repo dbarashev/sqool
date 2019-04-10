@@ -18,6 +18,9 @@ abstract class Task(val name: String, protected val robotQuery: String) {
         |$$ LANGUAGE $language;
         """.trimMargin()
 
+    override fun equals(other: Any?) =
+            other is Task && other.name == name && other.robotQuery == robotQuery
+
     protected enum class Language {
         SQL, PLPGSQL
     }

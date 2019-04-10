@@ -15,4 +15,7 @@ class RelationSpec(val keyCols: List<TaskResultColumn>,
     }
 
     fun getAllColsList(): List<TaskResultColumn> = keyCols + nonKeyCols
+
+    override fun equals(other: Any?) =
+            other is RelationSpec && other.keyCols == keyCols && other.nonKeyCols == nonKeyCols
 }
