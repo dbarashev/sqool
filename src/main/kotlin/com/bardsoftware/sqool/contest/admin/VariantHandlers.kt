@@ -26,6 +26,7 @@ class VariantNewHandler : RequestHandler<VariantNewArgs>() {
                         tasks)
                 http.ok()
             } catch (exception: TaskDeserializationException) {
+                exception.printStackTrace()
                 http.error(400, exception.message, exception)
             }
 }

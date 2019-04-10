@@ -26,6 +26,6 @@ class DockerImageBuilderTest {
                 "/workspace", "/workspace/hse2019", "/workspace/hse2019/cw2",
                 "/workspace/hse2019/cw2/Task3-dynamic.sql", "/workspace/hse2019/cw2/variant3-static.sql"
         )
-        assertIterableEquals(expectedFolders, folders)
+        assertEquals(expectedFolders.sorted(), folders.sorted())
     }
 }

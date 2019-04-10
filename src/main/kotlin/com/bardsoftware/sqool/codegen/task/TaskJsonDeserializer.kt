@@ -20,13 +20,17 @@ fun deserializeJsonTasks(jsonArray: String): List<Task> {
     } catch (exception: Exception) {
         when (exception) {
             is UnrecognizedPropertyException, is InvalidDefinitionException, is JsonMappingException,
-            is TypeCastException, is IllegalArgumentException -> throw throw TaskDeserializationException(exception)
+            is TypeCastException, is IllegalArgumentException -> throw TaskDeserializationException(exception.message, exception)
             else -> throw exception
         }
     }
 }
 
-class TaskDeserializationException(cause: Throwable?) : Exception(cause)
+class TaskDeserializationException : Exception {
+    constructor(message: String?, cause: Throwable) : super(message, cause)
+
+    constructor(message: String?) : super(message)
+}
 
 class TaskDto {
     val name = ""
@@ -36,16 +40,16 @@ class TaskDto {
 
     fun toTask(): Task {
         if (!isValid()) {
-            throw TaskDeserializationException(null)
+            throw TaskDeserializationException("Invalid task json")
         }
 
-        if (keyAttributes.size == 1 && keyAttributes[0].name == null) {
+        if (keyAttributes.size == 1 && keyAttributes[0].name.isEmpty()) {
             return ScalarValueTask(name, solution, SqlDataType.getEnum(keyAttributes[0].type))
         }
 
         if (keyAttributes.size == 1 && nonKeyAttributes.isEmpty()) {
             val type = SqlDataType.getEnum(keyAttributes[0].type)
-            val column = TaskResultColumn(keyAttributes[0].name as String, type)
+            val column = TaskResultColumn(keyAttributes[0].name, type)
             return SingleColumnTask(name, solution, column)
         }
 
@@ -63,9 +67,9 @@ class TaskDto {
     }
 
     class AttributeDto {
-        val name: String? = null
+        val name: String = ""
         val type: String = ""
 
-        fun toTaskResultColumn(): TaskResultColumn = TaskResultColumn(name as String, SqlDataType.getEnum(type))
+        fun toTaskResultColumn(): TaskResultColumn = TaskResultColumn(name, SqlDataType.getEnum(type))
     }
 }
