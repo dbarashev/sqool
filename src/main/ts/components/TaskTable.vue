@@ -49,15 +49,12 @@ export default class TaskTable extends Vue {
             solution: "Put teacher's query here"
           })
       );
-      $.ajax('/admin/variant/new', {
-          method: 'POST',
-          data: {
-              course: "course",
-              module: "module",
-              variant: "variant",
-              schema: "schema",
-              tasks: JSON.stringify(jsonTasks)
-          },
+      $.post('/admin/variant/new', {
+          course: "course",
+          module: "module",
+          variant: "variant",
+          schema: "schema",
+          tasks: JSON.stringify(jsonTasks)
       });
     }
 }
