@@ -106,7 +106,7 @@ CREATE TABLE Contest.GradingDetails(
 CREATE TABLE Contest(
     code TEXT NOT NULL PRIMARY KEY,
     name TEXT NOT NULL,
-    dates TSTZRANGE
+    dates TSTZRANGE NOT NULL DEFAULT tstzrange(NOW(), NOW() + interval '1h')
 );
 
 CREATE OR REPLACE VIEW ContestDto AS

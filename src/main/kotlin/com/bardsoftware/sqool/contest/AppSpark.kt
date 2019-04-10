@@ -1,9 +1,6 @@
 package com.bardsoftware.sqool.contest
 
-import com.bardsoftware.sqool.contest.admin.ContestAllHandler
-import com.bardsoftware.sqool.contest.admin.TaskAllHandler
-import com.bardsoftware.sqool.contest.admin.TaskNewArgs
-import com.bardsoftware.sqool.contest.admin.TaskNewHandler
+import com.bardsoftware.sqool.contest.admin.*
 import com.google.common.io.ByteStreams
 import com.google.common.net.HttpHeaders
 import com.google.common.net.MediaType
@@ -189,7 +186,8 @@ fun main(args: Array<String>) {
     }
   }
 
-  val adminContestAllHandler = ContestAllHandler(dataSource)
+  val adminContestAllHandler = ContestAllHandler()
+  val adminContestNewHandler = ContestNewHandler()
   val adminTaskAllHandler = TaskAllHandler(flags)
   val adminTaskNewHandler = TaskNewHandler(flags)
   val challengeHandler = ChallengeHandler()
@@ -201,6 +199,12 @@ fun main(args: Array<String>) {
 
     Routes(this, freemarker).apply {
       GET("/admin/contest/all" BY adminContestAllHandler)
+      POST("/admin/contest/new" BY adminContestNewHandler ARGS mapOf(
+          "code" to ContestNewArgs::code,
+          "name" to ContestNewArgs::name,
+          "start_ts" to ContestNewArgs::start_ts,
+          "end_ts" to ContestNewArgs::end_ts
+      ))
       GET("/admin/task/all" BY adminTaskAllHandler)
       POST("/admin/task/new" BY adminTaskNewHandler ARGS mapOf(
           "result"      to TaskNewArgs::result,
