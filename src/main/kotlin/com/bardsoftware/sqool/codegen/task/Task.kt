@@ -21,6 +21,12 @@ abstract class Task(val name: String, protected val robotQuery: String) {
     override fun equals(other: Any?) =
             other is Task && other.name == name && other.robotQuery == robotQuery
 
+    override fun hashCode(): Int {
+        var result = name.hashCode()
+        result = 31 * result + robotQuery.hashCode()
+        return result
+    }
+
     protected enum class Language {
         SQL, PLPGSQL
     }

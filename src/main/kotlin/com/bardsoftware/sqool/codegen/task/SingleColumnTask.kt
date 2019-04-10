@@ -55,4 +55,10 @@ class SingleColumnTask(name: String, robotQuery: String,
 
     override fun equals(other: Any?) =
             other is SingleColumnTask && other.spec == spec && super.equals(other)
+
+    override fun hashCode(): Int {
+        var result = super.hashCode()
+        result = 31 * result + spec.hashCode()
+        return result
+    }
 }

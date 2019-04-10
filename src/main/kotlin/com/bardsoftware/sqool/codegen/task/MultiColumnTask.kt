@@ -83,4 +83,10 @@ class MultiColumnTask(name: String, robotQuery: String,
 
     override fun equals(other: Any?) =
             other is MultiColumnTask && other.matcherSpec == matcherSpec && super.equals(other)
+
+    override fun hashCode(): Int {
+        var result = super.hashCode()
+        result = 31 * result + matcherSpec.hashCode()
+        return result
+    }
 }

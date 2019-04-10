@@ -1,6 +1,6 @@
 package com.bardsoftware.sqool.codegen.task.spec
 
-class RelationSpec(val keyCols: List<TaskResultColumn>,
+data class RelationSpec(val keyCols: List<TaskResultColumn>,
                    val nonKeyCols: List<TaskResultColumn> = emptyList()
 ) {
     init {
@@ -15,7 +15,4 @@ class RelationSpec(val keyCols: List<TaskResultColumn>,
     }
 
     fun getAllColsList(): List<TaskResultColumn> = keyCols + nonKeyCols
-
-    override fun equals(other: Any?) =
-            other is RelationSpec && other.keyCols == keyCols && other.nonKeyCols == nonKeyCols
 }

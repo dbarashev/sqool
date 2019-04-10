@@ -64,4 +64,10 @@ class ScalarValueTask(name: String, robotQuery: String,
 
     override fun equals(other: Any?) =
             other is ScalarValueTask && other.resultTypeEnum == resultTypeEnum && super.equals(other)
+
+    override fun hashCode(): Int {
+        var result = super.hashCode()
+        result = 31 * result + resultTypeEnum.hashCode()
+        return result
+    }
 }
