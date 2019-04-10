@@ -56,7 +56,8 @@ class TaskNewHandler(flags: Flags) : DbHandler<TaskNewArgs>(flags) {
 
 fun buildResultJson(resultSpecSql: String): String {
   val resultColumns = resultSpecSql.split(",").map { colSpec ->
-    var words = colSpec.trim().split(Regex("\\s+"), limit = 2)
+    val words = colSpec.trim().split(Regex("\\s+"), limit = 2)
+    // TODO: update this code to work with types consisting of two words, like "DOUBLE PRECISION"
     if (words.size > 2) {
       throw TaskValidationException("Malformed column specification $colSpec")
     }
@@ -69,7 +70,7 @@ fun buildResultJson(resultSpecSql: String): String {
     return@map TaskResultColumn(name, sqlType)
   }
 
-  var indexInc = if (resultColumns.size == 1 && resultColumns[0].name == "") 0 else 1
+  val indexInc = if (resultColumns.size == 1 && resultColumns[0].name == "") 0 else 1
   return resultColumns.mapIndexed { index, column ->
     """
         |{ "col_num": ${index + indexInc},
