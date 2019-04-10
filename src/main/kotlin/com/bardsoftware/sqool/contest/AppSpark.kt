@@ -187,7 +187,8 @@ fun main(args: Array<String>) {
     }
   }
 
-  val adminContestAllHandler = ContestAllHandler(dataSource)
+  val adminContestAllHandler = ContestAllHandler()
+  val adminContestNewHandler = ContestNewHandler()
   val adminTaskAllHandler = TaskAllHandler(flags)
   val adminTaskNewHandler = TaskNewHandler(flags)
   val adminVariantNewHandler = VariantNewHandler()
@@ -199,6 +200,12 @@ fun main(args: Array<String>) {
 
     Routes(this, freemarker).apply {
       GET("/admin/contest/all" BY adminContestAllHandler)
+      POST("/admin/contest/new" BY adminContestNewHandler ARGS mapOf(
+          "code" to ContestNewArgs::code,
+          "name" to ContestNewArgs::name,
+          "start_ts" to ContestNewArgs::start_ts,
+          "end_ts" to ContestNewArgs::end_ts
+      ))
       GET("/admin/task/all" BY adminTaskAllHandler)
       POST("/admin/task/new" BY adminTaskNewHandler ARGS mapOf(
           "result"      to TaskNewArgs::result,
