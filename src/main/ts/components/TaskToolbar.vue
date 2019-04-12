@@ -1,7 +1,7 @@
 <template>
     <div class="d-flex">
         <button type="button" class="btn btn-raised btn-danger mr-3" @click="createNewTask">Новая Задача</button>
-        <button type="button" class="btn btn-secondary">Построить вариант</button>
+        <button type="button" class="btn btn-secondary" @click="buildVariant">Построить вариант</button>
     </div>
 </template>
 
@@ -9,10 +9,12 @@
 import {Component, Inject, Vue} from 'vue-property-decorator';
 import {TaskDto} from '../Task';
 import TaskPropertiesModal from './TaskPropertiesModal.vue';
+import TaskTable from "./TaskTable.vue";
 
 @Component
 export default class TaskToolbar extends Vue {
     @Inject() public readonly taskProperties!: () => TaskPropertiesModal;
+    @Inject() public readonly taskTable!: () => TaskTable;
 
     public createNewTask() {
         const newTask = new TaskDto(-1, '000', '', '');
@@ -28,6 +30,10 @@ export default class TaskToolbar extends Vue {
         }).then(() => {
             this.taskProperties().hide();
         });
+    }
+
+    public buildVariant() {
+        this.taskTable().buildVariant();
     }
 }
 </script>

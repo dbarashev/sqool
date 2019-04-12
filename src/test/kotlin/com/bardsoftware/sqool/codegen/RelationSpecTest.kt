@@ -16,7 +16,7 @@ class RelationSpecTest {
     @Test
     fun testDefaultNonKeyAttributes() {
         val relationSpec = RelationSpec(listOf(TaskResultColumn("id", SqlDataType.INT)))
-        assertTrue(relationSpec.cols.isEmpty())
+        assertTrue(relationSpec.nonKeyCols.isEmpty())
     }
 
     @Test

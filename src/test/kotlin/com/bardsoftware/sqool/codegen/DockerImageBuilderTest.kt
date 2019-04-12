@@ -3,9 +3,8 @@ package com.bardsoftware.sqool.codegen
 import com.bardsoftware.sqool.codegen.task.SingleColumnTask
 import com.bardsoftware.sqool.codegen.task.spec.SqlDataType
 import com.bardsoftware.sqool.codegen.task.spec.TaskResultColumn
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-
-import org.junit.jupiter.api.Assertions.*
 
 
 class DockerImageBuilderTest {
@@ -26,6 +25,6 @@ class DockerImageBuilderTest {
                 "/workspace", "/workspace/hse2019", "/workspace/hse2019/cw2",
                 "/workspace/hse2019/cw2/Task3-dynamic.sql", "/workspace/hse2019/cw2/variant3-static.sql"
         )
-        assertIterableEquals(expectedFolders, folders)
+        assertEquals(expectedFolders.sorted(), folders.sorted())
     }
 }

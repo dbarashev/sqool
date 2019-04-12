@@ -2,8 +2,7 @@ package com.bardsoftware.sqool.codegen.task
 
 import com.bardsoftware.sqool.codegen.task.spec.TaskResultColumn
 
-class SingleColumnTask(name: String,
-                       robotQuery: String,
+class SingleColumnTask(name: String, robotQuery: String,
                        private val spec: TaskResultColumn
 ) : ColumnTask(name, robotQuery) {
     override val resultType: String
@@ -52,5 +51,14 @@ class SingleColumnTask(name: String,
             |
             |DROP FUNCTION $userQueryFunName() CASCADE;
             """.trimMargin()
+    }
+
+    override fun equals(other: Any?) =
+            other is SingleColumnTask && other.spec == spec && super.equals(other)
+
+    override fun hashCode(): Int {
+        var result = super.hashCode()
+        result = 31 * result + spec.hashCode()
+        return result
     }
 }

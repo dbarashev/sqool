@@ -3,8 +3,7 @@ package com.bardsoftware.sqool.codegen.task
 import com.bardsoftware.sqool.codegen.CodeGenerator
 import com.bardsoftware.sqool.codegen.task.spec.SqlDataType
 
-class ScalarValueTask(name: String,
-                      robotQuery: String,
+class ScalarValueTask(name: String, robotQuery: String,
                       private val resultTypeEnum: SqlDataType
 ) : Task(name, robotQuery) {
     override val resultType: String
@@ -61,5 +60,14 @@ class ScalarValueTask(name: String,
             |
             |DROP FUNCTION $userQueryFunName() CASCADE;
             """.trimMargin()
+    }
+
+    override fun equals(other: Any?) =
+            other is ScalarValueTask && other.resultTypeEnum == resultTypeEnum && super.equals(other)
+
+    override fun hashCode(): Int {
+        var result = super.hashCode()
+        result = 31 * result + resultTypeEnum.hashCode()
+        return result
     }
 }

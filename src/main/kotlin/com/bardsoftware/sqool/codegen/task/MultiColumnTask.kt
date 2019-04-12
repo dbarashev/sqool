@@ -3,8 +3,7 @@ package com.bardsoftware.sqool.codegen.task
 import com.bardsoftware.sqool.codegen.task.spec.MatcherSpec
 import com.bardsoftware.sqool.codegen.task.spec.SqlDataType
 
-class MultiColumnTask(name: String,
-                      robotQuery: String,
+class MultiColumnTask(name: String, robotQuery: String,
                       private val matcherSpec: MatcherSpec
 ) : ColumnTask(name, robotQuery) {
     override val resultType: String
@@ -14,7 +13,7 @@ class MultiColumnTask(name: String,
         val userQueryMock = matcherSpec.relationSpec.getAllColsList().joinToString(", ", "SELECT ") { "NULL::${it.type}" }
         val keyColNamesList = matcherSpec.relationSpec.keyCols.map { it.name }
 
-        val maxAbsDiffChecks = matcherSpec.relationSpec.cols
+        val maxAbsDiffChecks = matcherSpec.relationSpec.nonKeyCols
                 .filter { it.type.kind != SqlDataType.Kind.NON_NUMERIC }
                 .joinToString("\n\n") {
                     val diffVar = if (it.type.kind == SqlDataType.Kind.INTEGER) "max_abs_int_diff" else "max_abs_decimal_diff"
@@ -81,4 +80,13 @@ class MultiColumnTask(name: String,
         |) AS T;
         |RETURN NEXT '$failedCheckMessage ' || $maxAbsDiffVar::TEXT;
         """.trimIndent()
+
+    override fun equals(other: Any?) =
+            other is MultiColumnTask && other.matcherSpec == matcherSpec && super.equals(other)
+
+    override fun hashCode(): Int {
+        var result = super.hashCode()
+        result = 31 * result + matcherSpec.hashCode()
+        return result
+    }
 }

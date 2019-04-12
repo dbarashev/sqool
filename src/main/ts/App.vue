@@ -42,7 +42,7 @@
           <div class="tab-pane fade show active" id="list-tasks" role="tabpanel">
             <TaskToolbar>
             </TaskToolbar>
-            <TaskTable>
+            <TaskTable ref="taskTable">
             </TaskTable>
           </div>
           <div class="tab-pane fade" id="list-variants" role="tabpanel">
@@ -80,6 +80,12 @@ export default class App extends Vue {
   public taskProperties(): TaskPropertiesModal {
     return this.$refs.taskPropertiesModal as TaskPropertiesModal;
   }
+
+  @Provide()
+  public taskTable(): TaskTable {
+    return this.$refs.taskTable as TaskTable;
+  }
+  
   @Provide()
   public contestProperties(): ContestPropertiesModal {
     return this.$refs.contestPropertiesModal as ContestPropertiesModal;

@@ -1,6 +1,6 @@
 package com.bardsoftware.sqool.codegen.task.spec
 
-class MatcherSpec(val relationSpec: RelationSpec,
+data class MatcherSpec(val relationSpec: RelationSpec,
                   val wrongKeyColsProjMessage: String = "Множество кортежей ${relationSpec.keyCols
                           .joinToString(", ", "(", ")") { it.name }} отличается от результатов робота",
                   val rightKeyColsProjMessage: String = "Кортежи ${relationSpec.keyCols
@@ -25,7 +25,7 @@ class MatcherSpec(val relationSpec: RelationSpec,
         if (relationSpec.keyCols.contains(column)) {
             throw IllegalArgumentException("Non-key attributes can't have a difference error")
         }
-        if (!relationSpec.cols.contains(column)) {
+        if (!relationSpec.nonKeyCols.contains(column)) {
             throw IllegalArgumentException("No such non-key attribute in the relation")
         }
     }

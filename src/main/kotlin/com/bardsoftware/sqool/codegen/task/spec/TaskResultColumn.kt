@@ -17,6 +17,14 @@ enum class SqlDataType(val kind: Kind) {
         override fun toString(): String = "DOUBLE PRECISION"
     };
 
+    companion object {
+        fun getEnum(value: String): SqlDataType =
+                when (value) {
+                    "DOUBLE PRECISION" -> DOUBLE_PRECISION
+                    else -> valueOf(value)
+                }
+    }
+
     enum class Kind {
         NON_NUMERIC, DECIMAL, INTEGER
     }

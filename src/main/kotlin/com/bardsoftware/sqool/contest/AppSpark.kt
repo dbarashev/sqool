@@ -14,6 +14,7 @@ import spark.Response
 import spark.Session
 import spark.kotlin.ignite
 import spark.template.freemarker.FreeMarkerEngine
+import java.io.File
 import java.util.*
 import java.util.logging.Level
 import java.util.logging.Logger
@@ -190,8 +191,8 @@ fun main(args: Array<String>) {
   val adminContestNewHandler = ContestNewHandler()
   val adminTaskAllHandler = TaskAllHandler(flags)
   val adminTaskNewHandler = TaskNewHandler(flags)
+  val adminVariantNewHandler = VariantNewHandler()
   val challengeHandler = ChallengeHandler()
-
 
   ignite().apply {
     port(8080)
@@ -210,6 +211,13 @@ fun main(args: Array<String>) {
           "result"      to TaskNewArgs::result,
           "name"        to TaskNewArgs::name,
           "description" to TaskNewArgs::description
+      ))
+      POST("/admin/variant/new" BY adminVariantNewHandler ARGS mapOf(
+          "course"  to VariantNewArgs::course,
+          "module"  to VariantNewArgs::module,
+          "variant" to VariantNewArgs::variant,
+          "schema"  to VariantNewArgs::schema,
+          "tasks"   to VariantNewArgs::tasks
       ))
       GET("/"          TEMPLATE "index.ftl")
       GET("/dashboard" TEMPLATE "dashboard.ftl")
