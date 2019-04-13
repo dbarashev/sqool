@@ -9,7 +9,7 @@
                     </button>
                 </div>
                 <div class="modal-body">
-                    <ul ul class="nav nav-tabs" id="taskTabs" role="tablist">
+                    <ul class="nav nav-tabs nav-fill" id="taskTabs" role="tablist">
                         <li class="nav-item">
                             <a class="nav-link active" id="main-properties-tab" data-toggle="tab" href="#main-properties" role="tab"
                                aria-controls="main-properties" aria-selected="true">Основные свойства</a>
@@ -29,15 +29,6 @@
                                            class="form-text text-muted">Обычно это номер.</small>
                                 </div>
                                 <div class="form-group">
-                                    <label for="task-properties-description">Описание</label>
-                                    <textarea class="form-control"
-                                              v-model="taskDescription"
-                                              id="task-properties-description" rows="5">
-                                    </textarea>
-                                    <small id="task-properties-description-help"
-                                           class="form-text text-muted">Можно использовать Markdown</small>
-                                </div>
-                                <div class="form-group">
                                     <label for="task-properties-name">Столбцы результата</label>
                                     <input type="text" class="form-control"
                                            id="task-properties-result"
@@ -50,7 +41,7 @@
                             </form>
                         </div>
                         <div class="tab-pane fade" id="description" role="tabpanel" aria-labelledby="description-tab">
-                            <TaskMarkdown></TaskMarkdown>
+                            <TaskMarkdown ref="taskMarkdown"> </TaskMarkdown>
                         </div>
                     </div>
                 </div>
@@ -75,7 +66,6 @@ import TaskMarkdown from './TaskMarkdown.vue';
 export default class TaskPropertiesModal extends Vue {
     public taskName: string = '';
     public taskResult: string = '';
-    public taskDescription: string = '';
 
     private taskId: number = -1;
     private deferred: JQueryDeferred<TaskDto> | undefined;
@@ -84,7 +74,6 @@ export default class TaskPropertiesModal extends Vue {
         $('#task-properties').modal();
         this.taskId = task.id;
         this.taskName = task.name;
-        this.taskDescription = task.description;
         this.taskResult = task.result_json;
 
         this.deferred = $.Deferred<TaskDto>();
@@ -97,7 +86,9 @@ export default class TaskPropertiesModal extends Vue {
 
     public submit() {
         if (this.deferred) {
-            this.deferred.resolve(new TaskDto(this.taskId, this.taskName, this.taskDescription, this.taskResult));
+            const markdown = this.$refs.taskMarkdown as TaskMarkdown;
+            const taskDescription = markdown.markdownText() as string;
+            this.deferred.resolve(new TaskDto(this.taskId, this.taskName, taskDescription, this.taskResult));
         }
     }
 }
