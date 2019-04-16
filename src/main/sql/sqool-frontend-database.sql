@@ -25,9 +25,10 @@ CREATE TABLE Contest.Task(
 
 CREATE TABLE Contest.TaskResult(
     task_id INT NOT NULL REFERENCES Task,
-    col_num INT NOT NULL check ( col_num > 0 ),
+    col_num INT NOT NULL,
     col_name TEXT NOT NULL,
     col_type TEXT NOT NULL DEFAULT 'TEXT',
+    CHECK(col_num > 0 AND col_name != '' OR col_num = 0 AND col_name = ''),
     PRIMARY KEY(task_id, col_num)
 );
 
@@ -106,7 +107,7 @@ CREATE TABLE Contest.GradingDetails(
 CREATE TABLE Contest(
     code TEXT NOT NULL PRIMARY KEY,
     name TEXT NOT NULL,
-    dates TSTZRANGE
+    dates TSTZRANGE NOT NULL DEFAULT tstzrange(NOW(), NOW() + interval '1h')
 );
 
 CREATE OR REPLACE VIEW ContestDto AS

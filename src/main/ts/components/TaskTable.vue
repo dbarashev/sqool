@@ -10,7 +10,7 @@
         </thead>
         <tbody>
             <tr v-for="t in tasks">
-                <td><input type="checkbox"></td>
+                <td><input type="checkbox" :value="t" v-model="selectedTasks"></td>
                 <td>{{ t.name }}</td>
                 <td v-html="t.description"></td>
                 <td>{{ taskResultSpec(t) }}</td>
@@ -26,6 +26,7 @@ import {ColumnSpec, TaskDto} from '../Task';
 @Component
 export default class TaskTable extends Vue {
   public tasks: TaskDto[] = [];
+  public selectedTasks: TaskDto[] = [];
 
   public mounted() {
       $.ajax({
@@ -39,6 +40,23 @@ export default class TaskTable extends Vue {
       return JSON.parse(task.result_json)
           .map((column: ColumnSpec) => `${column.name} ${column.type}`).join(',');
   }
+
+  public buildVariant() {
+      const jsonTasks = this.selectedTasks.map(task => ({
+            name: task.name,
+            keyAttributes: JSON.parse(task.result_json),
+            nonKeyAttributes: [],
+            solution: "Put teacher's query here"
+          })
+      );
+      $.post('/admin/variant/new', {
+          course: "course",
+          module: "module",
+          variant: "variant",
+          schema: "schema",
+          tasks: JSON.stringify(jsonTasks)
+      });
+    }
 }
 </script>
 

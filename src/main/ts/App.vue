@@ -34,13 +34,15 @@
       <div class="container">
         <div class="pt-4 tab-content" id="nav-tabContent">
           <div class="tab-pane fade" id="list-contest" role="tabpanel">
+            <ContestToolbar>
+            </ContestToolbar>
             <ContestTable>
             </ContestTable>
           </div>
           <div class="tab-pane fade show active" id="list-tasks" role="tabpanel">
             <TaskToolbar>
             </TaskToolbar>
-            <TaskTable>
+            <TaskTable ref="taskTable">
             </TaskTable>
           </div>
           <div class="tab-pane fade" id="list-variants" role="tabpanel">
@@ -52,6 +54,7 @@
         </div>
       </div>
     </main>
+    <ContestPropertiesModal ref="contestPropertiesModal"></ContestPropertiesModal>
     <TaskPropertiesModal ref="taskPropertiesModal"></TaskPropertiesModal>
   </div>
 </template>
@@ -62,10 +65,13 @@ import TaskTable from './components/TaskTable.vue';
 import TaskToolbar from './components/TaskToolbar.vue';
 import TaskPropertiesModal from './components/TaskPropertiesModal.vue';
 import ContestTable from './components/ContestTable.vue';
+import ContestToolbar from './components/ContestToolbar.vue';
+import ContestPropertiesModal from './components/ContestPropertiesModal.vue';
 
 @Component({
   components: {
-    ContestTable,
+    ContestToolbar,
+    ContestTable, ContestPropertiesModal,
     TaskTable, TaskToolbar, TaskPropertiesModal,
   },
 })
@@ -73,6 +79,16 @@ export default class App extends Vue {
   @Provide()
   public taskProperties(): TaskPropertiesModal {
     return this.$refs.taskPropertiesModal as TaskPropertiesModal;
+  }
+
+  @Provide()
+  public taskTable(): TaskTable {
+    return this.$refs.taskTable as TaskTable;
+  }
+  
+  @Provide()
+  public contestProperties(): ContestPropertiesModal {
+    return this.$refs.contestPropertiesModal as ContestPropertiesModal;
   }
 }
 </script>

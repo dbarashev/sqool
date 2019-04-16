@@ -1,5 +1,8 @@
 package com.bardsoftware.sqool.codegen
 
+import com.bardsoftware.sqool.codegen.task.spec.RelationSpec
+import com.bardsoftware.sqool.codegen.task.spec.SqlDataType
+import com.bardsoftware.sqool.codegen.task.spec.TaskResultColumn
 import org.junit.jupiter.api.Test
 
 import org.junit.jupiter.api.Assertions.*
@@ -13,7 +16,7 @@ class RelationSpecTest {
     @Test
     fun testDefaultNonKeyAttributes() {
         val relationSpec = RelationSpec(listOf(TaskResultColumn("id", SqlDataType.INT)))
-        assertTrue(relationSpec.cols.isEmpty())
+        assertTrue(relationSpec.nonKeyCols.isEmpty())
     }
 
     @Test

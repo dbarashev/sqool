@@ -1,17 +1,29 @@
 package com.bardsoftware.sqool.codegen
 
+import com.bardsoftware.sqool.codegen.task.*
+import com.bardsoftware.sqool.codegen.task.spec.MatcherSpec
+import com.bardsoftware.sqool.codegen.task.spec.RelationSpec
+import com.bardsoftware.sqool.codegen.task.spec.SqlDataType
+import com.bardsoftware.sqool.codegen.task.spec.TaskResultColumn
 import org.junit.jupiter.api.Test
 
 import org.junit.jupiter.api.Assertions.*
 
 class CodeGeneratorTest {
     @Test
-    fun testSingleColumnQueryRobotCode() {
-        val expectedStaticCode = """
+    fun testStaticCodeHeader() {
+        val generator = CodeGenerator("cw1", "/hse/cw1/schema.sql")
+        val expectedHeader = """
             |CREATE SCHEMA cw1;
             |SET search_path=cw1;
             |\i /hse/cw1/schema.sql;
-            |
+            """.trimMargin()
+        assertEquals(expectedHeader, generator.generateStaticCodeHeader())
+    }
+
+    @Test
+    fun testSingleColumnQueryRobotCode() {
+        val expectedStaticCode = """
             |CREATE OR REPLACE FUNCTION Task3_Robot()
             |RETURNS TABLE(id INT) AS $$
             |SELECT 11;
@@ -89,20 +101,16 @@ class CodeGeneratorTest {
             |   SELECT 1 AS query_id, * FROM Task3_User();
             """.trimMargin()
 
+        val generator = CodeGenerator("cw1", "/hse/cw1/schema.sql")
         val spec = TaskResultColumn("id", SqlDataType.INT)
-        val result = generateSingleColumnQueryRobot(
-                "Task3", spec, "cw1", "/hse/cw1/schema.sql", "SELECT 11;")
-        assertEquals(expectedStaticCode, result.staticCode)
-        assertEquals(expectedPerSubmissionCode, result.perSubmissionCode)
+        val task = SingleColumnTask("Task3", "SELECT 11;", spec)
+        assertEquals(expectedStaticCode, task.generateStaticCode())
+        assertEquals(expectedPerSubmissionCode, task.generateDynamicCode(generator))
     }
 
     @Test
     fun testScalarValueQueryRobotCode() {
         val expectedStaticCode = """
-            |CREATE SCHEMA cw2;
-            |SET search_path=cw2;
-            |\i /hse/cw2/schema.sql;
-            |
             |CREATE OR REPLACE FUNCTION Task12_Robot()
             |RETURNS TEXT AS $$
             |SELECT 'Some text';
@@ -154,20 +162,15 @@ class CodeGeneratorTest {
             |$$ LANGUAGE SQL;
             """.trimMargin()
 
-        val result = generateScalarValueQueryRobot(
-                "Task12", SqlDataType.TEXT, "cw2", "/hse/cw2/schema.sql",
-                "SELECT 'Some text';")
-        assertEquals(expectedStaticCode, result.staticCode)
-        assertEquals(expectedPerSubmissionCode, result.perSubmissionCode)
+        val generator = CodeGenerator("cw2", "/hse/cw2/schema.sql")
+        val task = ScalarValueTask("Task12", "SELECT 'Some text';", SqlDataType.TEXT)
+        assertEquals(expectedStaticCode, task.generateStaticCode())
+        assertEquals(expectedPerSubmissionCode, task.generateDynamicCode(generator))
     }
 
     @Test
     fun testMultipleColumnQueryRobotCode() {
         val expectedStaticCode = """
-            |CREATE SCHEMA cw3;
-            |SET search_path=cw3;
-            |\i /cw3/schema.sql;
-            |
             |CREATE OR REPLACE FUNCTION Task05_Robot()
             |RETURNS TABLE(ship TEXT, port INT, transfers_num INT, transfer_size DOUBLE PRECISION, product TEXT) AS $$
             |SELECT 'ship', 1, 10, 500::DOUBLE PRECISION, 'prod'
@@ -268,10 +271,9 @@ class CodeGeneratorTest {
         val relationSpec = RelationSpec(keyAttribute, nonKeyAttributes)
         val matcherSpec = MatcherSpec(relationSpec, "Множество пар (корабль, порт) отличается от результатов робота")
 
-        val result = generateMultipleColumnQueryRobot(
-                "Task05", matcherSpec, "cw3", "/cw3/schema.sql",
-                "SELECT 'ship', 1, 10, 500::DOUBLE PRECISION, 'prod'")
-        assertEquals(expectedPerSubmissionCode, result.perSubmissionCode)
-        assertEquals(expectedStaticCode, result.staticCode)
+        val generator = CodeGenerator("cw3", "/cw3/schema.sql")
+        val task = MultiColumnTask("Task05", "SELECT 'ship', 1, 10, 500::DOUBLE PRECISION, 'prod'", matcherSpec)
+        assertEquals(expectedStaticCode, task.generateStaticCode())
+        assertEquals(expectedPerSubmissionCode, task.generateDynamicCode(generator))
     }
 }
