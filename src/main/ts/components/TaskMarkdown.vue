@@ -1,7 +1,7 @@
 <template>
     <div id="taskCodeDescription">
-        <div>
-            <div class="col-sm-12 col-lg-12">
+        <div class="row">
+            <div class="col-sm-12 col-lg-6 text-left">
                     <div class="form-group">
                         <label for="task-properties-code">Markdown разметка</label>
                         <textarea class="form-control"
@@ -10,7 +10,8 @@
                         </textarea>
                     </div>
             </div>
-            <div class="col-sm-12 col-lg-12">
+            <div class="col-sm-12 col-lg-6">
+                <label>Preview</label>
                 <div v-html="markdownText()"></div>
             </div>
         </div>
