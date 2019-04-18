@@ -7,7 +7,7 @@
 <script lang="ts">
 import {Component, Inject, Vue} from 'vue-property-decorator';
 import {ContestDto} from '../Contest';
-import ContestPropertiesModal from './ContestPropertiesModal.vue';
+import ContestPropertiesModal from './ContestPropertiesModal';
 
 @Component
 export default class ContestToolbar extends Vue {
