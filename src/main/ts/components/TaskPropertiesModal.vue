@@ -1,6 +1,6 @@
 <template>
     <div class="modal" tabindex="-1" role="dialog" id="task-properties">
-        <div class="modal-dialog" role="document">
+        <div class="modal-dialog w-75 mw-100" role="document">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Задача {{ taskName }}</h5>
@@ -9,7 +9,7 @@
                     </button>
                 </div>
                 <div class="modal-body">
-                    <ul class="nav nav-tabs nav-fill" id="taskTabs" role="tablist">
+                    <ul class="nav nav-tabs" id="taskTabs" role="tablist">
                         <li class="nav-item">
                             <a class="nav-link active" id="main-properties-tab" data-toggle="tab" href="#main-properties" role="tab"
                                aria-controls="main-properties" aria-selected="true">Основные свойства</a>

@@ -13,7 +13,7 @@
             <div class="col-sm-12 col-lg-6 text-left">
                 <div class="form-group bmd-form-group">
                     <label class="bmd-label-static" for="task-properties-preview">Preview</label>
-                    <div class="form-control" id="task-properties-preview">
+                    <div id="task-properties-preview">
                         <div v-html="markdownText()"></div>
                     </div>
                 </div>
