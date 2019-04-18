@@ -12,7 +12,7 @@
             <tr v-for="t in tasks">
                 <td><input type="checkbox" :value="t" v-model="selectedTasks"></td>
                 <td>{{ t.name }}</td>
-                <td>{{ t.description }}</td>
+                <td v-html="t.description"></td>
                 <td>{{ taskResultSpec(t) }}</td>
             </tr>
         </tbody>
