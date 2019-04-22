@@ -1,0 +1,17 @@
+version: '3'
+
+services:
+  contest-sql:
+    image: contest-image
+    volumes:
+      - contest-volume:/workspace
+
+  postgres:
+    image: postgres
+    volumes:
+      - contest-volume:/workspace
+      - ./run-sql.sh:/docker-entrypoint-initdb.d/run-sql.sh
+    #command: bash -c 'ls'
+
+volumes:
+  contest-volume:

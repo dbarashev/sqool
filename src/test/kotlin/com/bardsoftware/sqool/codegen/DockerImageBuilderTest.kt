@@ -13,7 +13,7 @@ class DockerImageBuilderTest {
         val spec = TaskResultColumn("id", SqlDataType.INT)
         val task = SingleColumnTask("Task3", "SELECT 11;", spec)
         buildDockerImage(
-                imageName = "test-image", course = "hse2019", module =  "cw2",
+                imageName = "contest-image", course = "hse2019", module =  "cw2",
                 variant = "variant3", schemaPath = "/workspace/hse2019/cw2/schema3.sql", tasks = listOf(task))
 
         val process = Runtime.getRuntime().exec("docker run --rm test-image find /workspace")
