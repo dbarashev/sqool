@@ -16,7 +16,7 @@ class DockerImageBuilderTest {
                 imageName = "contest-image", course = "hse2019", module =  "cw2",
                 variant = "variant3", schemaPath = "/workspace/hse2019/cw2/schema3.sql", tasks = listOf(task))
 
-        val process = Runtime.getRuntime().exec("docker run --rm test-image find /workspace")
+        val process = Runtime.getRuntime().exec("docker run --rm contest-image find /workspace")
         val folders = process.inputStream.bufferedReader()
                 .use { it.readText() }
                 .lines()
