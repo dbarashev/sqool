@@ -1,5 +1,6 @@
 package com.bardsoftware.sqool.codegen
 
+import com.bardsoftware.sqool.codegen.docker.buildDockerImage
 import com.bardsoftware.sqool.codegen.task.SingleColumnTask
 import com.bardsoftware.sqool.codegen.task.spec.SqlDataType
 import com.bardsoftware.sqool.codegen.task.spec.TaskResultColumn
@@ -13,7 +14,7 @@ class DockerImageBuilderTest {
         val spec = TaskResultColumn("id", SqlDataType.INT)
         val task = SingleColumnTask("Task3", "SELECT 11;", spec)
         buildDockerImage(
-                imageName = "contest-image", course = "hse2019", module =  "cw2",
+                imageName = "contest-image", course = "hse2019", module = "cw2",
                 variant = "variant3", schemaPath = "/workspace/hse2019/cw2/schema3.sql", tasks = listOf(task))
 
         val process = Runtime.getRuntime().exec("docker run --rm contest-image find /workspace")

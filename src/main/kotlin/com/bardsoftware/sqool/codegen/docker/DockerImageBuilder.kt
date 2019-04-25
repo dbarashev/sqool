@@ -1,5 +1,6 @@
-package com.bardsoftware.sqool.codegen
+package com.bardsoftware.sqool.codegen.docker
 
+import com.bardsoftware.sqool.codegen.CodeGenerator
 import com.bardsoftware.sqool.codegen.task.Task
 import com.google.cloud.tools.jib.api.Containerizer
 import com.google.cloud.tools.jib.api.DockerDaemonImage
@@ -35,4 +36,8 @@ fun buildDockerImage(
             )
 
     root.deleteRecursively()
+}
+
+private fun checkImage(imageName: String) {
+
 }
