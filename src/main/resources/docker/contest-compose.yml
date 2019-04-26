@@ -5,9 +5,7 @@ services:
     image: contest-image
     volumes:
       - /workspace
-    #  - contest-volume:/workspace
     command: tail -f /dev/null
-    #command: cat /workspace/hse2019/cw2/variant3-static.sql
 
   db:
     image: postgres
@@ -24,9 +22,4 @@ services:
         condition: service_healthy
     volumes_from:
       - contest-sql:ro
-    #volumes:
-    #  - contest-volume:/workspace
     command: bash -c 'find /workspace -type f -name "*-static.sql" -exec cat {} + | psql -h db -U postgres'
-
-#volumes:
-#  contest-volume:
