@@ -38,8 +38,8 @@ export default class Submission extends Vue {
             url: '/admin/submission/get',
             method: 'GET',
             data: {
-                taskId: this.taskId,
-                userId: this.userId,
+                task_id: this.taskId,
+                user_id: this.userId,
             },
         }).then((attempt) => {
             markdown.setText(attempt.attempt_text);
