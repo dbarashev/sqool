@@ -72,7 +72,3 @@ private fun checkImage() {
         }
     }
 }
-
-fun main() {
-    checkImage()
-}
