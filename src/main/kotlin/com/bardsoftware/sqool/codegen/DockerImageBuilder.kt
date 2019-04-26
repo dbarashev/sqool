@@ -35,7 +35,6 @@ fun buildDockerImage(
             )
 
     root.deleteRecursively()
-
     checkImage()
 }
 
@@ -47,6 +46,8 @@ private fun checkImage() {
         |    docker/compose:1.23.2 -f /etc/contest-compose.yml up
         |    --force-recreate
         |    --abort-on-container-exit
+        |    --renew-anon-volumes
+        |    --no-color
         """.trimMargin().replace('\n', ' ')
 
     val composeProcess = Runtime.getRuntime().exec(composeCommand)
@@ -57,6 +58,7 @@ private fun checkImage() {
                 .use { it.readText() }
                 .lines()
                 .filter { it.matches(".*run-sql.*\\|.*".toRegex()) }
+                .map { it.split("| ")[1] }
         if (output.any { it.matches(".*ERROR.*".toRegex()) }) {
             println("Contest image testing: Invalid sql:")
             print(output.joinToString("\n"))
