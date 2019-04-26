@@ -1,6 +1,6 @@
 package com.bardsoftware.sqool.contest.admin
 
-import com.bardsoftware.sqool.codegen.docker.buildDockerImage
+import com.bardsoftware.sqool.codegen.buildDockerImage
 import com.bardsoftware.sqool.codegen.task.TaskDeserializationException
 import com.bardsoftware.sqool.codegen.task.deserializeJsonTasks
 import com.bardsoftware.sqool.contest.HttpApi

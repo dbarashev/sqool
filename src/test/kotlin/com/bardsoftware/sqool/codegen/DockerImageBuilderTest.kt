@@ -1,6 +1,5 @@
 package com.bardsoftware.sqool.codegen
 
-import com.bardsoftware.sqool.codegen.docker.buildDockerImage
 import com.bardsoftware.sqool.codegen.task.SingleColumnTask
 import com.bardsoftware.sqool.codegen.task.spec.SqlDataType
 import com.bardsoftware.sqool.codegen.task.spec.TaskResultColumn
