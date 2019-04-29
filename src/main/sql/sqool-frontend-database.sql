@@ -18,6 +18,7 @@ CREATE TABLE Contest.Task(
     real_name TEXT UNIQUE,
     signature TEXT,
     description TEXT,
+    solution TEXT,
     score INT CHECK(score BETWEEN 1 AND 10),
     difficulty INT CHECK(difficulty BETWEEN 1 AND 3),
     author_id INT REFERENCES Contest.ContestUser
@@ -39,6 +40,7 @@ CREATE OR REPLACE VIEW Contest.TaskDto AS
 -- [{"name": "col1", "type": "INT"}, {"name": "col2", type: "TEXT"}]
 SELECT id, name,
   COALESCE(description, '') AS description,
+  COALESCE(solution, '') AS solution,
   array_to_json(array_agg(json_object('{name, type}', ARRAY[col_name, col_type])))::TEXT AS result_json
 FROM Contest.Task T JOIN Contest.TaskResult R ON T.id=R.task_id
 GROUP BY T.id
@@ -47,6 +49,7 @@ UNION ALL
 -- []
 SELECT id, name,
   COALESCE(description, '') AS description,
+  COALESCE(solution, '') AS solution,
   '[]' AS result_json
 FROM Contest.Task T LEFT JOIN Contest.TaskResult R ON T.id=R.task_id
 WHERE R.task_id IS NULL
@@ -59,8 +62,8 @@ DECLARE
   new_task_id INT;
 BEGIN
   WITH T AS (
-    INSERT INTO Contest.Task(name, real_name, description)
-      VALUES (NEW.name, NEW.name, NEW.description)
+    INSERT INTO Contest.Task(name, real_name, description, solution)
+      VALUES (NEW.name, NEW.name, NEW.description, NEW.solution)
       RETURNING id
   )
   SELECT id INTO new_task_id

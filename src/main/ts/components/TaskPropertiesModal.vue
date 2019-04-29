@@ -11,20 +11,25 @@
                 <div class="modal-body">
                     <ul class="nav nav-tabs" id="taskTabs" role="tablist">
                         <li class="nav-item">
-                            <a class="nav-link active" id="main-properties-tab" data-toggle="tab" href="#main-properties" role="tab"
-                               aria-controls="main-properties" aria-selected="true">Основные свойства</a>
+                            <a class="nav-link active" id="main-properties-tab" data-toggle="tab" href="#task-main-properties" role="tab"
+                               aria-controls="task-main-properties" aria-selected="true">Основные свойства</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" id="description-tab" data-toggle="tab" href="#description" role="tab"
-                               aria-controls="description" aria-selected="false">Описание</a>
+                            <a class="nav-link" id="description-tab" data-toggle="tab" href="#task-description" role="tab"
+                               aria-controls="task-description" aria-selected="false">Описание</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="solution-tab" data-toggle="tab" href="#task-solution" role="tab"
+                               aria-controls="task-solution" aria-selected="false">Решение</a>
                         </li>
                     </ul>
                     <div class="tab-content" id="taskTabsContent">
-                        <div class="tab-pane fade show active" id="main-properties" role="tabpanel" aria-labelledby="main-properties-tab">
+                        <div class="tab-pane fade show active" id="task-main-properties" role="tabpanel" aria-labelledby="main-properties-tab">
                             <form>
                                 <div class="form-group">
                                     <label for="task-properties-name">Название задачи</label>
-                                    <input type="text" class="form-control" id="task-properties-name" aria-describedby="task-properties-name-help" v-model="taskName">
+                                    <input type="text" class="form-control" id="task-properties-name" aria-describedby="task-properties-name-help"
+                                           v-model="taskName">
                                     <small id="task-properties-name-help"
                                            class="form-text text-muted">Обычно это номер.</small>
                                 </div>
@@ -40,8 +45,19 @@
                                 </div>
                             </form>
                         </div>
-                        <div class="tab-pane fade" id="description" role="tabpanel" aria-labelledby="description-tab">
+                        <div class="tab-pane fade" id="task-description" role="tabpanel" aria-labelledby="description-tab">
                             <TaskMarkdown ref="taskMarkdown"> </TaskMarkdown>
+                        </div>
+                        <div class="tab-pane fade" id="task-solution" role="tabpanel" aria-labelledby="solution-tab">
+                            <form>
+                                <div class="form-group">
+                                    <label for="task-solution-text">Авторское решение</label>
+                                    <textarea class="form-control"
+                                              v-model="taskSolution"
+                                              id="task-solution-text" rows="15">
+                                    </textarea>
+                                </div>
+                            </form>
                         </div>
                     </div>
                 </div>

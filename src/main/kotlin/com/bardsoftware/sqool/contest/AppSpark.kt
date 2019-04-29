@@ -14,7 +14,6 @@ import spark.Response
 import spark.Session
 import spark.kotlin.ignite
 import spark.template.freemarker.FreeMarkerEngine
-import java.io.File
 import java.util.*
 import java.util.logging.Level
 import java.util.logging.Logger
@@ -210,7 +209,8 @@ fun main(args: Array<String>) {
       POST("/admin/task/new" BY adminTaskNewHandler ARGS mapOf(
           "result"      to TaskNewArgs::result,
           "name"        to TaskNewArgs::name,
-          "description" to TaskNewArgs::description
+          "description" to TaskNewArgs::description,
+          "solution"    to TaskNewArgs::solution
       ))
       POST("/admin/variant/new" BY adminVariantNewHandler ARGS mapOf(
           "course"  to VariantNewArgs::course,

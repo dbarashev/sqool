@@ -10,6 +10,7 @@ import TaskMarkdown from './TaskMarkdown';
 export default class TaskPropertiesModal extends Vue {
     public taskName: string = '';
     public taskResult: string = '';
+    public taskSolution: string = '';
 
     private taskId: number = -1;
     private deferred: JQueryDeferred<TaskDto> | undefined;
@@ -19,6 +20,7 @@ export default class TaskPropertiesModal extends Vue {
         this.taskId = task.id;
         this.taskName = task.name;
         this.taskResult = task.result_json;
+        this.taskSolution = task.solution;
 
         this.deferred = $.Deferred<TaskDto>();
         return this.deferred;
@@ -32,7 +34,8 @@ export default class TaskPropertiesModal extends Vue {
         if (this.deferred) {
             const markdown = this.$refs.taskMarkdown as TaskMarkdown;
             const taskDescription = markdown.markdownText() as string;
-            this.deferred.resolve(new TaskDto(this.taskId, this.taskName, taskDescription, this.taskResult));
+            this.deferred.resolve(new TaskDto(
+                this.taskId, this.taskName, taskDescription, this.taskResult, this.taskSolution));
         }
     }
 }

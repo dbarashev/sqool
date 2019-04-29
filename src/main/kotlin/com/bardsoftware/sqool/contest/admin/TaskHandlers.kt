@@ -6,15 +6,33 @@ import com.bardsoftware.sqool.contest.Flags
 import com.bardsoftware.sqool.contest.HttpApi
 import com.bardsoftware.sqool.contest.HttpResponse
 import com.bardsoftware.sqool.contest.RequestArgs
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.ObjectMapper
+import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
+
+private val JSON_MAPPER = ObjectMapper()
 
 object Tasks : Table("Contest.TaskDto") {
   val id = integer("id").primaryKey()
   val name = text("name")
   val description = text("description")
   val result_json = text("result_json")
+  val solution = text("solution")
+
+  fun asJson(row: ResultRow): JsonNode {
+    return JSON_MAPPER.createObjectNode().also {
+      it.put("id", row[id])
+      it.put("name", row[name])
+      it.put("description", row[description])
+      it.put("solution", row[solution])
+      it.put("result_json", row[result_json])
+    }
+
+  }
 }
 
 /**
@@ -23,8 +41,8 @@ object Tasks : Table("Contest.TaskDto") {
 
 class TaskAllHandler(flags: Flags) : DbHandler<RequestArgs>(flags) {
   override fun handle(http: HttpApi, argValues: RequestArgs): HttpResponse {
-    return withDatabase { db ->
-      http.json(db.contestQueries.selectAllTasks().executeAsList())
+    return transaction {
+      http.json(Tasks.selectAll().map(Tasks::asJson).toList())
     }
   }
 
@@ -35,9 +53,9 @@ class TaskAllHandler(flags: Flags) : DbHandler<RequestArgs>(flags) {
 
 class TaskValidationException(msg: String) : Exception(msg)
 
-data class TaskNewArgs(var name: String, var description: String, var result: String) : RequestArgs()
+data class TaskNewArgs(var name: String, var description: String, var result: String, var solution: String) : RequestArgs()
 class TaskNewHandler(flags: Flags) : DbHandler<TaskNewArgs>(flags) {
-  override fun args(): TaskNewArgs = TaskNewArgs(name = "", description = "", result = "")
+  override fun args(): TaskNewArgs = TaskNewArgs(name = "", description = "", result = "", solution = "")
 
   override fun handle(http: HttpApi, argValues: TaskNewArgs): HttpResponse {
     val resultJson = buildResultJson(argValues.result)
@@ -48,6 +66,7 @@ class TaskNewHandler(flags: Flags) : DbHandler<TaskNewArgs>(flags) {
         it[name] = argValues.name
         it[description] = argValues.description
         it[result_json] = resultJson
+        it[solution] = argValues.solution
       }
       http.ok()
     }

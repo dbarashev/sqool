@@ -8,8 +8,8 @@
 <script lang="ts">
 import {Component, Inject, Vue} from 'vue-property-decorator';
 import {TaskDto} from '../Task';
-import TaskPropertiesModal from './TaskPropertiesModal.vue';
-import TaskTable from "./TaskTable.vue";
+import TaskPropertiesModal from './TaskPropertiesModal';
+import TaskTable from './TaskTable';
 
 @Component
 export default class TaskToolbar extends Vue {
@@ -17,7 +17,7 @@ export default class TaskToolbar extends Vue {
     @Inject() public readonly taskTable!: () => TaskTable;
 
     public createNewTask() {
-        const newTask = new TaskDto(-1, '000', '', '');
+        const newTask = new TaskDto(-1, '000', '', '', '');
         this.taskProperties().show(newTask).then((updatedTask) => {
             return $.ajax('/admin/task/new', {
                 method: 'POST',
@@ -25,6 +25,7 @@ export default class TaskToolbar extends Vue {
                     name: updatedTask.name,
                     description: updatedTask.description,
                     result: updatedTask.result_json,
+                    solution: updatedTask.solution,
                 },
             });
         }).then(() => {
