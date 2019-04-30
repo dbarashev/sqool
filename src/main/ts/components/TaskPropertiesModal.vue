@@ -53,43 +53,5 @@
     </div>
 </template>
 
-<script lang="ts">
-import { Component, Vue } from 'vue-property-decorator';
-import {TaskDto} from '../Task';
-import TaskMarkdown from './TaskMarkdown.vue';
-
-@Component({
-  components: {
-    TaskMarkdown,
-  },
-})
-export default class TaskPropertiesModal extends Vue {
-    public taskName: string = '';
-    public taskResult: string = '';
-
-    private taskId: number = -1;
-    private deferred: JQueryDeferred<TaskDto> | undefined;
-
-    public show(task: TaskDto): JQueryDeferred<TaskDto> {
-        $('#task-properties').modal();
-        this.taskId = task.id;
-        this.taskName = task.name;
-        this.taskResult = task.result_json;
-
-        this.deferred = $.Deferred<TaskDto>();
-        return this.deferred;
-    }
-
-    public hide() {
-        $('#task-properties').modal('hide');
-    }
-
-    public submit() {
-        if (this.deferred) {
-            const markdown = this.$refs.taskMarkdown as TaskMarkdown;
-            const taskDescription = markdown.markdownText() as string;
-            this.deferred.resolve(new TaskDto(this.taskId, this.taskName, taskDescription, this.taskResult));
-        }
-    }
-}
+<script lang="ts" src="./TaskPropertiesModal.ts">
 </script>

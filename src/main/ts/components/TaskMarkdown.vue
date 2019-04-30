@@ -21,22 +21,5 @@
         </div>
     </div>
 </template>
-
-<script lang="ts">
-import {Component, Vue} from 'vue-property-decorator';
-import Showdown from 'showdown';
-
-@Component
-export default class TaskMarkdown extends Vue {
-    private text = '';
-    private converter = new Showdown.Converter();
-
-    public markdownText(): string {
-        return this.converter.makeHtml(this.text);
-    }
-
-    public setText(text: string) {
-        this.text = text;
-    }
-}
+<script lang="ts" src="./TaskMarkdown.ts">
 </script>
