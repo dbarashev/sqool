@@ -13,7 +13,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
 object Attempts : Table("Contest.Attempt") {
   val task_id = integer("task_id")
   val user_id = integer("user_id")
-  val attempt_text = integer("attempt_text")
+  val attempt_text = text("attempt_text")
 }
 
 data class AttemptArgs(var user_id: String, var task_id: String) : RequestArgs()
@@ -26,7 +26,7 @@ class AttemptHandler : RequestHandler<AttemptArgs>() {
       if (attempts.isEmpty()) {
         http.json(hashMapOf("attempt_text" to "[comment]: # (there was no attempt)"));
       } else {
-        http.json(hashMapOf("attempt_text" to attempts.last()));
+        http.json(hashMapOf("attempt_text" to attempts.last()[Attempts.attempt_text]));
       }
     }
   }
