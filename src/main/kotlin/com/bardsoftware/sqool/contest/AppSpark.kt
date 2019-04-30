@@ -14,7 +14,6 @@ import spark.Response
 import spark.Session
 import spark.kotlin.ignite
 import spark.template.freemarker.FreeMarkerEngine
-import java.io.File
 import java.util.*
 import java.util.logging.Level
 import java.util.logging.Logger
@@ -192,7 +191,7 @@ fun main(args: Array<String>) {
   val adminTaskAllHandler = TaskAllHandler(flags)
   val adminTaskNewHandler = TaskNewHandler(flags)
   val adminVariantNewHandler = VariantNewHandler()
-  val adminAttemptHandler = AttemptHandler()
+  val adminSubmissionGetHandler = SubmissionGetHandler()
   val challengeHandler = ChallengeHandler()
 
   ignite().apply {
@@ -223,7 +222,7 @@ fun main(args: Array<String>) {
       GET("/"          TEMPLATE "index.ftl")
       GET("/dashboard" TEMPLATE "dashboard.ftl")
       GET("/admin/submission/review" TEMPLATE "submission.ftl")
-      GET("/admin/submission/get" BY adminAttemptHandler ARGS mapOf(
+      GET("/admin/submission/get" BY adminSubmissionGetHandler ARGS mapOf(
               "task_id" to AttemptArgs::task_id,
               "user_id" to AttemptArgs::user_id
       ))

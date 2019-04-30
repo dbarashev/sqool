@@ -18,7 +18,7 @@ object Attempts : Table("Contest.Attempt") {
 
 data class AttemptArgs(var user_id: String, var task_id: String) : RequestArgs()
 
-class AttemptHandler : RequestHandler<AttemptArgs>() {
+class SubmissionGetHandler : RequestHandler<AttemptArgs>() {
   override fun handle(http: HttpApi, argValues: AttemptArgs): HttpResponse {
     return transaction {
       val attempts = Attempts.select {(Attempts.user_id eq argValues.user_id.toInt()) and
