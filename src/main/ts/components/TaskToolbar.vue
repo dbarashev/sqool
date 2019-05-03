@@ -14,34 +14,8 @@ import TaskTable from './TaskTable';
 
 @Component
 export default class TaskToolbar extends Vue {
-    @Inject() public readonly taskProperties!: () => TaskPropertiesModal;
-    @Inject() public readonly taskTable!: () => TaskTable;
 
-    public createNewTask() {
-        const newTask = new TaskDto(-1, '000', '', '', '');
-        this.taskProperties().show(newTask).then((updatedTask) => {
-            return $.ajax('/admin/task/new', this.buildTaskPayload(updatedTask));
-        }).then(() => {
-            this.taskProperties().hide();
-        });
-    }
-
-    public editTask() {
-        const activeTask = this.taskTable().getActiveTask();
-        if (activeTask) {
-            this.taskProperties().show(activeTask).then((updatedTask) => {
-                $.ajax('/admin/task/update', this.buildTaskPayload(updatedTask));
-            }).then(() => {
-                this.taskProperties().hide();
-            });
-        }
-    }
-
-    public buildVariant() {
-        this.taskTable().buildVariant();
-    }
-
-    private buildTaskPayload(task: TaskDto): object {
+    private static buildTaskPayload(task: TaskDto): object {
         return {
             method: 'POST',
             data: {
@@ -52,6 +26,34 @@ export default class TaskToolbar extends Vue {
                 solution: task.solution,
             },
         };
+    }
+    @Inject() public readonly taskProperties!: () => TaskPropertiesModal;
+    @Inject() public readonly taskTable!: () => TaskTable;
+
+    public createNewTask() {
+        const newTask = new TaskDto(-1, '000', '', '', '');
+        this.taskProperties().show(newTask).then((updatedTask) => {
+            return $.ajax('/admin/task/new', TaskToolbar.buildTaskPayload(updatedTask));
+        }).then(() => {
+            this.taskProperties().hide();
+            this.taskTable().refresh();
+        });
+    }
+
+    public editTask() {
+        const activeTask = this.taskTable().getActiveTask();
+        if (activeTask) {
+            this.taskProperties().show(activeTask).then((updatedTask) => {
+                $.ajax('/admin/task/update', TaskToolbar.buildTaskPayload(updatedTask));
+            }).then(() => {
+                this.taskProperties().hide();
+                this.taskTable().refresh();
+            });
+        }
+    }
+
+    public buildVariant() {
+        this.taskTable().buildVariant();
     }
 }
 </script>

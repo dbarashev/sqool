@@ -8,11 +8,7 @@ export default class TaskTable extends Vue {
     private activeTask?: TaskDto;
 
     public mounted() {
-        $.ajax({
-            url: '/admin/task/all',
-        }).done((tasks: TaskDto[]) => {
-            this.tasks = tasks;
-        });
+        this.refresh();
     }
 
     public taskResultSpec(task: TaskDto): string {
@@ -49,4 +45,11 @@ export default class TaskTable extends Vue {
         return this.activeTask;
     }
 
+    public refresh() {
+        $.ajax({
+            url: '/admin/task/all',
+        }).done((tasks: TaskDto[]) => {
+            this.tasks = tasks;
+        });
+    }
 }
