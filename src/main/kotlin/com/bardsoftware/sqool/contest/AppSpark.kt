@@ -189,7 +189,7 @@ fun main(args: Array<String>) {
   val adminContestAllHandler = ContestAllHandler()
   val adminContestNewHandler = ContestNewHandler()
   val adminTaskAllHandler = TaskAllHandler(flags)
-  val adminTaskNewHandler = TaskNewHandler(flags)
+  val adminTaskEditHandler = TaskEditHandler(flags)
   val adminVariantNewHandler = VariantNewHandler()
   val challengeHandler = ChallengeHandler()
 
@@ -206,11 +206,18 @@ fun main(args: Array<String>) {
           "end_ts" to ContestNewArgs::end_ts
       ))
       GET("/admin/task/all" BY adminTaskAllHandler)
-      POST("/admin/task/new" BY adminTaskNewHandler ARGS mapOf(
-          "result"      to TaskNewArgs::result,
-          "name"        to TaskNewArgs::name,
-          "description" to TaskNewArgs::description,
-          "solution"    to TaskNewArgs::solution
+      POST("/admin/task/new" BY adminTaskEditHandler ARGS mapOf(
+          "result"      to TaskEditArgs::result,
+          "name"        to TaskEditArgs::name,
+          "description" to TaskEditArgs::description,
+          "solution"    to TaskEditArgs::solution
+      ))
+      POST("/admin/task/update" BY adminTaskEditHandler ARGS mapOf(
+          "id"          to TaskEditArgs::id,
+          "result"      to TaskEditArgs::result,
+          "name"        to TaskEditArgs::name,
+          "description" to TaskEditArgs::description,
+          "solution"    to TaskEditArgs::solution
       ))
       POST("/admin/variant/new" BY adminVariantNewHandler ARGS mapOf(
           "course"  to VariantNewArgs::course,

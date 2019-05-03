@@ -2,7 +2,13 @@ export class ColumnSpec {
     constructor(readonly name: string, readonly type: string) {}
 }
 
-export class TaskDto  {
+export function getTaskResultSql(task: TaskDto) {
+    return JSON.parse(task.result_json)
+        .map((column: ColumnSpec) => `${column.name} ${column.type}`).join(',');
+}
+export class TaskDto {
+    public active = false;
+
     constructor(readonly id: number,
                 readonly name: string,
                 readonly description: string,

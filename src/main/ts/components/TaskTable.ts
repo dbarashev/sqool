@@ -1,10 +1,11 @@
 import { Component, Vue } from 'vue-property-decorator';
-import {ColumnSpec, TaskDto} from '../Task';
+import {ColumnSpec, getTaskResultSql, TaskDto} from '../Task';
 
 @Component
 export default class TaskTable extends Vue {
     public tasks: TaskDto[] = [];
     public selectedTasks: TaskDto[] = [];
+    private activeTask?: TaskDto;
 
     public mounted() {
         $.ajax({
@@ -14,9 +15,8 @@ export default class TaskTable extends Vue {
         });
     }
 
-    public taskResultSpec(task: TaskDto) {
-        return JSON.parse(task.result_json)
-            .map((column: ColumnSpec) => `${column.name} ${column.type}`).join(',');
+    public taskResultSpec(task: TaskDto): string {
+        return getTaskResultSql(task);
     }
 
     public buildVariant() {
@@ -35,4 +35,18 @@ export default class TaskTable extends Vue {
             tasks: JSON.stringify(jsonTasks),
         });
     }
+
+    public makeActive(task: TaskDto) {
+        task.active = true;
+        if (this.activeTask) {
+            this.activeTask.active = false;
+        }
+        this.activeTask = task;
+        this.$forceUpdate();
+    }
+
+    public getActiveTask(): TaskDto | undefined {
+        return this.activeTask;
+    }
+
 }

@@ -9,7 +9,7 @@
         </tr>
         </thead>
         <tbody>
-            <tr v-for="t in tasks">
+            <tr v-for="t in tasks" @click="makeActive(t)" v-bind:class="{ 'table-active': t.active }">
                 <td><input type="checkbox" :value="t" v-model="selectedTasks"></td>
                 <td>{{ t.name }}</td>
                 <td v-html="t.description"></td>

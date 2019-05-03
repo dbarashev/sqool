@@ -61,14 +61,19 @@ RETURNS TRIGGER AS $$
 DECLARE
   new_task_id INT;
 BEGIN
-  WITH T AS (
-    INSERT INTO Contest.Task(name, real_name, description, solution)
-      VALUES (NEW.name, NEW.name, NEW.description, NEW.solution)
-      RETURNING id
-  )
-  SELECT id INTO new_task_id
-  FROM T;
-
+  IF NEW.id IS NULL THEN
+      WITH T AS (
+        INSERT INTO Contest.Task(name, real_name, description, solution)
+          VALUES (NEW.name, NEW.name, NEW.description, NEW.solution)
+          RETURNING id
+      )
+      SELECT id INTO new_task_id
+      FROM T;
+  ELSE
+      UPDATE Contest.Task SET name = NEW.name, real_name = NEW.name, description = NEW.description, solution = NEW.solution
+      WHERE id = NEW.id;
+      SELECT NEW.id INTO new_task_id;
+  END IF;
   WITH T AS (
     SELECT new_task_id AS task_id, X.*
     FROM json_to_recordset(NEW.result_json::JSON) AS X(col_num INT, col_name TEXT, col_type TEXT)
@@ -86,6 +91,11 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER TaskDto_Insert_Trigger
 INSTEAD OF INSERT ON Contest.TaskDto
 FOR EACH ROW
+EXECUTE PROCEDURE TaskDto_Insert();
+
+CREATE TRIGGER TaskDto_Update_Trigger
+    INSTEAD OF UPDATE ON Contest.TaskDto
+    FOR EACH ROW
 EXECUTE PROCEDURE TaskDto_Insert();
 
 

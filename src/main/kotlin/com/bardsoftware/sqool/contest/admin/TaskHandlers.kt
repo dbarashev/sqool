@@ -8,10 +8,8 @@ import com.bardsoftware.sqool.contest.HttpResponse
 import com.bardsoftware.sqool.contest.RequestArgs
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
-import org.jetbrains.exposed.sql.ResultRow
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.selectAll
+import com.google.common.base.Strings
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 
 private val JSON_MAPPER = ObjectMapper()
@@ -53,22 +51,39 @@ class TaskAllHandler(flags: Flags) : DbHandler<RequestArgs>(flags) {
 
 class TaskValidationException(msg: String) : Exception(msg)
 
-data class TaskNewArgs(var name: String, var description: String, var result: String, var solution: String) : RequestArgs()
-class TaskNewHandler(flags: Flags) : DbHandler<TaskNewArgs>(flags) {
-  override fun args(): TaskNewArgs = TaskNewArgs(name = "", description = "", result = "", solution = "")
+data class TaskEditArgs(var id: String,
+                        var name: String,
+                        var description: String,
+                        var result: String,
+                        var solution: String) : RequestArgs()
+class TaskEditHandler(flags: Flags) : DbHandler<TaskEditArgs>(flags) {
+  override fun args(): TaskEditArgs = TaskEditArgs(
+      id = "", name = "", description = "", result = "", solution = "")
 
-  override fun handle(http: HttpApi, argValues: TaskNewArgs): HttpResponse {
+  override fun handle(http: HttpApi, argValues: TaskEditArgs): HttpResponse {
     val resultJson = buildResultJson(argValues.result)
 
-
     return transaction {
-      Tasks.insert {
-        it[name] = argValues.name
-        it[description] = argValues.description
-        it[result_json] = resultJson
-        it[solution] = argValues.solution
+      when (Strings.emptyToNull(argValues.id)) {
+        null -> {
+          Tasks.insert {
+            it[name] = argValues.name
+            it[description] = argValues.description
+            it[result_json] = resultJson
+            it[solution] = argValues.solution
+          }
+          http.ok()
+        }
+        else -> {
+          Tasks.update(where = {Tasks.id eq argValues.id.toInt()}) {
+            it[name] = argValues.name
+            it[description] = argValues.description
+            it[result_json] = resultJson
+            it[solution] = argValues.solution
+          }
+          http.ok()
+        }
       }
-      http.ok()
     }
   }
 }

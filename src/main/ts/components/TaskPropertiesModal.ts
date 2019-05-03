@@ -1,5 +1,5 @@
 import { Component, Vue } from 'vue-property-decorator';
-import {TaskDto} from '../Task';
+import {getTaskResultSql, TaskDto} from '../Task';
 import TaskMarkdown from './TaskMarkdown';
 
 @Component({
@@ -19,7 +19,7 @@ export default class TaskPropertiesModal extends Vue {
         $('#task-properties').modal();
         this.taskId = task.id;
         this.taskName = task.name;
-        this.taskResult = task.result_json;
+        this.taskResult = getTaskResultSql(task);
         this.taskSolution = task.solution;
 
         this.deferred = $.Deferred<TaskDto>();
