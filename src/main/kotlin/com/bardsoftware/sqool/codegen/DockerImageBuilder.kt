@@ -5,6 +5,12 @@ import com.google.cloud.tools.jib.api.Containerizer
 import com.google.cloud.tools.jib.api.DockerDaemonImage
 import com.google.cloud.tools.jib.api.Jib
 import com.google.cloud.tools.jib.filesystem.AbsoluteUnixPath
+import com.spotify.docker.client.DefaultDockerClient
+import com.spotify.docker.client.DockerClient.LogsParam.stderr
+import com.spotify.docker.client.DockerClient.LogsParam.stdout
+import com.spotify.docker.client.messages.ContainerConfig
+import com.spotify.docker.client.messages.ContainerExit
+import com.spotify.docker.client.messages.HostConfig
 import java.io.File
 import java.nio.file.Paths
 
@@ -35,42 +41,93 @@ fun buildDockerImage(
             )
 
     root.deleteRecursively()
-    checkImage()
+    checkImage(imageName)
 }
 
-private fun checkImage() {
-    val composeFile = Task::class.java.classLoader.getResource("docker/contest-compose.yml").path
-    val composeCommand = """
-        |docker run --rm -v /var/run/docker.sock:/var/run/docker.sock
-        |    -v $composeFile:/etc/contest-compose.yml
-        |    docker/compose:1.23.2 -f /etc/contest-compose.yml up
-        |    --force-recreate
-        |    --abort-on-container-exit
-        |    --renew-anon-volumes
-        |    --no-color
-        """.trimMargin().replace('\n', ' ')
+private fun checkImage(imageName: String) {
+    val tempDir = createTempDir()
+    val composeFile = createComposeFile(tempDir, imageName)
 
-    val composeProcess = Runtime.getRuntime().exec(composeCommand)
-    val exitVal = composeProcess.waitFor()
-
-    if (exitVal == 0) {
-        val output = composeProcess.inputStream.bufferedReader()
-                .use { it.readText() }
-                .lines()
+    val (result, output) = runDockerCompose(composeFile)
+    if (result.statusCode() == 0L) {
+        val errors = output.lines()
                 .filter { it.matches(".*run-sql.*\\|.*".toRegex()) }
                 .map { it.split("| ")[1] }
-        if (output.any { it.matches(".*ERROR.*".toRegex()) }) {
+        if (errors.any { it.matches(".*ERROR.*".toRegex()) }) {
             println("Contest image testing: Invalid sql:")
-            print(output.joinToString("\n"))
+            print(errors.joinToString("\n"))
         } else {
             println("Contest image testing: OK")
         }
     } else {
-        val errors = composeProcess.errorStream.bufferedReader()
-                .use { it.readText() }
-        if (errors.isNotEmpty()) {
-            println("Contest image testing: unable to test image:")
-            print(errors)
-        }
+        println("Contest image testing: unable to test image:")
+        println(output)
     }
+
+    tempDir.deleteRecursively()
+}
+
+private fun createComposeFile(directory: File, imageName: String): File {
+    val composeYml = """
+        |version: '2.1'
+        |
+        |services:
+        |  contest-sql:
+        |    image: $imageName
+        |    volumes:
+        |      - /workspace
+        |    #waiting for run-sql container to finish queries and stop compose command
+        |    command: tail -f /dev/null
+        |
+        |  db:
+        |    image: postgres
+        |    healthcheck:
+        |      test: ["CMD-SHELL", "pg_isready -U postgres"]
+        |      interval: 5s
+        |      timeout: 5s
+        |      retries: 5
+        |
+        |  run-sql:
+        |    image: postgres
+        |    depends_on:
+        |      db:
+        |        condition: service_healthy
+        |    volumes_from:
+        |      - contest-sql:ro
+        |    command: bash -c 'find /workspace -type f -name "*-static.sql" -exec cat {} + | psql -h db -U postgres'
+        """.trimMargin()
+    val composeFile = File(directory, "contest-compose.yml")
+    composeFile.writeText(composeYml)
+    return composeFile
+}
+
+private fun runDockerCompose(composeFile: File): Pair<ContainerExit, String> {
+    val docker = DefaultDockerClient.fromEnv().build()
+    docker.pull("docker/compose:1.23.2")
+
+    val hostConfig = HostConfig.builder()
+            .appendBinds(
+                    "/var/run/docker.sock:/var/run/docker.sock",
+                    "${composeFile.absolutePath}:/etc/contest-compose.yml"
+            )
+            .build()
+    val composeCommand = listOf(
+            "-f", "/etc/contest-compose.yml", "up",
+            "--force-recreate", "--abort-on-container-exit",
+            "--renew-anon-volumes", "--no-color"
+    )
+    val containerConfig = ContainerConfig.builder()
+            .hostConfig(hostConfig)
+            .image("docker/compose:1.23.2")
+            .cmd(composeCommand)
+            .build()
+
+    val container = docker.createContainer(containerConfig)
+    docker.startContainer(container.id())
+    val result = docker.waitContainer(container.id())
+    val output = docker.logs(container.id(), stdout(), stderr()).readFully()
+    docker.removeContainer(container.id())
+    docker.close()
+
+    return Pair(result, output)
 }

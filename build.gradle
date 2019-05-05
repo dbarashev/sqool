@@ -15,7 +15,6 @@ buildscript {
 }
 plugins {
 	id 'com.google.cloud.tools.jib' version '1.0.2'
-
 }
 
 apply plugin: 'application'
@@ -35,7 +34,6 @@ repositories {
 
 mainClassName = 'com.bardsoftware.sqool.contest.AppSparkKt'
 
-
 dependencies {
 	compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:${kotlinVersion}"
 	compile "org.jetbrains.kotlin:kotlin-reflect:${kotlinVersion}"
@@ -43,7 +41,9 @@ dependencies {
 	compile "com.xenomachina:kotlin-argparser:2.+"
 	
 	compile 'com.google.cloud.tools:jib-core:0.+'
-	
+
+	compile group: 'com.spotify', name: 'docker-client', version: '8.+'
+
 	// PubSub stuff
 	compile 'com.google.cloud:google-cloud-pubsub:0.26.+'
 	
