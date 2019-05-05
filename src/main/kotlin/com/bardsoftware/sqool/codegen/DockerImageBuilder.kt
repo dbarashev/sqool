@@ -110,13 +110,13 @@ private fun runDockerCompose(composeFile: File): Pair<ContainerExit, String> {
                     HostConfig.Bind.from("/var/run/docker.sock")
                             .to("/var/run/docker.sock")
                             .build(),
-                    HostConfig.Bind.from(composeFile.absolutePath)
-                            .to("/etc/contest-compose.yml")
+                    HostConfig.Bind.from(composeFile.parent)
+                            .to("/etc/contest-compose/")
                             .build()
             )
             .build()
     val composeCommand = listOf(
-            "-f", "/etc/contest-compose.yml", "up",
+            "-f", "/etc/contest-compose/${composeFile.name}", "up",
             "--force-recreate", "--abort-on-container-exit",
             "--renew-anon-volumes", "--no-color"
     )
@@ -134,4 +134,10 @@ private fun runDockerCompose(composeFile: File): Pair<ContainerExit, String> {
     docker.close()
 
     return Pair(result, output)
+}
+
+fun main() {
+    val tempDir = createTempDir()
+    println(tempDir.absolutePath)
+    println(tempDir.name)
 }
