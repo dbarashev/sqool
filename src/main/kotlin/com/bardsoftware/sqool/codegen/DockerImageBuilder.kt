@@ -107,8 +107,12 @@ private fun runDockerCompose(composeFile: File): Pair<ContainerExit, String> {
 
     val hostConfig = HostConfig.builder()
             .appendBinds(
-                    "/var/run/docker.sock:/var/run/docker.sock",
-                    "${composeFile.absolutePath}:/etc/contest-compose.yml"
+                    HostConfig.Bind.from("/var/run/docker.sock")
+                            .to("/var/run/docker.sock")
+                            .build(),
+                    HostConfig.Bind.from(composeFile.absolutePath)
+                            .to("/etc/contest-compose.yml")
+                            .build()
             )
             .build()
     val composeCommand = listOf(
