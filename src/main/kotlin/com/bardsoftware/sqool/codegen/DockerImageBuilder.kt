@@ -96,6 +96,7 @@ private fun createComposeFile(imageName: String): File {
         |    command: bash -c 'find /workspace -type f -name "*-static.sql" -exec cat {} + | psql -h db -U postgres'
         """.trimMargin()
     val composeFile = createTempFile("contest-compose", ".yml")
+    composeFile.parentFile.mkdirs()
     composeFile.writeText(composeYml)
     return composeFile
 }
@@ -106,11 +107,11 @@ private fun runDockerCompose(composeFile: File): Pair<ContainerExit, String> {
 
     val hostConfig = HostConfig.builder()
             .appendBinds(
+                    HostConfig.Bind.from(composeFile.canonicalPath)
+                            .to("/etc/contest-compose.yml")
+                            .build(),
                     HostConfig.Bind.from("/var/run/docker.sock")
                             .to("/var/run/docker.sock")
-                            .build(),
-                    HostConfig.Bind.from(composeFile.absolutePath)
-                            .to("/etc/contest-compose.yml")
                             .build()
             )
             .build()
@@ -133,10 +134,4 @@ private fun runDockerCompose(composeFile: File): Pair<ContainerExit, String> {
     docker.close()
 
     return Pair(result, output)
-}
-
-fun main() {
-    val tempDir = createTempDir()
-    println(tempDir.absolutePath)
-    println(tempDir.name)
 }
