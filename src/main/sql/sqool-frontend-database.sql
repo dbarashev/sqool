@@ -74,16 +74,16 @@ BEGIN
       WHERE id = NEW.id;
       SELECT NEW.id INTO new_task_id;
   END IF;
+
+  DELETE FROM Contest.TaskResult
+      WHERE task_id = new_task_id;
   WITH T AS (
     SELECT new_task_id AS task_id, X.*
     FROM json_to_recordset(NEW.result_json::JSON) AS X(col_num INT, col_name TEXT, col_type TEXT)
   )
   INSERT INTO Contest.TaskResult(task_id, col_num, col_name, col_type)
   SELECT task_id, col_num, col_name, col_type
-  FROM T
-  ON CONFLICT ON CONSTRAINT  taskresult_pkey DO
-    UPDATE SET col_num = EXCLUDED.col_num, col_name = EXCLUDED.col_name, col_type = EXCLUDED.col_type;
-
+  FROM T;
 RETURN NEW;
 end;
 $$ LANGUAGE plpgsql;

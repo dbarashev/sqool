@@ -49,7 +49,8 @@ export default class TaskTable extends Vue {
         $.ajax({
             url: '/admin/task/all',
         }).done((tasks: TaskDto[]) => {
-            this.tasks = tasks;
+            this.tasks = [];
+            tasks.forEach((t) => this.tasks.push(t));
         });
     }
 }
