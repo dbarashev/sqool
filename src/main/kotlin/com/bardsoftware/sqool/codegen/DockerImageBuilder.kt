@@ -45,8 +45,7 @@ fun buildDockerImage(
 }
 
 private fun checkImage(imageName: String) {
-    val tempDir = createTempDir()
-    val composeFile = createComposeFile(tempDir, imageName)
+    val composeFile = createComposeFile(imageName)
 
     val (result, output) = runDockerCompose(composeFile)
     if (result.statusCode() == 0L) {
@@ -64,10 +63,10 @@ private fun checkImage(imageName: String) {
         println(output)
     }
 
-    tempDir.deleteRecursively()
+    composeFile.delete()
 }
 
-private fun createComposeFile(directory: File, imageName: String): File {
+private fun createComposeFile(imageName: String): File {
     val composeYml = """
         |version: '2.1'
         |
@@ -96,7 +95,7 @@ private fun createComposeFile(directory: File, imageName: String): File {
         |      - contest-sql:ro
         |    command: bash -c 'find /workspace -type f -name "*-static.sql" -exec cat {} + | psql -h db -U postgres'
         """.trimMargin()
-    val composeFile = File(directory, "contest-compose.yml")
+    val composeFile = createTempFile("contest-compose", ".yml")
     composeFile.writeText(composeYml)
     return composeFile
 }
@@ -110,13 +109,13 @@ private fun runDockerCompose(composeFile: File): Pair<ContainerExit, String> {
                     HostConfig.Bind.from("/var/run/docker.sock")
                             .to("/var/run/docker.sock")
                             .build(),
-                    HostConfig.Bind.from(composeFile.parent)
-                            .to("/etc/contest-compose/")
+                    HostConfig.Bind.from(composeFile.absolutePath)
+                            .to("/etc/contest-compose.yml")
                             .build()
             )
             .build()
     val composeCommand = listOf(
-            "-f", "/etc/contest-compose/${composeFile.name}", "up",
+            "-f", "/etc/contest-compose.yml", "up",
             "--force-recreate", "--abort-on-container-exit",
             "--renew-anon-volumes", "--no-color"
     )
