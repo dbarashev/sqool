@@ -75,7 +75,9 @@ private fun createComposeFileInTempDir(imageName: String): File {
         |    image: $imageName
         |    volumes:
         |      - /workspace
-        |    #waiting for run-sql container to finish queries and stop compose command
+        |    # We need to stop docker-compose (and in particular PostgreSQL server) 
+        |    # when test queries are completed. The easiest way is to set --abort-on-container-exit flag. 
+        |    # However, we don't want to abort too early, so here we just wait forever.
         |    command: tail -f /dev/null
         |
         |  db:
