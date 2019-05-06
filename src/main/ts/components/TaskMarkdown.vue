@@ -21,6 +21,5 @@
         </div>
     </div>
 </template>
-
 <script lang="ts" src="./TaskMarkdown.ts">
 </script>
