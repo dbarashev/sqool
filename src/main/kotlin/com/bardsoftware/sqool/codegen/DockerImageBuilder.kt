@@ -101,7 +101,7 @@ private fun createComposeFile(imageName: String): File {
 }
 
 private fun runDockerCompose(composeFile: File): Pair<ContainerExit, String> {
-    assert(composeFile.isFile)
+    throw Exception(composeFile.canonicalPath + "\n" + composeFile.readText())
 
     val docker = DefaultDockerClient.fromEnv().build()
     docker.pull("docker/compose:1.23.2")
