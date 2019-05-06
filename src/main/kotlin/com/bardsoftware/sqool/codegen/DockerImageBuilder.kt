@@ -107,10 +107,10 @@ private fun runDockerCompose(composeFile: File): Pair<ContainerExit, String> {
     docker.pull("docker/compose:1.23.2")
 
     val hostConfig = HostConfig.builder()
-            .appendBinds(
+            .appendBinds(/*
                     HostConfig.Bind.from(composeFile.parentFile.canonicalPath)
                             .to("/etc/contest-compose/")
-                            .build(),
+                            .build(),*/
                     HostConfig.Bind.from("/var/run/docker.sock")
                             .to("/var/run/docker.sock")
                             .build()
@@ -124,12 +124,12 @@ private fun runDockerCompose(composeFile: File): Pair<ContainerExit, String> {
     val containerConfig = ContainerConfig.builder()
             .hostConfig(hostConfig)
             .image("docker/compose:1.23.2")
-            //.volumes("/etc/contest-compose")
+            .volumes("/etc/contest-compose")
             .cmd(composeCommand)
             .build()
 
     val container = docker.createContainer(containerConfig)
-    //docker.copyToContainer(composeFile.parentFile.toPath(), container.id(), "/etc/contest-compose/")
+    docker.copyToContainer(composeFile.parentFile.toPath(), container.id(), "/etc/contest-compose/")
     docker.startContainer(container.id())
     val result = docker.waitContainer(container.id())
     val output = docker.logs(container.id(), stdout(), stderr()).readFully()
