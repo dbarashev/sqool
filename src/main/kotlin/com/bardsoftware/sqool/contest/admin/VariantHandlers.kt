@@ -20,7 +20,7 @@ class VariantNewHandler : RequestHandler<VariantNewArgs>() {
             try {
                 val tasks = deserializeJsonTasks(argValues.tasks)
                 buildDockerImage(
-                        "image_name",
+                        "contest-image",
                         argValues.course, argValues.module,
                         argValues.variant, argValues.schema,
                         tasks)
