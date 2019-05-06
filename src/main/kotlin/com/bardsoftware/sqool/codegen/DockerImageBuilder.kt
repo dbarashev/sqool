@@ -101,15 +101,13 @@ private fun createComposeFile(imageName: String): File {
 }
 
 private fun runDockerCompose(composeFile: File): Pair<ContainerExit, String> {
-    throw Exception(composeFile.canonicalPath + "\n" + composeFile.readText())
-
     val docker = DefaultDockerClient.fromEnv().build()
     docker.pull("docker/compose:1.23.2")
 
     val hostConfig = HostConfig.builder()
             .appendBinds(
                     HostConfig.Bind.from(composeFile.canonicalPath)
-                            .to("/etc/contest-compose.yml")
+                            .to("/contest-compose.yml")
                             .build(),
                     HostConfig.Bind.from("/var/run/docker.sock")
                             .to("/var/run/docker.sock")
@@ -117,7 +115,7 @@ private fun runDockerCompose(composeFile: File): Pair<ContainerExit, String> {
             )
             .build()
     val composeCommand = listOf(
-            "-f", "/etc/contest-compose.yml", "up",
+            "-f", "/contest-compose.yml", "up",
             "--force-recreate", "--abort-on-container-exit",
             "--renew-anon-volumes", "--no-color"
     )
