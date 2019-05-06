@@ -63,7 +63,7 @@ private fun checkImage(imageName: String) {
         println(output)
     }
 
-    composeFile.deleteRecursively()
+    composeFile.parentFile.deleteRecursively()
 }
 
 private fun createComposeFileInTempDir(imageName: String): File {
@@ -96,7 +96,8 @@ private fun createComposeFileInTempDir(imageName: String): File {
         |    command: bash -c 'find /workspace -type f -name "*-static.sql" -exec cat {} + | psql -h db -U postgres'
         """.trimMargin()
 
-    val composeFile = createTempFile("contest-compose", ".yml")
+    val composeDir = createTempDir()
+    val composeFile = File(composeDir, "contest-compose.yml")
     composeFile.writeText(composeYml)
     return composeFile
 }
@@ -107,8 +108,8 @@ private fun runDockerCompose(composeFile: File): Pair<ContainerExit, String> {
 
     val hostConfig = HostConfig.builder()
             .appendBinds(
-                    HostConfig.Bind.from(composeFile.canonicalPath)
-                            .to("/etc/contest-compose/contest-compose.yml")
+                    HostConfig.Bind.from(composeFile.parentFile.canonicalPath)
+                            .to("/etc/contest-compose/")
                             .build(),
                     HostConfig.Bind.from("/var/run/docker.sock")
                             .to("/var/run/docker.sock")
@@ -116,18 +117,19 @@ private fun runDockerCompose(composeFile: File): Pair<ContainerExit, String> {
             )
             .build()
     val composeCommand = listOf(
-            "-f", "/etc/contest-compose/contest-compose.yml", "up",
+            "-f", "/etc/contest-compose/${composeFile.name}", "up",
             "--force-recreate", "--abort-on-container-exit",
             "--renew-anon-volumes", "--no-color"
     )
     val containerConfig = ContainerConfig.builder()
-            .volumes("/etc/contest-compose")
             .hostConfig(hostConfig)
             .image("docker/compose:1.23.2")
+            .volumes("/etc/contest-compose")
             .cmd(composeCommand)
             .build()
 
     val container = docker.createContainer(containerConfig)
+    docker.copyToContainer(composeFile.parentFile.toPath(), container.id(), "/etc/contest-compose/")
     docker.startContainer(container.id())
     val result = docker.waitContainer(container.id())
     val output = docker.logs(container.id(), stdout(), stderr()).readFully()
