@@ -24,7 +24,7 @@ class SubmissionGetHandler : RequestHandler<SubmissionGetArgs>() {
         ((Attempts.user_id eq argValues.user_id.toInt())
         and
         (Attempts.task_id eq argValues.task_id.toInt()))
-      }.toList();
+      }.toList()
       when {
           attempts.isEmpty() -> http.json(hashMapOf("attempt_text" to "[comment]: # (there was no attempt)"))
           attempts.size > 1 -> http.error(500, "get more than one attempt by user_id and task_id")
