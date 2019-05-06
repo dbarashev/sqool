@@ -96,12 +96,13 @@ private fun createComposeFile(imageName: String): File {
         |    command: bash -c 'find /workspace -type f -name "*-static.sql" -exec cat {} + | psql -h db -U postgres'
         """.trimMargin()
     val composeFile = createTempFile("contest-compose", ".yml")
-    composeFile.parentFile.mkdirs()
     composeFile.writeText(composeYml)
     return composeFile
 }
 
 private fun runDockerCompose(composeFile: File): Pair<ContainerExit, String> {
+    assert(composeFile.isFile)
+
     val docker = DefaultDockerClient.fromEnv().build()
     docker.pull("docker/compose:1.23.2")
 
