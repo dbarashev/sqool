@@ -12,6 +12,8 @@ import com.spotify.docker.client.messages.ContainerConfig
 import com.spotify.docker.client.messages.ContainerExit
 import com.spotify.docker.client.messages.HostConfig
 import java.io.File
+import java.io.OutputStream
+import java.io.PrintWriter
 import java.nio.file.Paths
 
 fun buildDockerImage(
@@ -41,29 +43,33 @@ fun buildDockerImage(
             )
 
     root.deleteRecursively()
-    checkImage(imageName)
 }
 
-private fun checkImage(imageName: String) {
+fun checkImage(imageName: String, outputStream: OutputStream) {
+    val writer = PrintWriter(outputStream)
     val composeFile = createComposeFileInTempDir(imageName)
 
     val (result, output) = runDockerCompose(composeFile)
     if (result.statusCode() == 0L) {
+        // Extracting output produces by run-sql container to check if there are any error messages.
         val errors = output.lines()
+                // docker-compose prepends container name with pipe to original lines.
                 .filter { it.matches(".*run-sql.*\\|.*".toRegex()) }
+                // We need only original parts.
                 .map { it.split("| ")[1] }
         if (errors.any { it.matches(".*ERROR.*".toRegex()) }) {
-            println("Contest image testing: Invalid sql:")
-            print(errors.joinToString("\n"))
+            writer.println("Contest image testing: Invalid sql:")
+            writer.println(errors.joinToString("\n"))
         } else {
-            println("Contest image testing: OK")
+            writer.println("Contest image testing: OK")
         }
     } else {
-        println("Contest image testing: unable to test image:")
-        println(output)
+        writer.println("Contest image testing: unable to test image:")
+        writer.println(output)
     }
 
     composeFile.parentFile.deleteRecursively()
+    writer.flush()
 }
 
 private fun createComposeFileInTempDir(imageName: String): File {
@@ -110,9 +116,6 @@ private fun runDockerCompose(composeFile: File): Pair<ContainerExit, String> {
 
     val hostConfig = HostConfig.builder()
             .appendBinds(
-                    HostConfig.Bind.from(composeFile.parentFile.canonicalPath)
-                            .to("/etc/contest-compose/")
-                            .build(),
                     HostConfig.Bind.from("/var/run/docker.sock")
                             .to("/var/run/docker.sock")
                             .build()

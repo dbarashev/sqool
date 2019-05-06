@@ -5,23 +5,15 @@ import com.bardsoftware.sqool.codegen.task.spec.SqlDataType
 import com.bardsoftware.sqool.codegen.task.spec.TaskResultColumn
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.io.ByteArrayOutputStream
-import java.io.PrintStream
-
 
 class DockerImageBuilderTest {
-    private val stdOut = ByteArrayOutputStream()
-
-    @BeforeEach
-    fun setStdOut() {
-        System.setOut(PrintStream(stdOut))
-    }
+    private val outputStream = ByteArrayOutputStream()
 
     @AfterEach
-    fun cleanStdOut() {
-        System.setOut(null)
+    fun cleanOutputStream() {
+        outputStream.reset()
     }
 
     @Test
@@ -51,7 +43,8 @@ class DockerImageBuilderTest {
         buildDockerImage(
                 imageName = "contest-image", course = "hse2019", module = "cw2",
                 variant = "variant3", schemaPath = "/workspace/hse2019/cw2/schema3.sql", tasks = listOf(task))
-        assertEquals("Contest image testing: OK\n", stdOut.toString())
+        checkImage("contest-image", outputStream)
+        assertEquals("Contest image testing: OK\n", outputStream.toString())
     }
 
     @Test
@@ -61,6 +54,7 @@ class DockerImageBuilderTest {
         buildDockerImage(
                 imageName = "contest-image", course = "hse2019", module = "cw2",
                 variant = "variant3", schemaPath = "/workspace/hse2019/cw2/schema3.sql", tasks = listOf(task))
+        checkImage("contest-image", outputStream)
 
         val expectedOutput = """
             |Contest image testing: Invalid sql:
@@ -77,7 +71,8 @@ class DockerImageBuilderTest {
             |HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
             |CREATE FUNCTION
             |DROP FUNCTION
+            |
             """.trimMargin()
-        assertEquals(expectedOutput, stdOut.toString())
+        assertEquals(expectedOutput, outputStream.toString())
     }
 }
