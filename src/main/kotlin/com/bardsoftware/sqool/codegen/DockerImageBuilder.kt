@@ -122,13 +122,13 @@ private fun runDockerCompose(composeFile: File): Pair<ContainerExit, String> {
                             .build()
             )
         .appendBinds(
-            HostConfig.Bind.from(composeFile.absolutePath)
-                .to("/var/run/contest-compose.yml")
+            HostConfig.Bind.from(composeFile.parentFile.absolutePath)
+                .to("/var/run/sqool")
                 .build()
         )
             .build()
     val composeCommand = listOf(
-            "-f", "/var/run/contest-compose.yml", "up",
+            "-f", "/var/run/sqool/${composeFile.name}", "up",
             "--force-recreate", "--abort-on-container-exit",
             "--renew-anon-volumes", "--no-color"
     )
