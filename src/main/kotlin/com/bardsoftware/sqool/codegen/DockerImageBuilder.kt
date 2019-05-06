@@ -81,8 +81,8 @@ private fun createComposeFileInTempDir(imageName: String): File {
         |    image: $imageName
         |    volumes:
         |      - /workspace
-        |    # We need to stop docker-compose (and in particular PostgreSQL server) 
-        |    # when test queries are completed. The easiest way is to set --abort-on-container-exit flag. 
+        |    # We need to stop docker-compose (and in particular PostgreSQL server)
+        |    # when test queries are completed. The easiest way is to set --abort-on-container-exit flag.
         |    # However, we don't want to abort too early, so here we just wait forever.
         |    command: tail -f /dev/null
         |
@@ -114,27 +114,31 @@ private fun runDockerCompose(composeFile: File): Pair<ContainerExit, String> {
     val docker = DefaultDockerClient.fromEnv().build()
     docker.pull("docker/compose:1.23.2")
 
+    println("Compose file: ${composeFile.absolutePath}")
     val hostConfig = HostConfig.builder()
             .appendBinds(
                     HostConfig.Bind.from("/var/run/docker.sock")
                             .to("/var/run/docker.sock")
                             .build()
             )
+        .appendBinds(
+            HostConfig.Bind.from(composeFile.absolutePath)
+                .to("/var/run/contest-compose.yml")
+                .build()
+        )
             .build()
     val composeCommand = listOf(
-            "-f", "/etc/contest-compose/${composeFile.name}", "up",
+            "-f", "/var/run/contest-compose.yml", "up",
             "--force-recreate", "--abort-on-container-exit",
             "--renew-anon-volumes", "--no-color"
     )
     val containerConfig = ContainerConfig.builder()
             .hostConfig(hostConfig)
             .image("docker/compose:1.23.2")
-            .volumes("/etc/contest-compose")
             .cmd(composeCommand)
             .build()
 
     val container = docker.createContainer(containerConfig)
-    docker.copyToContainer(composeFile.parentFile.toPath(), container.id(), "/etc/contest-compose/")
     docker.startContainer(container.id())
     val result = docker.waitContainer(container.id())
     val output = docker.logs(container.id(), stdout(), stderr()).readFully()
