@@ -45,7 +45,7 @@ fun buildDockerImage(
 }
 
 private fun checkImage(imageName: String) {
-    val composeFile = createComposeFile(imageName)
+    val composeFile = createComposeFileInTempDir(imageName)
 
     val (result, output) = runDockerCompose(composeFile)
     if (result.statusCode() == 0L) {
@@ -63,10 +63,10 @@ private fun checkImage(imageName: String) {
         println(output)
     }
 
-    composeFile.deleteRecursively()
+    composeFile.parentFile.deleteRecursively()
 }
 
-private fun createComposeFile(imageName: String): File {
+private fun createComposeFileInTempDir(imageName: String): File {
     val composeYml = """
         |version: '2.1'
         |
@@ -107,10 +107,7 @@ private fun runDockerCompose(composeFile: File): Pair<ContainerExit, String> {
     docker.pull("docker/compose:1.23.2")
 
     val hostConfig = HostConfig.builder()
-            .appendBinds(/*
-                    HostConfig.Bind.from(composeFile.parentFile.canonicalPath)
-                            .to("/etc/contest-compose/")
-                            .build(),*/
+            .appendBinds(
                     HostConfig.Bind.from("/var/run/docker.sock")
                             .to("/var/run/docker.sock")
                             .build()
@@ -137,8 +134,4 @@ private fun runDockerCompose(composeFile: File): Pair<ContainerExit, String> {
     docker.close()
 
     return Pair(result, output)
-}
-
-fun main() {
-    checkImage("contest-image")
 }
