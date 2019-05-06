@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test
 /**
  * @author dbarashev@bardsoftware.com
  */
-class TaskNewHandlerTest {
+class TaskEditHandlerTest {
   @Test
   fun `test valid result spec of scalar value task`() {
     assertEquals("""

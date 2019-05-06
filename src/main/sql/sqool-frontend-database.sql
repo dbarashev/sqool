@@ -18,6 +18,7 @@ CREATE TABLE Contest.Task(
     real_name TEXT UNIQUE,
     signature TEXT,
     description TEXT,
+    solution TEXT,
     score INT CHECK(score BETWEEN 1 AND 10),
     difficulty INT CHECK(difficulty BETWEEN 1 AND 3),
     author_id INT REFERENCES Contest.ContestUser
@@ -39,6 +40,7 @@ CREATE OR REPLACE VIEW Contest.TaskDto AS
 -- [{"name": "col1", "type": "INT"}, {"name": "col2", type: "TEXT"}]
 SELECT id, name,
   COALESCE(description, '') AS description,
+  COALESCE(solution, '') AS solution,
   array_to_json(array_agg(json_object('{name, type}', ARRAY[col_name, col_type])))::TEXT AS result_json
 FROM Contest.Task T JOIN Contest.TaskResult R ON T.id=R.task_id
 GROUP BY T.id
@@ -47,6 +49,7 @@ UNION ALL
 -- []
 SELECT id, name,
   COALESCE(description, '') AS description,
+  COALESCE(solution, '') AS solution,
   '[]' AS result_json
 FROM Contest.Task T LEFT JOIN Contest.TaskResult R ON T.id=R.task_id
 WHERE R.task_id IS NULL
@@ -58,24 +61,29 @@ RETURNS TRIGGER AS $$
 DECLARE
   new_task_id INT;
 BEGIN
-  WITH T AS (
-    INSERT INTO Contest.Task(name, real_name, description)
-      VALUES (NEW.name, NEW.name, NEW.description)
-      RETURNING id
-  )
-  SELECT id INTO new_task_id
-  FROM T;
+  IF NEW.id IS NULL THEN
+      WITH T AS (
+        INSERT INTO Contest.Task(name, real_name, description, solution)
+          VALUES (NEW.name, NEW.name, NEW.description, NEW.solution)
+          RETURNING id
+      )
+      SELECT id INTO new_task_id
+      FROM T;
+  ELSE
+      UPDATE Contest.Task SET name = NEW.name, real_name = NEW.name, description = NEW.description, solution = NEW.solution
+      WHERE id = NEW.id;
+      SELECT NEW.id INTO new_task_id;
+  END IF;
 
+  DELETE FROM Contest.TaskResult
+      WHERE task_id = new_task_id;
   WITH T AS (
     SELECT new_task_id AS task_id, X.*
     FROM json_to_recordset(NEW.result_json::JSON) AS X(col_num INT, col_name TEXT, col_type TEXT)
   )
   INSERT INTO Contest.TaskResult(task_id, col_num, col_name, col_type)
   SELECT task_id, col_num, col_name, col_type
-  FROM T
-  ON CONFLICT ON CONSTRAINT  taskresult_pkey DO
-    UPDATE SET col_num = EXCLUDED.col_num, col_name = EXCLUDED.col_name, col_type = EXCLUDED.col_type;
-
+  FROM T;
 RETURN NEW;
 end;
 $$ LANGUAGE plpgsql;
@@ -83,6 +91,11 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER TaskDto_Insert_Trigger
 INSTEAD OF INSERT ON Contest.TaskDto
 FOR EACH ROW
+EXECUTE PROCEDURE TaskDto_Insert();
+
+CREATE TRIGGER TaskDto_Update_Trigger
+    INSTEAD OF UPDATE ON Contest.TaskDto
+    FOR EACH ROW
 EXECUTE PROCEDURE TaskDto_Insert();
 
 

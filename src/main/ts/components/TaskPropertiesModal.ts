@@ -1,5 +1,5 @@
 import { Component, Vue } from 'vue-property-decorator';
-import {TaskDto} from '../Task';
+import {getTaskResultSql, TaskDto} from '../Task';
 import TaskMarkdown from './TaskMarkdown';
 
 @Component({
@@ -10,15 +10,23 @@ import TaskMarkdown from './TaskMarkdown';
 export default class TaskPropertiesModal extends Vue {
     public taskName: string = '';
     public taskResult: string = '';
+    public taskSolution: string = '';
 
     private taskId: number = -1;
     private deferred: JQueryDeferred<TaskDto> | undefined;
+    get markdown(): TaskMarkdown {
+        return this.$refs.taskMarkdown as TaskMarkdown;
+    }
+
 
     public show(task: TaskDto): JQueryDeferred<TaskDto> {
         $('#task-properties').modal();
         this.taskId = task.id;
         this.taskName = task.name;
-        this.taskResult = task.result_json;
+        this.taskResult = getTaskResultSql(task);
+        this.markdown.textValue = task.description;
+
+        this.taskSolution = task.solution;
 
         this.deferred = $.Deferred<TaskDto>();
         return this.deferred;
@@ -30,9 +38,10 @@ export default class TaskPropertiesModal extends Vue {
 
     public submit() {
         if (this.deferred) {
-            const markdown = this.$refs.taskMarkdown as TaskMarkdown;
-            const taskDescription = markdown.markdownText() as string;
-            this.deferred.resolve(new TaskDto(this.taskId, this.taskName, taskDescription, this.taskResult));
+            const taskDescription = this.markdown.textValue;
+            this.deferred.resolve(new TaskDto(
+                this.taskId, this.taskName, taskDescription, this.taskResult, this.taskSolution));
         }
     }
+
 }

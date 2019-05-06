@@ -42,7 +42,7 @@ export default class Submission extends Vue {
                 user_id: this.userId,
             },
         }).then((attempt) => {
-            markdown.setText(attempt.attempt_text);
+            markdown.textValue = attempt.attempt_text;
         });
     }
 }
