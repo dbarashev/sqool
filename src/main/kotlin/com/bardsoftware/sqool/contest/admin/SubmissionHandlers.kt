@@ -7,7 +7,6 @@ import com.bardsoftware.sqool.contest.RequestHandler
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.select
-import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
 
 object Attempts : Table("Contest.Attempt") {
@@ -16,21 +15,24 @@ object Attempts : Table("Contest.Attempt") {
   val attempt_text = text("attempt_text")
 }
 
-data class AttemptArgs(var user_id: String, var task_id: String) : RequestArgs()
+data class SubmissionGetArgs(var user_id: String, var task_id: String) : RequestArgs()
 
-class SubmissionGetHandler : RequestHandler<AttemptArgs>() {
-  override fun handle(http: HttpApi, argValues: AttemptArgs): HttpResponse {
+class SubmissionGetHandler : RequestHandler<SubmissionGetArgs>() {
+  override fun handle(http: HttpApi, argValues: SubmissionGetArgs): HttpResponse {
     return transaction {
-      val attempts = Attempts.select {(Attempts.user_id eq argValues.user_id.toInt()) and
-              (Attempts.task_id eq argValues.task_id.toInt())}.toList();
-      if (attempts.isEmpty()) {
-        http.json(hashMapOf("attempt_text" to "[comment]: # (there was no attempt)"));
-      } else {
-        http.json(hashMapOf("attempt_text" to attempts.last()[Attempts.attempt_text]));
+      val attempts = Attempts.select {
+        ((Attempts.user_id eq argValues.user_id.toInt())
+        and
+        (Attempts.task_id eq argValues.task_id.toInt()))
+      }.toList();
+      when {
+          attempts.isEmpty() -> http.json(hashMapOf("attempt_text" to "[comment]: # (there was no attempt)"))
+          attempts.size > 1 -> http.error(500, "get more than one attempt by user_id and task_id")
+          else -> http.json(hashMapOf("attempt_text" to attempts.last()[Attempts.attempt_text]))
       }
     }
   }
 
-  override fun args(): AttemptArgs = AttemptArgs("", "")
+  override fun args(): SubmissionGetArgs = SubmissionGetArgs("", "")
 }
 

@@ -2,12 +2,12 @@ module.exports = {
   lintOnSave: false,
   outputDir: 'build/resources/main',
   assetsDir: 'public',
-
-  configureWebpack: config => {
-     config.entry = {
-       app: [
-         './src/main/ts/main.ts'
-       ]
-     }
-  }
+    pages: {
+      app: {
+        entry: './src/main/ts/main.ts'
+      },
+      submission: {
+        entry: './src/main/ts/Submission.ts'
+      }
+    }
 }

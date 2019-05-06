@@ -223,8 +223,8 @@ fun main(args: Array<String>) {
       GET("/dashboard" TEMPLATE "dashboard.ftl")
       GET("/admin/submission/review" TEMPLATE "submission.ftl")
       GET("/admin/submission/get" BY adminSubmissionGetHandler ARGS mapOf(
-              "task_id" to AttemptArgs::task_id,
-              "user_id" to AttemptArgs::user_id
+              "task_id" to SubmissionGetArgs::task_id,
+              "user_id" to SubmissionGetArgs::user_id
       ))
     }
     get("/login") {

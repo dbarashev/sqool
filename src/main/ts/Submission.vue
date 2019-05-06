@@ -22,7 +22,7 @@
 
 <script lang="ts">
 import {Component, Vue} from 'vue-property-decorator';
-import TaskMarkdown from './components/TaskMarkdown.vue';
+import TaskMarkdown from './components/TaskMarkdown';
 
 @Component({
     components: {
