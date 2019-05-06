@@ -118,10 +118,7 @@ private fun runDockerCompose(composeFile: File): Pair<ContainerExit, String> {
             .appendBinds(
                     HostConfig.Bind.from("/var/run/docker.sock")
                             .to("/var/run/docker.sock")
-                            .build(),
-                HostConfig.Bind.from(composeFile.parentFile.absolutePath)
-                    .to("/var/run/sqool")
-                    .build()
+                            .build()
             )
             .build()
     val composeCommand = listOf(
@@ -135,8 +132,9 @@ private fun runDockerCompose(composeFile: File): Pair<ContainerExit, String> {
             .image("docker/compose:1.23.2")
             .cmd(composeCommand)
             .build()
-    
+
     val container = docker.createContainer(containerConfig)
+    docker.copyToContainer(composeFile.parentFile.toPath(), container.id(), "/var/run/sqool/")
     docker.startContainer(container.id())
     val result = docker.waitContainer(container.id())
     val output = docker.logs(container.id(), stdout(), stderr()).readFully()
