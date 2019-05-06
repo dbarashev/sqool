@@ -2,9 +2,10 @@ export class ColumnSpec {
     constructor(readonly name: string, readonly type: string) {}
 }
 
-export function getTaskResultSql(task: TaskDto) {
-    return JSON.parse(task.result_json)
-        .map((column: ColumnSpec) => `${column.name} ${column.type}`).join(',');
+export function getTaskResultSql(task: TaskDto): string {
+    return (task.result_json.trim() === '')
+        ? ''
+        : JSON.parse(task.result_json).map((column: ColumnSpec) => `${column.name} ${column.type}`).join(',');
 }
 export class TaskDto {
     public active = false;
