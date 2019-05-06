@@ -114,7 +114,6 @@ private fun runDockerCompose(composeFile: File): Pair<ContainerExit, String> {
     val docker = DefaultDockerClient.fromEnv().build()
     docker.pull("docker/compose:1.23.2")
 
-    println("Compose file: ${composeFile.absolutePath}")
     val hostConfig = HostConfig.builder()
             .appendBinds(
                     HostConfig.Bind.from("/var/run/docker.sock")
@@ -134,9 +133,12 @@ private fun runDockerCompose(composeFile: File): Pair<ContainerExit, String> {
     )
     val containerConfig = ContainerConfig.builder()
             .hostConfig(hostConfig)
+            .volumes("/var/run/sqool")
             .image("docker/compose:1.23.2")
             .cmd(composeCommand)
             .build()
+
+    throw RuntimeException("Compose file: ${composeFile.absolutePath} host config: $hostConfig container config:$containerConfig")
 
     val container = docker.createContainer(containerConfig)
     docker.startContainer(container.id())
