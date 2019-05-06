@@ -191,6 +191,7 @@ fun main(args: Array<String>) {
   val adminTaskAllHandler = TaskAllHandler(flags)
   val adminTaskEditHandler = TaskEditHandler(flags)
   val adminVariantNewHandler = VariantNewHandler()
+  val adminSubmissionGetHandler = SubmissionGetHandler()
   val challengeHandler = ChallengeHandler()
 
   ignite().apply {
@@ -228,6 +229,11 @@ fun main(args: Array<String>) {
       ))
       GET("/"          TEMPLATE "index.ftl")
       GET("/dashboard" TEMPLATE "dashboard.ftl")
+      GET("/admin/submission/review" TEMPLATE "submission.ftl")
+      GET("/admin/submission/get" BY adminSubmissionGetHandler ARGS mapOf(
+              "task_id" to SubmissionGetArgs::task_id,
+              "user_id" to SubmissionGetArgs::user_id
+      ))
     }
     get("/login") {
       freemarker.render(ModelAndView(emptyMap<String, String>(), "login.ftl"))

@@ -17,6 +17,7 @@ export default class TaskMarkdown extends Vue {
     get htmlValue(): string {
         return this.converter.makeHtml(this.text);
     }
+
     public markdownText(): string {
         return this.htmlValue;
     }

@@ -105,6 +105,7 @@ CREATE TABLE Contest.Attempt(
     user_id INT REFERENCES Contest.ContestUser,
     attempt_id TEXT UNIQUE,
     status AttemptStatus DEFAULT 'failure',
+    attempt_text TEXT,
     count INT DEFAULT 0,
     testing_start_ts TIMESTAMP,
     PRIMARY KEY(task_id, user_id));
