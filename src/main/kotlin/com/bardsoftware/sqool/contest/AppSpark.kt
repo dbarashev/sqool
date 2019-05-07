@@ -175,7 +175,7 @@ fun main(args: Array<String>) {
   val dataSource = HikariDataSource().apply {
     username = flags.postgresUser
     password = flags.postgresPassword
-    jdbcUrl = "jdbc:postgresql://${flags.postgresAddress}:${flags.postgresPort}/${flags.postgresDatabase ?: flags.postgresUser}"
+    jdbcUrl = "jdbc:postgresql://${flags.postgresAddress}:${flags.postgresPort}/${flags.postgresDatabase.ifEmpty { flags.postgresUser }}"
   }
   Database.connect(dataSource)
   val assessor = if (flags.taskQueue == "") {
