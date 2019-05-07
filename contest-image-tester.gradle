@@ -1,0 +1,53 @@
+buildscript {
+	ext {
+		kotlinVersion = '1.3.+'
+	}
+	repositories {
+		google()
+		mavenCentral()
+		jcenter()
+	}
+	dependencies {
+		classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:${kotlinVersion}")
+		classpath("org.jetbrains.kotlin:kotlin-allopen:${kotlinVersion}")
+	}
+}
+plugins {
+	id 'com.google.cloud.tools.jib' version '1.0.2'
+}
+
+apply plugin: 'application'
+apply plugin: 'kotlin'
+
+version = '1.0.0'
+sourceCompatibility = 1.8
+
+repositories {
+	mavenCentral()
+	jcenter()
+}
+
+mainClassName = 'com.bardsoftware.sqool.codegen.DynamicCodeTesterKt'
+
+dependencies {
+	compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:${kotlinVersion}"
+	compile "org.jetbrains.kotlin:kotlin-reflect:${kotlinVersion}"
+
+	compile "com.xenomachina:kotlin-argparser:2.+"
+
+	// Postgres stuff
+	compile group: 'org.postgresql', name: 'postgresql', version: '42.1.1'
+	compile 'com.zaxxer:HikariCP:2.7.+'
+}
+
+sourceSets {
+	main {
+		kotlin {
+			srcDirs = [ "$projectDir/src/contest-image-tester/kotlin" ]
+		}
+	}
+}
+
+jib {
+	to.image = 'dbarashev/sqool-contest-image-tester'
+}

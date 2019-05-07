@@ -48,3 +48,7 @@ class DynamicCodeTester {
     }
   }
 }
+
+fun main(args: Array<String>) {
+  println("Hello from the dynamic code tester")
+}
