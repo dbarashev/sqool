@@ -190,7 +190,7 @@ fun main(args: Array<String>) {
   val adminContestNewHandler = ContestNewHandler()
   val adminTaskAllHandler = TaskAllHandler(flags)
   val adminTaskEditHandler = TaskEditHandler(flags)
-  val adminVariantNewHandler = VariantNewHandler()
+  val adminVariantNewHandler = VariantNewHandler(flags)
   val adminSubmissionGetHandler = SubmissionGetHandler()
   val challengeHandler = ChallengeHandler()
 
