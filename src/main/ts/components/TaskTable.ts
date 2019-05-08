@@ -16,13 +16,13 @@ export default class TaskTable extends Vue {
     }
 
     public buildVariant() {
-        const tasksId = this.selectedTasks.map(task => task.id);
+        const taskIdList = this.selectedTasks.map(task => task.id);
         $.post('/admin/variant/new', {
             course: 'course',
             module: 'module',
             variant: 'variant',
             schema: 'schema',
-            tasks: JSON.stringify(tasksId),
+            tasks: JSON.stringify(taskIdList),
         });
     }
 

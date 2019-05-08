@@ -18,12 +18,10 @@ class VariantNewHandler(flags: Flags) : DbHandler<VariantNewArgs>(flags) {
 
     override fun handle(http: HttpApi, argValues: VariantNewArgs): HttpResponse =
             try {
-                val tasksId = ObjectMapper().readValue(argValues.tasks, IntArray::class.java)
+                val taskIdList = ObjectMapper().readValue(argValues.tasks, IntArray::class.java)
                 val tasks = transaction {
-                    tasksId.map {
-                        Tasks.select { Tasks.id eq it }
-                                .map { resultRowToTask(it) }
-                    }.flatten()
+                    Tasks.select { Tasks.id inList taskIdList.toList() }
+                            .map { resultRowToTask(it) }
                 }
                 buildDockerImage(
                         "contest-image",
