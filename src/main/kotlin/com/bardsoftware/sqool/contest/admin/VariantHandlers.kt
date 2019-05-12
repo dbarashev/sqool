@@ -32,8 +32,8 @@ class VariantNewHandler : RequestHandler<VariantNewArgs>() {
                 when(checkImage("contest-image", errorStream)) {
                     ImageCheckResult.OK -> http.ok()
                     ImageCheckResult.COMPOSE_ERROR -> http.error(500, errorStream.toString())
-                    ImageCheckResult.INVALID_SQL -> http.error(400, errorStream.toString())
-                }
+                    ImageCheckResult.INVALID_SQL -> http.error(409, errorStream.toString())
+                }.also { errorStream.close() }
 
             } catch (exception: TaskDeserializationException) {
                 exception.printStackTrace()
