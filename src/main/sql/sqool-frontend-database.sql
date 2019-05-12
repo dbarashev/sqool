@@ -115,6 +115,14 @@ CREATE TABLE Contest.GradingDetails(
     result_set TEXT
 );
 
+
+CREATE TABLE Contest.SolutionReview (
+    task_id INT REFERENCES Contest.Task ON UPDATE CASCADE ON DELETE CASCADE,
+    user_id INT REFERENCES Contest.ContestUser,
+    reviewer_id INT UNIQUE,
+    solution_review TEXT,
+    PRIMARY KEY(task_id, user_id, reviewer_id));
+
 ---------------------------------------------------------------------
 -- Contest is a tournament which runs in some time interval.
 -- Contest consists of a few variants.
