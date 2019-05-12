@@ -44,7 +44,7 @@ export default class TaskTable extends Vue {
             if (xhr.status >= 200 && xhr.status < 300) {
                 title = "Вариант успешно создан"
             } else if (xhr.status >= 400 && xhr.status < 500) {
-                title = "В имени/решении/спецификации задач найдены синтаксичесие ошибки:"
+                title = "В имени/решении/спецификации задач найдены синтаксические ошибки:"
                 message = $(xhr.responseText).filter('title').text();
             } else if (xhr.status >= 500 && xhr.status < 600) {
                 title = "При создании варианта произошла внутрення ошибка сервера"
