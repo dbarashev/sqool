@@ -49,7 +49,7 @@ export default class TaskTable extends Vue {
             } else if (xhr.status >= 500 && xhr.status < 600) {
                 title = "При создании варианта произошла внутренняя ошибка сервера"
             } else {
-                title = "Неизвестная ошибка клиента"
+                title = `Что-то пошло не так: ${xhr.status}`;
             }
             this.alertDialog().show(title, message)
         }).always(() => {
