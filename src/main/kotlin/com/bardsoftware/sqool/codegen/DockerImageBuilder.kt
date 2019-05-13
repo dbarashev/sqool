@@ -45,12 +45,16 @@ fun buildDockerImage(
     root.deleteRecursively()
 }
 
-fun checkImage(imageName: String, outputStream: OutputStream) {
-    val writer = PrintWriter(outputStream)
+enum class ImageCheckResult {
+    OK, INVALID_SQL, COMPOSE_ERROR
+}
+
+fun checkImage(imageName: String, errorStream: OutputStream): ImageCheckResult {
+    val writer = PrintWriter(errorStream)
     val composeFile = createComposeFileInTempDir(imageName)
 
     val (result, output) = runDockerCompose(composeFile)
-    if (result.statusCode() == 0L) {
+    return if (result.statusCode() == 0L) {
         // Extracting output produces by run-sql container to check if there are any error messages.
         val errors = output.lines()
                 // docker-compose prepends container name with pipe to original lines.
@@ -60,16 +64,18 @@ fun checkImage(imageName: String, outputStream: OutputStream) {
         if (errors.any { it.matches(".*ERROR.*".toRegex()) }) {
             writer.println("Contest image testing: Invalid sql:")
             writer.println(errors.joinToString("\n"))
+            ImageCheckResult.INVALID_SQL
         } else {
-            writer.println("Contest image testing: OK")
+            ImageCheckResult.OK
         }
     } else {
         writer.println("Contest image testing: unable to test image:")
         writer.println(output)
+        ImageCheckResult.COMPOSE_ERROR
+    }.also {
+        composeFile.parentFile.deleteRecursively()
+        writer.flush()
     }
-
-    composeFile.parentFile.deleteRecursively()
-    writer.flush()
 }
 
 private fun createComposeFileInTempDir(imageName: String): File {
