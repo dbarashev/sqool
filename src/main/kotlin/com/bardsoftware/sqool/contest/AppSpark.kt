@@ -175,7 +175,7 @@ fun main(args: Array<String>) {
   val dataSource = HikariDataSource().apply {
     username = flags.postgresUser
     password = flags.postgresPassword
-    jdbcUrl = "jdbc:postgresql://${flags.postgresAddress}:${flags.postgresPort}/${flags.postgresDatabase ?: flags.postgresUser}"
+    jdbcUrl = "jdbc:postgresql://${flags.postgresAddress}:${flags.postgresPort}/${flags.postgresDatabase.ifEmpty { flags.postgresUser }}"
   }
   Database.connect(dataSource)
   val assessor = if (flags.taskQueue == "") {
@@ -190,7 +190,7 @@ fun main(args: Array<String>) {
   val adminContestNewHandler = ContestNewHandler()
   val adminTaskAllHandler = TaskAllHandler(flags)
   val adminTaskEditHandler = TaskEditHandler(flags)
-  val adminVariantNewHandler = VariantNewHandler()
+  val adminVariantNewHandler = VariantNewHandler(flags)
   val adminSubmissionGetHandler = SubmissionGetHandler()
   val challengeHandler = ChallengeHandler()
 

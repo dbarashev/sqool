@@ -4,19 +4,23 @@ import com.bardsoftware.sqool.codegen.task.spec.MatcherSpec
 import com.bardsoftware.sqool.codegen.task.spec.RelationSpec
 import com.bardsoftware.sqool.codegen.task.spec.SqlDataType
 import com.bardsoftware.sqool.codegen.task.spec.TaskResultColumn
+import com.bardsoftware.sqool.contest.admin.Tasks
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.JsonMappingException
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.exc.InvalidDefinitionException
 import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException
+import org.jetbrains.exposed.sql.ResultRow
 import java.lang.Exception
 import java.lang.IllegalArgumentException
 
-fun deserializeJsonTasks(jsonArray: String): List<Task> {
-    val mapper = ObjectMapper()
+fun resultRowToTask(row: ResultRow): Task {
     return try {
-        val task = mapper.readValue<List<TaskDto>>(jsonArray, object : TypeReference<List<TaskDto>>() {})
-        task.map { it.toTask() }
+        val attributesJson = row[Tasks.result_json]
+        val keyAttributes = ObjectMapper().readValue<List<AttributeDto>>(
+                attributesJson, object : TypeReference<List<AttributeDto>>() {}
+        )
+        TaskDto(row[Tasks.name], row[Tasks.solution], keyAttributes).toTask()
     } catch (exception: Exception) {
         when (exception) {
             is UnrecognizedPropertyException, is InvalidDefinitionException, is JsonMappingException,
@@ -32,11 +36,12 @@ class TaskDeserializationException : Exception {
     constructor(message: String?) : super(message)
 }
 
-class TaskDto {
-    val name = ""
-    val solution: String = ""
-    val keyAttributes = emptyList<AttributeDto>()
-    val nonKeyAttributes = emptyList<AttributeDto>()
+class TaskDto(
+        private val name: String,
+        private val solution: String,
+        private val keyAttributes: List<AttributeDto>,
+        private val nonKeyAttributes: List<AttributeDto> = emptyList()
+) {
 
     fun toTask(): Task {
         if (!isValid()) {
@@ -56,7 +61,7 @@ class TaskDto {
         return buildMultiColumnTask()
     }
 
-    private fun isValid() = !name.isEmpty() && !solution.isEmpty()
+    private fun isValid() = name.isNotEmpty() && solution.isNotEmpty()
 
     private fun buildMultiColumnTask(): Task {
         val keyAttributes = keyAttributes.map { it.toTaskResultColumn() }
@@ -65,11 +70,11 @@ class TaskDto {
         val matcherSpec = MatcherSpec(relationSpec)
         return MultiColumnTask(name, solution, matcherSpec)
     }
+}
 
-    class AttributeDto {
-        val name: String = ""
-        val type: String = ""
+class AttributeDto {
+    val name: String = ""
+    val type: String = ""
 
-        fun toTaskResultColumn(): TaskResultColumn = TaskResultColumn(name, SqlDataType.getEnum(type))
-    }
+    fun toTaskResultColumn(): TaskResultColumn = TaskResultColumn(name, SqlDataType.getEnum(type))
 }
