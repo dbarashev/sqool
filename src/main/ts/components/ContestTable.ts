@@ -14,7 +14,8 @@ export default class ContestTable extends Vue {
         $.ajax({
             url: '/admin/contest/all',
         }).done((contests: ContestDto[]) => {
-            this.contests = contests;
+            this.contests = [];
+            contests.forEach((c) => this.contests.push(c));
         });
 
     }
