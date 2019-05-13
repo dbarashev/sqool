@@ -55,7 +55,9 @@
       </div>
     </main>
     <ContestPropertiesModal ref="contestPropertiesModal"></ContestPropertiesModal>
+    <AlertDialog ref="alertDialog"></AlertDialog>
     <TaskPropertiesModal ref="taskPropertiesModal"></TaskPropertiesModal>
+    <VariantBuildingProgressBar ref="variantBuildingProgressBar"></VariantBuildingProgressBar>
   </div>
 </template>
 
@@ -67,12 +69,15 @@ import TaskPropertiesModal from './components/TaskPropertiesModal.vue';
 import ContestTable from './components/ContestTable.vue';
 import ContestToolbar from './components/ContestToolbar.vue';
 import ContestPropertiesModal from './components/ContestPropertiesModal.vue';
+import VariantBuildingProgressBar from './components/VariantBuildingProgressBar.vue'
+import AlertDialog from "./components/AlertDialog.vue";
 
 @Component({
   components: {
     ContestToolbar,
     ContestTable, ContestPropertiesModal,
     TaskTable, TaskToolbar, TaskPropertiesModal,
+    VariantBuildingProgressBar, AlertDialog
   },
 })
 export default class App extends Vue {
@@ -89,6 +94,16 @@ export default class App extends Vue {
   @Provide()
   public contestProperties(): ContestPropertiesModal {
     return this.$refs.contestPropertiesModal as ContestPropertiesModal;
+  }
+
+  @Provide()
+  public variantBuildingProgressBar(): VariantBuildingProgressBar {
+    return this.$refs.variantBuildingProgressBar as VariantBuildingProgressBar
+  }
+
+  @Provide()
+  public alertDialog(): AlertDialog {
+    return this.$refs.alertDialog as AlertDialog
   }
 }
 </script>

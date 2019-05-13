@@ -43,8 +43,9 @@ class DockerImageBuilderTest {
         buildDockerImage(
                 imageName = "contest-image", course = "hse2019", module = "cw2",
                 variant = "variant3", schemaPath = "/workspace/hse2019/cw2/schema3.sql", tasks = listOf(task))
-        checkImage("contest-image", outputStream)
-        assertEquals("Contest image testing: OK\n", outputStream.toString())
+        val result = checkImage("contest-image", outputStream)
+        assertEquals(ImageCheckResult.OK, result)
+        assertEquals("", outputStream.toString())
     }
 
     @Test
@@ -54,8 +55,9 @@ class DockerImageBuilderTest {
         buildDockerImage(
                 imageName = "contest-image", course = "hse2019", module = "cw2",
                 variant = "variant3", schemaPath = "/workspace/hse2019/cw2/schema3.sql", tasks = listOf(task))
-        checkImage("contest-image", outputStream)
+        val result = checkImage("contest-image", outputStream)
 
+        assertEquals(ImageCheckResult.INVALID_SQL, result)
         val expectedOutput = """
             |Contest image testing: Invalid sql:
             |CREATE SCHEMA

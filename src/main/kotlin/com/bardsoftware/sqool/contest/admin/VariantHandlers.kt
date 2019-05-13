@@ -1,12 +1,15 @@
 package com.bardsoftware.sqool.contest.admin
 
+import com.bardsoftware.sqool.codegen.ImageCheckResult
 import com.bardsoftware.sqool.codegen.buildDockerImage
+import com.bardsoftware.sqool.codegen.checkImage
 import com.bardsoftware.sqool.codegen.task.TaskDeserializationException
 import com.bardsoftware.sqool.codegen.task.resultRowToTask
 import com.bardsoftware.sqool.contest.*
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
+import java.io.ByteArrayOutputStream
 
 data class VariantNewArgs(var course: String, var module: String,
                           var variant: String, var schema: String,
@@ -28,7 +31,13 @@ class VariantNewHandler(flags: Flags) : DbHandler<VariantNewArgs>(flags) {
                         argValues.course, argValues.module,
                         argValues.variant, argValues.schema,
                         tasks)
-                http.ok()
+
+                val errorStream = ByteArrayOutputStream()
+                when(checkImage("contest-image", errorStream)) {
+                    ImageCheckResult.OK -> http.ok()
+                    ImageCheckResult.COMPOSE_ERROR -> http.error(500, errorStream.toString())
+                    ImageCheckResult.INVALID_SQL -> http.error(409, errorStream.toString())
+                }.also { errorStream.close() }
             } catch (exception: TaskDeserializationException) {
                 exception.printStackTrace()
                 http.error(400, exception.message, exception)
