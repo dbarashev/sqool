@@ -1,7 +1,7 @@
 import {Component, Inject, Vue} from 'vue-property-decorator';
-import {ColumnSpec, getTaskResultSql, TaskDto} from '../Task';
-import VariantBuildingProgressBar from "./VariantBuildingProgressBar";
-import AlertDialog from "./AlertDialog";
+import {getTaskResultSql, TaskDto} from '../Task';
+import VariantBuildingProgressBar from './VariantBuildingProgressBar';
+import AlertDialog from './AlertDialog';
 
 @Component
 export default class TaskTable extends Vue {
@@ -23,30 +23,30 @@ export default class TaskTable extends Vue {
     }
 
     public buildVariant() {
-        const taskIdList = this.selectedTasks.map(task => task.id);
+        const taskIdList = this.selectedTasks.map((task) => task.id);
         $.post('/admin/variant/new', {
             course: 'course',
             module: 'module',
             variant: 'variant',
             schema: 'schema',
-            tasks: JSON.stringify(taskIdList)
+            tasks: JSON.stringify(taskIdList),
         }).done(() => {
-            this.alertDialog().show("Вариант успешно создан")
+            this.alertDialog().show('Вариант успешно создан');
         }).fail((xhr) => {
-            let title = "";
-            let message = "";
-            if (xhr.status == 409) {
-                title = "В имени/решении/спецификации задач найдены синтаксические ошибки:";
+            let title = '';
+            let message = '';
+            if (xhr.status === 409) {
+                title = 'В имени/решении/спецификации задач найдены синтаксические ошибки:';
                 message = $(xhr.responseText).filter('title').text();
             } else if (xhr.status >= 500 && xhr.status < 600) {
-                title = "При создании варианта произошла внутренняя ошибка сервера";
+                title = 'При создании варианта произошла внутренняя ошибка сервера';
             } else {
                 title = `Что-то пошло не так: ${xhr.status}`;
             }
             this.alertDialog().show(title, message);
         }).always(() => {
             this.variantBuildingProgressBar().hide();
-        })
+        });
     }
 
     public makeActive(task: TaskDto) {

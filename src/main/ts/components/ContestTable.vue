@@ -9,7 +9,7 @@
         </tr>
         </thead>
         <tbody>
-        <tr v-for="c in contests">
+        <tr v-for="c in contests"  @click="makeActive(c)" v-bind:class="{ 'table-active': c.active }">
             <td>{{ c.code }}</td>
             <td>{{ c.name }}</td>
             <td>{{ c.start_ts }}</td>
@@ -19,22 +19,7 @@
     </table>
 </template>
 
-<script lang="ts">
-import { Component, Vue } from 'vue-property-decorator';
-import {ContestDto} from '../Contest';
-
-@Component
-export default class ContestTable extends Vue {
-    public contests: ContestDto[] = [];
-
-    public mounted() {
-        $.ajax({
-            url: '/admin/contest/all',
-        }).done((contests: ContestDto[]) => {
-            this.contests = contests;
-        });
-    }
-}
+<script lang="ts" src="./ContestTable.ts">
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->

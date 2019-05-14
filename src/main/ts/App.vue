@@ -36,7 +36,7 @@
           <div class="tab-pane fade" id="list-contest" role="tabpanel">
             <ContestToolbar>
             </ContestToolbar>
-            <ContestTable>
+            <ContestTable ref="contestTable">
             </ContestTable>
           </div>
           <div class="tab-pane fade show active" id="list-tasks" role="tabpanel">
@@ -63,21 +63,21 @@
 
 <script lang="ts">
 import {Component, Provide, Vue} from 'vue-property-decorator';
-import TaskTable from './components/TaskTable.vue';
+import TaskTable from './components/TaskTable';
 import TaskToolbar from './components/TaskToolbar.vue';
 import TaskPropertiesModal from './components/TaskPropertiesModal.vue';
-import ContestTable from './components/ContestTable.vue';
+import ContestTable from './components/ContestTable';
 import ContestToolbar from './components/ContestToolbar.vue';
 import ContestPropertiesModal from './components/ContestPropertiesModal.vue';
-import VariantBuildingProgressBar from './components/VariantBuildingProgressBar.vue'
-import AlertDialog from "./components/AlertDialog.vue";
+import VariantBuildingProgressBar from './components/VariantBuildingProgressBar.vue';
+import AlertDialog from './components/AlertDialog.vue';
 
 @Component({
   components: {
     ContestToolbar,
     ContestTable, ContestPropertiesModal,
     TaskTable, TaskToolbar, TaskPropertiesModal,
-    VariantBuildingProgressBar, AlertDialog
+    VariantBuildingProgressBar, AlertDialog,
   },
 })
 export default class App extends Vue {
@@ -90,20 +90,25 @@ export default class App extends Vue {
   public taskTable(): TaskTable {
     return this.$refs.taskTable as TaskTable;
   }
-  
+
   @Provide()
   public contestProperties(): ContestPropertiesModal {
     return this.$refs.contestPropertiesModal as ContestPropertiesModal;
   }
 
   @Provide()
+  public contestTable(): ContestTable {
+    return this.$refs.contestTable as ContestTable;
+  }
+
+  @Provide()
   public variantBuildingProgressBar(): VariantBuildingProgressBar {
-    return this.$refs.variantBuildingProgressBar as VariantBuildingProgressBar
+    return this.$refs.variantBuildingProgressBar as VariantBuildingProgressBar;
   }
 
   @Provide()
   public alertDialog(): AlertDialog {
-    return this.$refs.alertDialog as AlertDialog
+    return this.$refs.alertDialog as AlertDialog;
   }
 }
 </script>
