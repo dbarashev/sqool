@@ -49,7 +49,8 @@
             Здесь будут варианты
           </div>
           <div class="tab-pane fade" id="list-schemes" role="tabpanel">
-            Здесь будут схемы БД
+            <ScriptTable>
+            </ScriptTable>
           </div>
         </div>
       </div>
@@ -71,9 +72,11 @@ import ContestToolbar from './components/ContestToolbar.vue';
 import ContestPropertiesModal from './components/ContestPropertiesModal.vue';
 import VariantBuildingProgressBar from './components/VariantBuildingProgressBar.vue';
 import AlertDialog from './components/AlertDialog.vue';
+import ScriptTable from './components/ScriptTable.vue';
 
 @Component({
   components: {
+    ScriptTable,
     ContestToolbar,
     ContestTable, ContestPropertiesModal,
     TaskTable, TaskToolbar, TaskPropertiesModal,
