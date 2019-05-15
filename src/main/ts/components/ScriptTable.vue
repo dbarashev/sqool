@@ -1,16 +1,14 @@
 <template>
-    <div id="scriptAccordion">
+    <div id="scriptAccordion" class="text-left">
 
         <div class="card" v-for="s in scripts">
-            <div class="card-header" :id="'scriptHeading' + s.id">
-                <h5 class="mb-0">
-                    <button class="btn btn-link"
+            <div class="card-header bg-light" :id="'scriptHeading' + s.id">
+                <h5 class="mb-0"
                             data-toggle="collapse"
                             :data-target="'#scriptCollapse' + s.id"
                             aria-expanded="false"
                             :aria-controls="'scriptCollapse' + s.id">
                         {{ s.description }}
-                    </button>
                 </h5>
             </div>
 
@@ -29,10 +27,11 @@ import {ScriptDto} from '../Script';
 
 @Component
 export default class ScriptTable extends Vue {
-    public scripts: ScriptDto[] = [
-        new ScriptDto(1, 'Марсофлот', 'CREATE TABLE Planet(id INT, NAME TEXT)'),
-        new ScriptDto(2, 'Пироги', 'CREATE TABLE Pie(id INT, NAME TEXT)'),
-    ];
+    public scripts: ScriptDto[] = [];
+
+    public mounted() {
+        this.refresh();
+    }
 
     public refresh() {
         $.ajax({
@@ -49,7 +48,11 @@ export default class ScriptTable extends Vue {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped lang="scss">
-    table {
-        margin-top: 20px;
+#scriptAccordion {
+    .card-header {
+        cursor: pointer;
     }
+
+}
+
 </style>

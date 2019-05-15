@@ -450,3 +450,8 @@ join contestuser u on u.id=a.user_id
 join leaderboardview l on l.nick=u.nick
 where status = 'success' group by u.id;
 
+-----------------------------------------------------------------------------------------------
+-- Add some test data
+INSERT INTO Contest.Script(description, body) VALUES
+    ('Марсофлот', 'CREATE TABLE Planet(id INT, name TEXT)'),
+    ('Пироги', 'CREATE TABLE Pie(id INT, name TEXT)');
