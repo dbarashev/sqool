@@ -51,6 +51,11 @@ enum class ImageCheckResult {
 
 fun checkImage(imageName: String, errorStream: OutputStream): ImageCheckResult {
     val writer = PrintWriter(errorStream)
+    val staticCodeResult = testStaticCode(imageName, writer)
+
+}
+
+private fun testStaticCode(imageName: String, errorStream: PrintWriter): ImageCheckResult {
     val composeFile = createComposeFileInTempDir(imageName)
 
     val (result, output) = runDockerCompose(composeFile)
@@ -62,19 +67,19 @@ fun checkImage(imageName: String, errorStream: OutputStream): ImageCheckResult {
                 // We need only original parts.
                 .map { it.split("| ")[1] }
         if (errors.any { it.matches(".*ERROR.*".toRegex()) }) {
-            writer.println("Contest image testing: Invalid sql:")
-            writer.println(errors.joinToString("\n"))
+            errorStream.println("Contest image testing: Invalid sql:")
+            errorStream.println(errors.joinToString("\n"))
             ImageCheckResult.INVALID_SQL
         } else {
             ImageCheckResult.OK
         }
     } else {
-        writer.println("Contest image testing: unable to test image:")
-        writer.println(output)
+        errorStream.println("Contest image testing: unable to test image:")
+        errorStream.println(output)
         ImageCheckResult.COMPOSE_ERROR
     }.also {
         composeFile.parentFile.deleteRecursively()
-        writer.flush()
+        errorStream.flush()
     }
 }
 
