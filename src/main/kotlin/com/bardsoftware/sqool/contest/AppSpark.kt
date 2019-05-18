@@ -175,7 +175,7 @@ fun main(args: Array<String>) {
   val dataSource = HikariDataSource().apply {
     username = flags.postgresUser
     password = flags.postgresPassword
-    jdbcUrl = "jdbc:postgresql://${flags.postgresAddress}:${flags.postgresPort}/${flags.postgresDatabase ?: flags.postgresUser}"
+    jdbcUrl = "jdbc:postgresql://${flags.postgresAddress}:${flags.postgresPort}/${flags.postgresDatabase.ifEmpty { flags.postgresUser }}"
   }
   Database.connect(dataSource)
   val assessor = if (flags.taskQueue == "") {
@@ -187,10 +187,11 @@ fun main(args: Array<String>) {
   }
 
   val adminContestAllHandler = ContestAllHandler()
-  val adminContestNewHandler = ContestNewHandler()
+  val adminContestNewHandler = ContestEditHandler(ContestEditMode.INSERT)
+  val adminContestUpdateHandler = ContestEditHandler(ContestEditMode.UPDATE)
   val adminTaskAllHandler = TaskAllHandler(flags)
   val adminTaskEditHandler = TaskEditHandler(flags)
-  val adminVariantNewHandler = VariantNewHandler()
+  val adminVariantNewHandler = VariantNewHandler(flags)
   val adminSubmissionGetHandler = SubmissionGetHandler()
   val adminReviewGetHandler = ReviewGetHandler()
   val adminReviewSaveHandler = ReviewSaveHandler()
@@ -203,10 +204,16 @@ fun main(args: Array<String>) {
     Routes(this, freemarker).apply {
       GET("/admin/contest/all" BY adminContestAllHandler)
       POST("/admin/contest/new" BY adminContestNewHandler ARGS mapOf(
-          "code" to ContestNewArgs::code,
-          "name" to ContestNewArgs::name,
-          "start_ts" to ContestNewArgs::start_ts,
-          "end_ts" to ContestNewArgs::end_ts
+          "code" to ContestEditArgs::code,
+          "name" to ContestEditArgs::name,
+          "start_ts" to ContestEditArgs::start_ts,
+          "end_ts" to ContestEditArgs::end_ts
+      ))
+      POST("/admin/contest/update" BY adminContestUpdateHandler ARGS mapOf(
+          "code" to ContestEditArgs::code,
+          "name" to ContestEditArgs::name,
+          "start_ts" to ContestEditArgs::start_ts,
+          "end_ts" to ContestEditArgs::end_ts
       ))
       GET("/admin/task/all" BY adminTaskAllHandler)
       POST("/admin/task/new" BY adminTaskEditHandler ARGS mapOf(

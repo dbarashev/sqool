@@ -147,10 +147,25 @@ BEGIN
 end;
 $$ LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION ContestDto_Update()
+    RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE Contest.Contest
+        SET name = NEW.name, dates = tstzrange(NEW.start_ts, NEW.end_ts)
+    WHERE code = NEW.code;
+    RETURN NEW;
+end;
+$$ LANGUAGE plpgsql;
+
 CREATE TRIGGER ContestDto_Insert_Trigger
   INSTEAD OF INSERT ON ContestDto
   FOR EACH ROW
 EXECUTE PROCEDURE ContestDto_Insert();
+
+CREATE TRIGGER ContestDto_Update_Trigger
+    INSTEAD OF UPDATE ON ContestDto
+    FOR EACH ROW
+EXECUTE PROCEDURE ContestDto_Update();
 
 -------------------------------------------------------------------------
 -- Variant is a collection of tasks which need to be solved

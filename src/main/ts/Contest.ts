@@ -1,4 +1,6 @@
 export class ContestDto  {
+    public active: boolean = false;
+
     constructor(readonly code: string,
                 readonly name: string,
                 // tslint:disable-next-line
