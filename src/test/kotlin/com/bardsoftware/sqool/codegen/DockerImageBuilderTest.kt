@@ -1,5 +1,8 @@
 package com.bardsoftware.sqool.codegen
 
+import com.bardsoftware.sqool.codegen.docker.ImageCheckResult
+import com.bardsoftware.sqool.codegen.docker.buildDockerImage
+import com.bardsoftware.sqool.codegen.docker.testStaticCode
 import com.bardsoftware.sqool.codegen.task.SingleColumnTask
 import com.bardsoftware.sqool.codegen.task.spec.SqlDataType
 import com.bardsoftware.sqool.codegen.task.spec.TaskResultColumn
@@ -7,6 +10,7 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.io.ByteArrayOutputStream
+import java.io.PrintWriter
 
 class DockerImageBuilderTest {
     private val outputStream = ByteArrayOutputStream()
@@ -37,29 +41,29 @@ class DockerImageBuilderTest {
     }
 
     @Test
-    fun testValidSqlStdout() {
+    fun testValidStaticSql() {
         val spec = TaskResultColumn("id", SqlDataType.INT)
         val task = SingleColumnTask("Task3", "SELECT 11;", spec)
         buildDockerImage(
                 imageName = "contest-image", course = "hse2019", module = "cw2",
                 variant = "variant3", schemaPath = "/workspace/hse2019/cw2/schema3.sql", tasks = listOf(task))
-        val result = checkImage("contest-image", outputStream)
+        val result = testStaticCode("contest-image", PrintWriter(outputStream))
         assertEquals(ImageCheckResult.OK, result)
         assertEquals("", outputStream.toString())
     }
 
     @Test
-    fun testInvalidSqlStdout() {
+    fun testInvalidStaticSql() {
         val spec = TaskResultColumn("id", SqlDataType.INT)
         val task = SingleColumnTask("Task3", "SELECTY 11", spec)
         buildDockerImage(
                 imageName = "contest-image", course = "hse2019", module = "cw2",
                 variant = "variant3", schemaPath = "/workspace/hse2019/cw2/schema3.sql", tasks = listOf(task))
-        val result = checkImage("contest-image", outputStream)
+        val result = testStaticCode("contest-image", PrintWriter(outputStream))
 
         assertEquals(ImageCheckResult.INVALID_SQL, result)
         val expectedOutput = """
-            |Contest image testing: Invalid sql:
+            |Invalid sql:
             |CREATE SCHEMA
             |SET
             |/workspace/hse2019/cw2/schema3.sql: No such file or directory
