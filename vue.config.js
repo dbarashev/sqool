@@ -7,7 +7,7 @@ module.exports = {
         entry: './src/main/ts/main.ts'
       },
       submission: {
-        entry: './src/main/ts/Submission.ts'
+        entry: './src/main/ts/review.ts'
       }
     }
 }
