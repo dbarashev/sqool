@@ -55,8 +55,6 @@ private fun createComposeFileInTempDir(imageName: String, flags: Flags): File {
         |
         |  run-sql:
         |    image: postgres
-        |    ports:
-        |       - ${flags.postgresPort}:${flags.postgresPort}
         |    volumes_from:
         |      - contest-sql:ro
         |    command: bash -c 'find /workspace -type f -name "*-static.sql" -exec cat {} + | psql $connectionUri'
