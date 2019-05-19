@@ -2,6 +2,7 @@ package com.bardsoftware.sqool.codegen.docker
 
 import com.bardsoftware.sqool.codegen.CodeGenerator
 import com.bardsoftware.sqool.codegen.task.Task
+import com.bardsoftware.sqool.contest.Flags
 import com.google.cloud.tools.jib.api.Containerizer
 import com.google.cloud.tools.jib.api.DockerDaemonImage
 import com.google.cloud.tools.jib.api.Jib
@@ -41,16 +42,20 @@ fun buildDockerImage(
 }
 
 enum class ImageCheckResult {
-    OK, INVALID_SQL, COMPOSE_ERROR
+    PASSED, FAILED, ERROR
 }
 
-fun checkImage(imageName: String, imageTasks: List<Task>, errorStream: OutputStream): ImageCheckResult {
+fun checkImage(imageName: String, imageTasks: List<Task>, flags: Flags, errorStream: OutputStream): ImageCheckResult {
     val writer = PrintWriter(errorStream)
     writer.println("Static code testing:")
-    val staticCodeResult = testStaticCode(imageName, writer)
+    val staticCodeResult = testStaticCode(imageName, flags, writer)
     writer.println()
     writer.println("Dynamic code testing:")
-    val dynamicCodeResult = testDynamicCode(imageName, imageTasks, writer)
+    val dynamicCodeResult = testDynamicCode(imageName, imageTasks, flags, writer)
 
-    return ImageCheckResult.OK
+    return when {
+        staticCodeResult == ImageCheckResult.PASSED && dynamicCodeResult == ImageCheckResult.PASSED -> ImageCheckResult.PASSED
+        staticCodeResult == ImageCheckResult.FAILED || dynamicCodeResult == ImageCheckResult.FAILED -> ImageCheckResult.FAILED
+        else -> ImageCheckResult.ERROR
+    }
 }

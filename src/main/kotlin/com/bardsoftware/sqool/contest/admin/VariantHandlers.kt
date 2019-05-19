@@ -16,7 +16,7 @@ data class VariantNewArgs(var course: String, var module: String,
                           var tasks: String
 ) : RequestArgs()
 
-class VariantNewHandler(flags: Flags) : DbHandler<VariantNewArgs>(flags) {
+class VariantNewHandler(private val flags: Flags) : DbHandler<VariantNewArgs>(flags) {
     override fun args(): VariantNewArgs = VariantNewArgs("", "", "", "", "")
 
     override fun handle(http: HttpApi, argValues: VariantNewArgs): HttpResponse =
@@ -33,10 +33,10 @@ class VariantNewHandler(flags: Flags) : DbHandler<VariantNewArgs>(flags) {
                         tasks)
 
                 val errorStream = ByteArrayOutputStream()
-                when(checkImage("contest-image", tasks, errorStream)) {
-                    ImageCheckResult.OK -> http.ok()
-                    ImageCheckResult.COMPOSE_ERROR -> http.error(500, errorStream.toString())
-                    ImageCheckResult.INVALID_SQL -> http.error(409, errorStream.toString())
+                when(checkImage("contest-image", tasks, flags, errorStream)) {
+                    ImageCheckResult.PASSED -> http.ok()
+                    ImageCheckResult.ERROR -> http.error(500, errorStream.toString())
+                    ImageCheckResult.FAILED -> http.error(409, errorStream.toString())
                 }.also { errorStream.close() }
             } catch (exception: TaskDeserializationException) {
                 exception.printStackTrace()

@@ -6,6 +6,8 @@ abstract class Task(val name: String, protected val robotQuery: String) {
     protected val robotQueryFunName = "${name}_Robot"
     protected val userQueryFunName = "${name}_User"
     abstract val resultType: String
+    abstract val mockSolution: String
+    abstract val mockSolutionError: String
 
     abstract fun generateStaticCode(): String
 

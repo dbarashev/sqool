@@ -130,6 +130,11 @@ class CodeGeneratorTest {
             |SELECT Task12_Robot() into result_robot;
             |SELECT Task12_User() into result_user;
             |
+            |IF (result_user IS NULL) THEN
+            |   RETURN NEXT 'Нет, ваш результат NULL';
+            |   RETURN;
+            |END IF;
+            |
             |IF (result_robot = result_user) THEN
             |   RETURN;
             |END IF;

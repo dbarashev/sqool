@@ -8,6 +8,10 @@ class ScalarValueTask(name: String, robotQuery: String,
 ) : Task(name, robotQuery) {
     override val resultType: String
         get() = resultTypeEnum.toString()
+    override val mockSolution: String
+        get() = "SELECT NULL::$resultType"
+    override val mockSolutionError: String
+        get() = "Нет, ваш результат NULL"
 
     override fun generateDynamicCode(codeGenerator: CodeGenerator): String = """
         |${codeGenerator.generateDynamicCodeHeader()}
@@ -19,14 +23,17 @@ class ScalarValueTask(name: String, robotQuery: String,
 
     override fun generateStaticCode(): String {
         val matcherFunName = "${name}_Matcher"
-        val userQueryMock = "SELECT NULL::$resultType"
-
         val matcherCode = """DECLARE
             |   result_robot $resultType;
             |   result_user $resultType;
             |BEGIN
             |SELECT $robotQueryFunName() into result_robot;
             |SELECT $userQueryFunName() into result_user;
+            |
+            |IF (result_user IS NULL) THEN
+            |   RETURN NEXT 'Нет, ваш результат NULL';
+            |   RETURN;
+            |END IF;
             |
             |IF (result_robot = result_user) THEN
             |   RETURN;
@@ -52,7 +59,7 @@ class ScalarValueTask(name: String, robotQuery: String,
             |
             |${generateFunDef(
                 funName = userQueryFunName, returnType = resultType,
-                body = userQueryMock, language = Language.SQL)}
+                body = mockSolution, language = Language.SQL)}
             |
             |${generateFunDef(
                 funName = matcherFunName, returnType = "SETOF TEXT",

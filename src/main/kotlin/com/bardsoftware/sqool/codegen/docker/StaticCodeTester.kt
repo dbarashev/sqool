@@ -1,5 +1,6 @@
 package com.bardsoftware.sqool.codegen.docker
 
+import com.bardsoftware.sqool.contest.Flags
 import com.spotify.docker.client.DefaultDockerClient
 import com.spotify.docker.client.DockerClient
 import com.spotify.docker.client.messages.ContainerConfig
@@ -8,8 +9,8 @@ import com.spotify.docker.client.messages.HostConfig
 import java.io.File
 import java.io.PrintWriter
 
-fun testStaticCode(imageName: String, errorStream: PrintWriter): ImageCheckResult {
-    val composeFile = createComposeFileInTempDir(imageName)
+fun testStaticCode(imageName: String, flags: Flags, errorStream: PrintWriter): ImageCheckResult {
+    val composeFile = createComposeFileInTempDir(imageName, flags)
 
     val (result, output) = runDockerCompose(composeFile)
     return if (result.statusCode() == 0L) {
@@ -22,21 +23,23 @@ fun testStaticCode(imageName: String, errorStream: PrintWriter): ImageCheckResul
         if (errors.any { it.matches(".*ERROR.*".toRegex()) }) {
             errorStream.println("Invalid sql:")
             errorStream.println(errors.joinToString("\n"))
-            ImageCheckResult.INVALID_SQL
+            ImageCheckResult.FAILED
         } else {
-            ImageCheckResult.OK
+            ImageCheckResult.PASSED
         }
     } else {
         errorStream.println("Unable to test image:")
         errorStream.println(output)
-        ImageCheckResult.COMPOSE_ERROR
+        ImageCheckResult.ERROR
     }.also {
         composeFile.parentFile.deleteRecursively()
         errorStream.flush()
     }
 }
 
-private fun createComposeFileInTempDir(imageName: String): File {
+private fun createComposeFileInTempDir(imageName: String, flags: Flags): File {
+    //val connectionUri = with(flags) { "postgresql://$postgresUser:$postgresPassword@$postgresAddress:$postgresPort" }
+    val connectionUri = with(flags) { "postgresql://$postgresUser@$postgresAddress:$postgresPort" }
     val composeYml = """
         |version: '2.1'
         |
@@ -50,22 +53,13 @@ private fun createComposeFileInTempDir(imageName: String): File {
         |    # However, we don't want to abort too early, so here we just wait forever.
         |    command: tail -f /dev/null
         |
-        |  db:
-        |    image: postgres
-        |    healthcheck:
-        |      test: ["CMD-SHELL", "pg_isready -U postgres"]
-        |      interval: 5s
-        |      timeout: 5s
-        |      retries: 5
-        |
         |  run-sql:
         |    image: postgres
-        |    depends_on:
-        |      db:
-        |        condition: service_healthy
+        |    ports:
+        |       - ${flags.postgresPort}:${flags.postgresPort}
         |    volumes_from:
         |      - contest-sql:ro
-        |    command: bash -c 'find /workspace -type f -name "*-static.sql" -exec cat {} + | psql -h db -U postgres'
+        |    command: bash -c 'find /workspace -type f -name "*-static.sql" -exec cat {} + | psql $connectionUri'
         """.trimMargin()
 
     val composeDir = createTempDir()

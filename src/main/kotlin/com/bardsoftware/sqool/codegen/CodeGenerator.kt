@@ -7,12 +7,6 @@ class CodeGenerator(private val contestName: String, private val pathToSchema: S
         |\i $pathToSchema;
         """.trimMargin()
 
-    fun generateDynamicCodeHeader() = """
-        |SELECT set_config(
-        |   'search_path',
-        |   '$contestName,' || current_setting('search_path'),
-        |   false
-        |);
-        """.trimMargin()
+    fun generateDynamicCodeHeader() = ""
 }
 

@@ -8,11 +8,18 @@ class MultiColumnTask(name: String, robotQuery: String,
 ) : ColumnTask(name, robotQuery) {
     override val resultType: String
         get() = matcherSpec.relationSpec.getAllColsList().joinToString(", ", "TABLE(", ")")
+    override val mockSolution: String
+        get() = matcherSpec.relationSpec.getAllColsList().joinToString(", ", "SELECT ") { "NULL::${it.type}" }
+    override val mockSolutionError: String
+        get() = """
+            |Множество пар (корабль, порт) отличается от результатов робота
+            |Размер пересечения результатов робота и ваших: 0 строк
+            |Размер объединения результатов робота и ваших: 1 строк
+            """.trimMargin()
+
 
     override fun generateStaticCode(): String {
-        val userQueryMock = matcherSpec.relationSpec.getAllColsList().joinToString(", ", "SELECT ") { "NULL::${it.type}" }
         val keyColNamesList = matcherSpec.relationSpec.keyCols.map { it.name }
-
         val maxAbsDiffChecks = matcherSpec.relationSpec.nonKeyCols
                 .filter { it.type.kind != SqlDataType.Kind.NON_NUMERIC }
                 .joinToString("\n\n") {
@@ -56,7 +63,7 @@ class MultiColumnTask(name: String, robotQuery: String,
             |
             |${generateFunDef(
                 funName = userQueryFunName, returnType = resultType,
-                body = userQueryMock, language = Language.SQL)}
+                body = mockSolution, language = Language.SQL)}
             |
             |${generateMergedViewCreation()}
             |
