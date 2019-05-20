@@ -23,6 +23,7 @@ export default class TaskTable extends Vue {
     }
 
     public buildVariant() {
+        this.variantBuildingProgressBar().show();
         const taskIdList = this.selectedTasks.map((task) => task.id);
         $.post('/admin/variant/new', {
             course: 'course',
