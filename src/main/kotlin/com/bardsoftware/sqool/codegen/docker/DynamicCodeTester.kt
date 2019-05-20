@@ -9,6 +9,7 @@ import org.postgresql.ds.PGSimpleDataSource
 import java.io.File
 import java.io.FileOutputStream
 import java.io.PrintWriter
+import java.lang.Exception
 import java.sql.SQLException
 import java.text.MessageFormat
 import java.util.*
@@ -66,6 +67,7 @@ private fun copyDirectoryFromImage(imageName: String, imagePath: String, destina
             if (entry.isFile) {
                 val file = File(destinationFolder, entry.name)
                 file.parentFile.mkdirs()
+                throw Exception(file.absolutePath)
                 file.createNewFile()
                 FileOutputStream(file).use { tarStream.copyTo(it) }
             }
