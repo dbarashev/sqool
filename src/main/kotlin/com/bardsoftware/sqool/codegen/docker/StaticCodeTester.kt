@@ -17,6 +17,7 @@ fun testStaticCode(imageName: String, flags: Flags, errorStream: PrintWriter): I
             errorStream.println(errors.joinToString("\n"))
             ImageCheckResult.FAILED
         } else {
+            errorStream.println("OK")
             ImageCheckResult.PASSED
         }
     } else {
@@ -48,6 +49,8 @@ private fun runPsql(imageName: String, flags: Flags): Pair<ContainerExit, String
             .cmd(command)
             .build()
     val container = docker.createContainer(containerConfig)
+
+    docker.inspectContainer(container.id())
 
     docker.startContainer(container.id())
     val result = docker.waitContainer(container.id())

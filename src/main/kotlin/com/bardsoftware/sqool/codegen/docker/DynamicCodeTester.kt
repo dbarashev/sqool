@@ -32,6 +32,7 @@ fun testDynamicCode(
         val submissionResult = tester.runTest(it.name, it.mockSolution)
         when {
             submissionResult.message == it.mockSolutionError -> {
+                writer.println("OK")
                 ImageCheckResult.PASSED
             }
             submissionResult.status == SubmissionResultStatus.ERROR -> {

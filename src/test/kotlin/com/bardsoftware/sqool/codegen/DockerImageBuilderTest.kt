@@ -7,34 +7,58 @@ import com.bardsoftware.sqool.codegen.task.spec.TaskResultColumn
 import com.bardsoftware.sqool.contest.Flags
 import com.nhaarman.mockito_kotlin.doReturn
 import com.nhaarman.mockito_kotlin.mock
-import com.nhaarman.mockito_kotlin.whenever
+import com.spotify.docker.client.DefaultDockerClient
+import com.spotify.docker.client.messages.ContainerConfig
+import com.spotify.docker.client.messages.ContainerCreation
+import com.spotify.docker.client.messages.HostConfig
+import com.spotify.docker.client.messages.PortBinding
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
-import java.awt.FlowLayout
 import java.io.ByteArrayOutputStream
 
 class DockerImageBuilderTest {
     private val outputStream = ByteArrayOutputStream()
-    private val flags = mock<Flags> {
-        on { postgresAddress } doReturn "localhost"
-        on { postgresPort } doReturn "5432"
-        on { postgresUser } doReturn "postgres"
-    }
 
     companion object {
+        private val dockerClient = DefaultDockerClient.fromEnv().build()
+        private val postgresServer: ContainerCreation
+        private lateinit var flags: Flags
+
+        init {
+            dockerClient.pull("postgres:11")
+            val hostConfig = HostConfig.builder()
+                    .portBindings(mapOf(Pair("5432/tcp", listOf(PortBinding.of("", "5432")))))
+                    .build()
+            val containerConfig = ContainerConfig.builder()
+                    .image("postgres:11")
+                    .exposedPorts( "5432/tcp" )
+                    .hostConfig(hostConfig)
+                    .build()
+            postgresServer = dockerClient.createContainer(containerConfig)
+        }
+
         @BeforeAll
         @JvmStatic
-        fun runPsqlServer() {
-            Runtime.getRuntime().exec("service postgresql start")
+        fun runPostgresServer() {
+            dockerClient.startContainer(postgresServer.id())
+            val postgresServerIp = dockerClient.inspectContainer(postgresServer.id()).networkSettings().ipAddress()
+            flags = mock {
+                on { postgresAddress } doReturn postgresServerIp
+                on { postgresPort } doReturn "5432"
+                on { postgresUser } doReturn "postgres"
+                on { postgresPassword } doReturn ""
+            }
         }
 
         @AfterAll
         @JvmStatic
-        fun stopPsqlServer() {
-            Runtime.getRuntime().exec("service postgresql stop")
+        fun stopPostgresServer() {
+            dockerClient.killContainer(postgresServer.id())
+            dockerClient.removeContainer(postgresServer.id())
+            dockerClient.close()
         }
     }
 
@@ -66,13 +90,21 @@ class DockerImageBuilderTest {
     @Test
     fun testValidSql() {
         val spec = TaskResultColumn("id", SqlDataType.INT)
-        val task = SingleColumnTask("Task3", "SELECT 11;", spec)
+        val task = SingleColumnTask("Task3", "SELECT 11 LIMIT 0;", spec)
         buildDockerImage(
                 imageName = "contest-image", course = "hse2019", module = "cw3",
                 variant = "variant3", schemaPath = "/workspace/hse2019/cw3/schema3.sql", tasks = listOf(task))
         val result = checkImage("contest-image", listOf(task), flags, outputStream)
+
         assertEquals(ImageCheckResult.PASSED, result)
-        assertEquals("", outputStream.toString())
+        val expectedOutput = """
+            |Static code testing:
+            |OK
+            |Dynamic code testing:
+            |OK
+            |
+            """.trimMargin()
+        assertEquals(expectedOutput, outputStream.toString())
     }
 
     @Test
@@ -86,6 +118,7 @@ class DockerImageBuilderTest {
 
         assertEquals(ImageCheckResult.FAILED, result)
         val expectedOutput = """
+            |Static code testing:
             |Invalid sql:
             |CREATE SCHEMA
             |SET
@@ -100,6 +133,12 @@ class DockerImageBuilderTest {
             |HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
             |CREATE FUNCTION
             |DROP FUNCTION
+            |
+            |Dynamic code testing:
+            |Invalid Task3 sql:
+            |ERROR: function task3_robot() does not exist
+            |  Hint: No function matches the given name and argument types. You might need to add explicit type casts.
+            |  Position: 74
             |
             """.trimMargin()
         assertEquals(expectedOutput, outputStream.toString())

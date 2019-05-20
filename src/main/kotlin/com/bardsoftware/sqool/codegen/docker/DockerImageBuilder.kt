@@ -49,7 +49,6 @@ fun checkImage(imageName: String, imageTasks: List<Task>, flags: Flags, errorStr
     val writer = PrintWriter(errorStream)
     writer.println("Static code testing:")
     val staticCodeResult = testStaticCode(imageName, flags, writer)
-    writer.println()
     writer.println("Dynamic code testing:")
     val dynamicCodeResult = testDynamicCode(imageName, imageTasks, flags, writer)
 
