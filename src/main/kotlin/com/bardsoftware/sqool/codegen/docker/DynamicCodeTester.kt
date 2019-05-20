@@ -70,7 +70,7 @@ private fun copyDirectoryFromImage(imageName: String, imagePath: String, destina
                 try {
                     file.createNewFile()
                 } catch (e: Exception) {
-                    throw Exception(file.name)
+                    throw Exception(file.absolutePath)
                 }
                 FileOutputStream(file).use { tarStream.copyTo(it) }
             }
