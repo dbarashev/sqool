@@ -67,6 +67,7 @@ private fun copyDirectoryFromImage(imageName: String, imagePath: String, destina
             if (!entry.isFile) {
                 file.mkdirs()
             } else {
+                file.createNewFile()
                 FileOutputStream(file).use { tarStream.copyTo(it) }
             }
             entry = tarStream.nextTarEntry
