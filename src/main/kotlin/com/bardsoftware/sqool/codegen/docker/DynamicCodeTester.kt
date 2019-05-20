@@ -18,7 +18,6 @@ fun testDynamicCode(
         imageName: String, tasksToTest: List<Task>, flags: Flags, writer: PrintWriter
 ): ImageCheckResult {
     val CONTEST_DIRECTORY = "/workspace"
-    File(CONTEST_DIRECTORY).deleteRecursively()
     copyDirectoryFromImage(imageName, CONTEST_DIRECTORY, "/")
 
     // assume there is only one course, module and variant in the image
