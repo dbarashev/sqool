@@ -65,13 +65,16 @@ private fun copyDirectoryFromImage(imageName: String, imagePath: String, destina
         while (entry != null) {
             val file = File(destinationFolder, entry.name)
             if (!entry.isFile) {
-                file.mkdir()
+                file.mkdirs()
             } else {
                 FileOutputStream(file).use { tarStream.copyTo(it) }
             }
             entry = tarStream.nextTarEntry
         }
     }
+
+    docker.removeContainer(container.id())
+    docker.close()
 }
 
 private fun getContestSpec(contestDirectory: String): ContestSpec? {
