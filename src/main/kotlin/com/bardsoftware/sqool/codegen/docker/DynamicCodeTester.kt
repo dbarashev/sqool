@@ -63,10 +63,9 @@ private fun copyDirectoryFromImage(imageName: String, imagePath: String, destina
     tarStream.use {
         var entry = tarStream.nextTarEntry
         while (entry != null) {
-            val file = File(destinationFolder, entry.name)
-            if (!entry.isFile) {
-                file.mkdirs()
-            } else {
+            if (entry.isFile) {
+                val file = File(destinationFolder, entry.name)
+                file.parentFile.mkdirs()
                 file.createNewFile()
                 FileOutputStream(file).use { tarStream.copyTo(it) }
             }
