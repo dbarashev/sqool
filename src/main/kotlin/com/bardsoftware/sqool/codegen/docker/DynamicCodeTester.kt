@@ -120,7 +120,7 @@ private class CodeTester(contestSpec: ContestSpec, flags: Flags) {
             dataSource.serverName = postgresAddress
             dataSource.portNumber = postgresPort.toInt()
             dataSource.user = postgresUser
-            //dataSource.password = postgresPassword
+            dataSource.password = postgresPassword
         }
     }
 

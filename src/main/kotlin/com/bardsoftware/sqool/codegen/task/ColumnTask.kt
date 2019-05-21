@@ -8,6 +8,8 @@ abstract class ColumnTask(name: String, robotQuery: String) : Task(name, robotQu
     protected val intxnSizeVar = "intxn_size"
 
     override fun generateDynamicCode(codeGenerator: CodeGenerator): String = """
+        |${codeGenerator.generateDynamicCodeHeader()}
+        |
         |${generateFunDef(
             funName = "${name}_User", returnType = resultType,
             body = "{1}", language = Language.SQL)}

@@ -14,6 +14,7 @@ class CodeGeneratorTest {
     fun testStaticCodeHeader() {
         val generator = CodeGenerator("cw1", "/hse/cw1/schema.sql")
         val expectedHeader = """
+            |DROP SCHEMA IF EXISTS cw1 CASCADE;
             |CREATE SCHEMA cw1;
             |SET search_path=cw1;
             |\i /hse/cw1/schema.sql;
@@ -84,6 +85,12 @@ class CodeGeneratorTest {
             |DROP FUNCTION Task3_User() CASCADE;
             """.trimMargin()
         val expectedPerSubmissionCode = """
+            |SELECT set_config(
+            |   ''search_path'',
+            |   ''cw1,'' || current_setting(''search_path''),
+            |   false
+            |);
+            |
             |CREATE OR REPLACE FUNCTION Task3_User()
             |RETURNS TABLE(id INT) AS $$
             |{1}
@@ -149,6 +156,12 @@ class CodeGeneratorTest {
             |DROP FUNCTION Task12_User() CASCADE;
             """.trimMargin()
         val expectedPerSubmissionCode = """
+            |SELECT set_config(
+            |   ''search_path'',
+            |   ''cw2,'' || current_setting(''search_path''),
+            |   false
+            |);
+            |
             |CREATE OR REPLACE FUNCTION Task12_User()
             |RETURNS TEXT AS $$
             |{1}
@@ -237,6 +250,12 @@ class CodeGeneratorTest {
             |DROP FUNCTION Task05_User() CASCADE;
             """.trimMargin()
         val expectedPerSubmissionCode = """
+            |SELECT set_config(
+            |   ''search_path'',
+            |   ''cw3,'' || current_setting(''search_path''),
+            |   false
+            |);
+            |
             |CREATE OR REPLACE FUNCTION Task05_User()
             |RETURNS TABLE(ship TEXT, port INT, transfers_num INT, transfer_size DOUBLE PRECISION, product TEXT) AS $$
             |{1}

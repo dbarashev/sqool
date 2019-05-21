@@ -14,6 +14,8 @@ class ScalarValueTask(name: String, robotQuery: String,
         get() = "Нет, ваш результат NULL"
 
     override fun generateDynamicCode(codeGenerator: CodeGenerator): String = """
+        |${codeGenerator.generateDynamicCodeHeader()}
+        |
         |${generateFunDef(
             funName = userQueryFunName, returnType = resultType,
             body = "{1}", language = Language.SQL)}

@@ -120,6 +120,8 @@ class DockerImageBuilderTest {
         val expectedOutput = """
             |Static code testing:
             |Invalid sql:
+            |NOTICE:  schema "cw2" does not exist, skipping
+            |DROP SCHEMA
             |CREATE SCHEMA
             |SET
             |/workspace/hse2019/cw2/schema3.sql: No such file or directory
