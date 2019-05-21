@@ -7,6 +7,7 @@ import com.spotify.docker.client.messages.ContainerConfig
 import com.spotify.docker.client.messages.ContainerExit
 import com.spotify.docker.client.messages.HostConfig
 import java.io.PrintWriter
+import com.spotify.docker.client.messages.NetworkConfig
 
 fun testStaticCode(imageName: String, flags: Flags, errorStream: PrintWriter): ImageCheckResult {
     val (result, output) = runPsql(imageName, flags)
@@ -49,8 +50,6 @@ private fun runPsql(imageName: String, flags: Flags): Pair<ContainerExit, String
             .cmd(command)
             .build()
     val container = docker.createContainer(containerConfig)
-
-    docker.inspectContainer(container.id())
 
     docker.startContainer(container.id())
     val result = docker.waitContainer(container.id())

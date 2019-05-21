@@ -10,12 +10,12 @@ class MultiColumnTask(name: String, robotQuery: String,
         get() = matcherSpec.relationSpec.getAllColsList().joinToString(", ", "TABLE(", ")")
     override val mockSolution: String
         get() = matcherSpec.relationSpec.getAllColsList().joinToString(", ", "SELECT ") { "NULL::${it.type}" }
-    override val mockSolutionError: String
+    override val mockSolutionError: Regex
         get() = """
-            |Множество пар (корабль, порт) отличается от результатов робота
-            |Размер пересечения результатов робота и ваших: 0 строк
-            |Размер объединения результатов робота и ваших: 1 строк
-            """.trimMargin()
+            |Множество пар \(корабль, порт\) отличается от результатов робота
+            |Размер пересечения результатов робота и ваших: \d+ строк
+            |Размер объединения результатов робота и ваших: \d+ строк
+            """.trimMargin().toRegex()
 
 
     override fun generateStaticCode(): String {
@@ -59,7 +59,7 @@ class MultiColumnTask(name: String, robotQuery: String,
         return """
             |${generateFunDef(
                 funName = robotQueryFunName, returnType = resultType,
-                body = robotQuery, language = Language.SQL)}
+                body = solution, language = Language.SQL)}
             |
             |${generateFunDef(
                 funName = userQueryFunName, returnType = resultType,

@@ -10,8 +10,8 @@ class ScalarValueTask(name: String, robotQuery: String,
         get() = resultTypeEnum.toString()
     override val mockSolution: String
         get() = "SELECT NULL::$resultType"
-    override val mockSolutionError: String
-        get() = "Нет, ваш результат NULL"
+    override val mockSolutionError: Regex
+        get() = "Нет, ваш результат NULL".toRegex()
 
     override fun generateDynamicCode(codeGenerator: CodeGenerator): String = """
         |${codeGenerator.generateDynamicCodeHeader()}
@@ -55,7 +55,7 @@ class ScalarValueTask(name: String, robotQuery: String,
         return """
             |${generateFunDef(
                 funName = robotQueryFunName, returnType = resultType,
-                body = robotQuery, language = Language.SQL)}
+                body = solution, language = Language.SQL)}
             |
             |${generateFunDef(
                 funName = userQueryFunName, returnType = resultType,

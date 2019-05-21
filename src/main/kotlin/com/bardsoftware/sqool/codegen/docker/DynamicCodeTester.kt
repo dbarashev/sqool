@@ -29,28 +29,14 @@ fun testDynamicCode(
     }
     val tester = CodeTester(contestSpec, flags)
 
-    val testResults = tasksToTest.map {
-        val submissionResult = tester.runTest(it.name, it.mockSolution)
-        when {
-            submissionResult.message == it.mockSolutionError -> {
-                writer.println("OK")
-                ImageCheckResult.PASSED
-            }
-            submissionResult.status == SubmissionResultStatus.ERROR -> {
-                writer.println("Invalid ${it.name} sql:")
-                writer.println(submissionResult.message)
-                ImageCheckResult.FAILED
-            }
-            else -> {
-                writer.println("Unexpected ${it.name}_Matcher result:")
-                writer.println(submissionResult.message)
-                ImageCheckResult.FAILED
-            }
-        }
-    }
+    val testResults = tasksToTest.map { testTask(tester, it, writer) }
 
-    writer.flush()
-    return if (testResults.all { it == ImageCheckResult.PASSED }) ImageCheckResult.PASSED else ImageCheckResult.FAILED
+    return if (testResults.all { it == ImageCheckResult.PASSED }) {
+        writer.println("OK")
+        ImageCheckResult.PASSED
+    } else {
+        ImageCheckResult.FAILED
+    }.also { writer.flush() }
 }
 
 private fun copyDirectoryFromImage(imageName: String, imagePath: String, destinationFolder: String) {
@@ -99,6 +85,39 @@ private fun getContestSpec(contestDirectory: String): ContestSpec? {
 }
 
 private data class ContestSpec(val course: String, val module: String)
+
+private fun testTask(tester: CodeTester, task: Task, writer: PrintWriter): ImageCheckResult {
+    val mockSubmissionOutput = tester.runTest(task.name, task.mockSolution)
+    val mockSubmissionResult = when {
+        mockSubmissionOutput.message?.matches(task.mockSolutionError) ?: false -> ImageCheckResult.PASSED
+
+        mockSubmissionOutput.status == SubmissionResultStatus.ERROR -> {
+            writer.println("Invalid ${task.name} sql:")
+            writer.println(mockSubmissionOutput.message)
+            ImageCheckResult.FAILED
+        }
+
+        else -> {
+            writer.println("Unexpected ${task.name}_Matcher result for mock solution:")
+            writer.println(mockSubmissionOutput.message)
+            ImageCheckResult.FAILED
+        }
+    }
+
+    val correctSubmissionOutput = tester.runTest(task.name, task.solution)
+    val correctSubmissionResult = if (correctSubmissionOutput.message.isNullOrEmpty()) {
+        ImageCheckResult.PASSED
+    } else {
+        if (correctSubmissionOutput.status != SubmissionResultStatus.ERROR) {
+            writer.println("Unexpected ${task.name}_Matcher result for teacher's solution:")
+            writer.println(mockSubmissionOutput.message)
+        }
+        ImageCheckResult.FAILED
+    }
+
+    return if (mockSubmissionResult == ImageCheckResult.PASSED && correctSubmissionResult == ImageCheckResult.PASSED)
+        ImageCheckResult.PASSED else ImageCheckResult.FAILED
+}
 
 private enum class SubmissionResultStatus {
     SUCCESSFUL, FAILED, ERROR, TIMEOUT
