@@ -1,6 +1,5 @@
 package com.bardsoftware.sqool.codegen
 
-import com.bardsoftware.sqool.codegen.docker.*
 import com.bardsoftware.sqool.codegen.task.SingleColumnTask
 import com.bardsoftware.sqool.codegen.task.spec.SqlDataType
 import com.bardsoftware.sqool.codegen.task.spec.TaskResultColumn
@@ -71,9 +70,9 @@ class DockerImageBuilderTest {
     fun testFileStructure() {
         val spec = TaskResultColumn("id", SqlDataType.INT)
         val task = SingleColumnTask("Task3", "SELECT 11;", spec)
-        buildDockerImage(
-                imageName = "contest-image", course = "hse2019", module = "cw1",
-                variant = "variant3", schemaPath = "/workspace/hse2019/cw1/schema3.sql", tasks = listOf(task))
+      buildDockerImage(
+          imageName = "contest-image", course = "hse2019", module = "cw1",
+          variant = "variant3", schemaPath = "/workspace/hse2019/cw1/schema3.sql", tasks = listOf(task))
 
         val process = Runtime.getRuntime().exec("docker run --rm contest-image find /workspace")
         val folders = process.inputStream.bufferedReader()
@@ -91,9 +90,9 @@ class DockerImageBuilderTest {
     fun testValidSql() {
         val spec = TaskResultColumn("id", SqlDataType.INT)
         val task = SingleColumnTask("Task3", "SELECT 11 LIMIT 0;", spec)
-        buildDockerImage(
-                imageName = "contest-image", course = "hse2019", module = "cw3",
-                variant = "variant3", schemaPath = "/workspace/hse2019/cw3/schema3.sql", tasks = listOf(task))
+      buildDockerImage(
+          imageName = "contest-image", course = "hse2019", module = "cw3",
+          variant = "variant3", schemaPath = "/workspace/hse2019/cw3/schema3.sql", tasks = listOf(task))
         val result = checkImage("contest-image", listOf(task), flags, outputStream)
 
         assertEquals(ImageCheckResult.PASSED, result)
@@ -111,9 +110,9 @@ class DockerImageBuilderTest {
     fun testInvalidSql() {
         val spec = TaskResultColumn("id", SqlDataType.INT)
         val task = SingleColumnTask("Task3", "SELECTY 11", spec)
-        buildDockerImage(
-                imageName = "contest-image", course = "hse2019", module = "cw2",
-                variant = "variant3", schemaPath = "/workspace/hse2019/cw2/schema3.sql", tasks = listOf(task))
+      buildDockerImage(
+          imageName = "contest-image", course = "hse2019", module = "cw2",
+          variant = "variant3", schemaPath = "/workspace/hse2019/cw2/schema3.sql", tasks = listOf(task))
         val result = checkImage("contest-image", listOf(task), flags, outputStream)
 
         assertEquals(ImageCheckResult.FAILED, result)

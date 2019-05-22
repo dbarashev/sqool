@@ -1,6 +1,7 @@
-package com.bardsoftware.sqool.codegen.docker
+package com.bardsoftware.sqool.codegen
 
-import com.bardsoftware.sqool.codegen.CodeGenerator
+import com.bardsoftware.sqool.codegen.docker.testDynamicCode
+import com.bardsoftware.sqool.codegen.docker.testStaticCode
 import com.bardsoftware.sqool.codegen.task.Task
 import com.bardsoftware.sqool.contest.Flags
 import com.google.cloud.tools.jib.api.Containerizer

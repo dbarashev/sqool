@@ -1,5 +1,6 @@
 package com.bardsoftware.sqool.codegen.docker
 
+import com.bardsoftware.sqool.codegen.ImageCheckResult
 import com.bardsoftware.sqool.contest.Flags
 import com.spotify.docker.client.DefaultDockerClient
 import com.spotify.docker.client.DockerClient
@@ -7,7 +8,6 @@ import com.spotify.docker.client.messages.ContainerConfig
 import com.spotify.docker.client.messages.ContainerExit
 import com.spotify.docker.client.messages.HostConfig
 import java.io.PrintWriter
-import com.spotify.docker.client.messages.NetworkConfig
 
 fun testStaticCode(imageName: String, flags: Flags, errorStream: PrintWriter): ImageCheckResult {
     val (result, output) = runPsql(imageName, flags)

@@ -1,5 +1,6 @@
 package com.bardsoftware.sqool.codegen.docker
 
+import com.bardsoftware.sqool.codegen.ImageCheckResult
 import com.bardsoftware.sqool.codegen.task.Task
 import com.bardsoftware.sqool.contest.Flags
 import com.spotify.docker.client.DefaultDockerClient
