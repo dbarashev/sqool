@@ -44,16 +44,13 @@ private fun runPsql(imageName: String, flags: Flags): Pair<ContainerExit, String
             .build()
     val postgresUri = with(flags) { "postgres://$postgresUser:$postgresPassword@$postgresAddress:$postgresPort" }
     val command = listOf("bash", "-c", "find /workspace -type f -name \"*-static.sql\" -exec cat {} + | psql $postgresUri")
-    println("before pull")
     docker.pull("postgres:10")
-    println("after pull")
     val containerConfig = ContainerConfig.builder()
             .image("postgres:10")
             .hostConfig(hostConfig)
             .cmd(command)
             .build()
     val container = docker.createContainer(containerConfig)
-    println("container create")
 
     docker.startContainer(container.id())
     val result = docker.waitContainer(container.id())
