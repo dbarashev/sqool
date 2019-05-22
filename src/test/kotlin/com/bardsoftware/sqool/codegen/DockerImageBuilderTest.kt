@@ -44,7 +44,6 @@ class DockerImageBuilderTest {
         fun runPostgresServer() {
             dockerClient.startContainer(postgresServer.id())
             val postgresServerIp = dockerClient.inspectContainer(postgresServer.id()).networkSettings().ipAddress()
-            print(postgresServerIp)
             flags = mock {
                 on { postgresAddress } doReturn postgresServerIp
                 on { postgresPort } doReturn "5432"
