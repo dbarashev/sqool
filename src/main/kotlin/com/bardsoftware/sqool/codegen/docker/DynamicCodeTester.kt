@@ -57,6 +57,7 @@ private fun copyDirectoryFromImage(imageName: String, imagePath: String, destina
                 try {
                     file.createNewFile()
                 } catch (e: Exception) {
+                    e.printStackTrace()
                     throw Exception(file.absolutePath)
                 }
                 FileOutputStream(file).use { tarStream.copyTo(it) }
