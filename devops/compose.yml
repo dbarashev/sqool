@@ -13,6 +13,9 @@ services:
       - POSTGRES_PASSWORD=c0nt3sts3rv3r
     ports:
       - '5430:5432'
+    networks:
+      sqool:
+        ipv4_address: 172.25.0.11
 
   app:
     image: dbarashev/sqool-frontend
@@ -22,10 +25,14 @@ services:
       - '8080:8080'
     cpus: 0.2
     mem_limit: 512M
-    command: --pg-address postgres --pg-password c0nt3sts3rv3r --contest au2018
+    command: --pg-address 172.25.0.11 --pg-password c0nt3sts3rv3r --contest au2018
     environment:
       - GOOGLE_CLOUD_PROJECT=dbms-class-2017
       - GOOGLE_APPLICATION_CREDENTIALS=/opt/gce.json
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - sqool
 
   init:
     image: postgres:10
@@ -37,4 +44,15 @@ services:
       - sql
     environment:
       - PGPASSWORD=c0nt3sts3rv3r
-    command: bash -c 'sleep 15s && psql -h postgres -U postgres -f /workspace/sqool-frontend-database.sql'
+    command: bash -c 'sleep 15s && psql -h 172.25.0.11 -U postgres -f /workspace/sqool-frontend-database.sql'
+    networks:
+      - sqool
+
+networks:
+  sqool:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.25.0.0/16
+          gateway: 172.25.0.1

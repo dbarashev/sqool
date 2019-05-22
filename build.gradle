@@ -135,6 +135,7 @@ test {
 }
 
 jib {
+	from.image = 'npalm/dind-java'
 	to.image = 'dbarashev/sqool-frontend'
 }
 

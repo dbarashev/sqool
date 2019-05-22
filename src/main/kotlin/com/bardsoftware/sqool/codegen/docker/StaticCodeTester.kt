@@ -7,7 +7,6 @@ import com.spotify.docker.client.messages.ContainerConfig
 import com.spotify.docker.client.messages.ContainerExit
 import com.spotify.docker.client.messages.HostConfig
 import java.io.PrintWriter
-import com.spotify.docker.client.messages.NetworkConfig
 
 fun testStaticCode(imageName: String, flags: Flags, errorStream: PrintWriter): ImageCheckResult {
     val (result, output) = runPsql(imageName, flags)
@@ -40,16 +39,20 @@ private fun runPsql(imageName: String, flags: Flags): Pair<ContainerExit, String
 
     val hostConfig = HostConfig.builder()
             .volumesFrom(sqlContainer.id())
+            .extraHosts("${flags.postgresAddress}:${flags.postgresAddress}")
             .build()
     val postgresUri = with(flags) { "postgres://$postgresUser:$postgresPassword@$postgresAddress:$postgresPort" }
     val command = listOf("bash", "-c", "find /workspace -type f -name \"*-static.sql\" -exec cat {} + | psql $postgresUri")
-    docker.pull("postgres:11")
+    println("before pull")
+    docker.pull("postgres:10")
+    println("after pull")
     val containerConfig = ContainerConfig.builder()
-            .image("postgres:11")
+            .image("postgres:10")
             .hostConfig(hostConfig)
             .cmd(command)
             .build()
     val container = docker.createContainer(containerConfig)
+    println("container create")
 
     docker.startContainer(container.id())
     val result = docker.waitContainer(container.id())

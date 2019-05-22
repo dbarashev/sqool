@@ -28,13 +28,13 @@ class DockerImageBuilderTest {
         private lateinit var flags: Flags
 
         init {
-            dockerClient.pull("postgres:11")
+            dockerClient.pull("postgres:10")
             val hostConfig = HostConfig.builder()
                     .portBindings(mapOf(Pair("5432/tcp", listOf(PortBinding.of("", "5432")))))
                     .build()
             val containerConfig = ContainerConfig.builder()
-                    .image("postgres:11")
-                    .exposedPorts( "5432/tcp" )
+                    .image("postgres:10")
+                    .exposedPorts("5432/tcp")
                     .hostConfig(hostConfig)
                     .build()
             postgresServer = dockerClient.createContainer(containerConfig)
@@ -45,6 +45,7 @@ class DockerImageBuilderTest {
         fun runPostgresServer() {
             dockerClient.startContainer(postgresServer.id())
             val postgresServerIp = dockerClient.inspectContainer(postgresServer.id()).networkSettings().ipAddress()
+            print(postgresServerIp)
             flags = mock {
                 on { postgresAddress } doReturn postgresServerIp
                 on { postgresPort } doReturn "5432"
