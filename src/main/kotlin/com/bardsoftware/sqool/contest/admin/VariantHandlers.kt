@@ -1,8 +1,8 @@
 package com.bardsoftware.sqool.contest.admin
 
-import com.bardsoftware.sqool.codegen.docker.ImageCheckResult
-import com.bardsoftware.sqool.codegen.docker.buildDockerImage
-import com.bardsoftware.sqool.codegen.docker.checkImage
+import com.bardsoftware.sqool.codegen.ImageCheckResult
+import com.bardsoftware.sqool.codegen.buildDockerImage
+import com.bardsoftware.sqool.codegen.checkImage
 import com.bardsoftware.sqool.codegen.task.TaskDeserializationException
 import com.bardsoftware.sqool.codegen.task.resultRowToTask
 import com.bardsoftware.sqool.contest.*
@@ -26,11 +26,11 @@ class VariantNewHandler(private val flags: Flags) : DbHandler<VariantNewArgs>(fl
                     Tasks.select { Tasks.id inList taskIdList.toList() }
                             .map { resultRowToTask(it) }
                 }
-                buildDockerImage(
-                        "contest-image",
-                        argValues.course, argValues.module,
-                        argValues.variant, argValues.schema,
-                        tasks)
+              buildDockerImage(
+                  "contest-image",
+                  argValues.course, argValues.module,
+                  argValues.variant, argValues.schema,
+                  tasks)
 
                 val errorStream = ByteArrayOutputStream()
                 when(checkImage("contest-image", tasks, flags, errorStream)) {

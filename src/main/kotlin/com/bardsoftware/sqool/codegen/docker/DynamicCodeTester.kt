@@ -1,5 +1,6 @@
 package com.bardsoftware.sqool.codegen.docker
 
+import com.bardsoftware.sqool.codegen.ImageCheckResult
 import com.bardsoftware.sqool.codegen.task.Task
 import com.bardsoftware.sqool.contest.Flags
 import com.spotify.docker.client.DefaultDockerClient
@@ -56,7 +57,7 @@ private fun copyDirectoryFromImage(imageName: String, imagePath: String, destina
                 try {
                     file.createNewFile()
                 } catch (e: Exception) {
-                    throw Exception(file.absolutePath)
+                    throw Exception("Failed to process entry ${entry.name} when writing to ${file.absolutePath}", e)
                 }
                 FileOutputStream(file).use { tarStream.copyTo(it) }
             }

@@ -193,6 +193,8 @@ fun main(args: Array<String>) {
   val adminTaskEditHandler = TaskEditHandler(flags)
   val adminVariantNewHandler = VariantNewHandler(flags)
   val adminSubmissionGetHandler = SubmissionGetHandler()
+  val adminReviewGetHandler = ReviewGetHandler()
+  val adminReviewSaveHandler = ReviewSaveHandler()
   val challengeHandler = ChallengeHandler()
 
   ignite().apply {
@@ -239,7 +241,19 @@ fun main(args: Array<String>) {
       GET("/admin/submission/review" TEMPLATE "submission.ftl")
       GET("/admin/submission/get" BY adminSubmissionGetHandler ARGS mapOf(
               "task_id" to SubmissionGetArgs::task_id,
-              "user_id" to SubmissionGetArgs::user_id
+              "user_id" to SubmissionGetArgs::user_id,
+              "reviewer_id" to SubmissionGetArgs::reviewer_id
+      ))
+      GET("/admin/review/get" BY adminReviewGetHandler ARGS mapOf(
+              "task_id" to ReviewGetArgs::task_id,
+              "user_id" to ReviewGetArgs::user_id,
+              "reviewer_id" to ReviewGetArgs::reviewer_id
+      ))
+      POST("/admin/review/save" BY adminReviewSaveHandler ARGS mapOf(
+              "task_id" to ReviewSaveArgs::task_id,
+              "user_id" to ReviewSaveArgs::user_id,
+              "reviewer_id" to ReviewSaveArgs::reviewer_id,
+              "solution_review" to ReviewSaveArgs::solution_review
       ))
     }
     get("/login") {

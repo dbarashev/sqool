@@ -13,40 +13,20 @@
                     <label for="taskId"> taskId </label>
                     <input id="taskId" v-model="taskId" class="form-control">
                 </div>
+                <div class="form-group">
+                    <label for="reviewerId"> reviewerId </label>
+                    <input id="reviewerId" v-model="reviewerId" class="form-control">
+                </div>
                 <button type="button" class="btn btn-raised btn-danger mr-3" @click="getAttempt">Get attempt</button>
+                <button type="button" class="btn btn-raised btn-danger mr-3" @click="getLastReview">Get last review</button>
                 <TaskMarkdown ref="taskMarkdown"></TaskMarkdown>
+                <button type="button" class="btn btn-raised btn-danger mr-3" @click="save">Save</button>
             </div>
         </main>
     </div>
 </template>
 
-<script lang="ts">
-import {Component, Vue} from 'vue-property-decorator';
-import TaskMarkdown from './components/TaskMarkdown';
-
-@Component({
-    components: {
-        TaskMarkdown,
-    },
-})
-export default class Submission extends Vue {
-    private taskId = -1;
-    private userId = -1;
-    public getAttempt() {
-        const markdown = this.$refs.taskMarkdown as TaskMarkdown;
-        $.ajax({
-            url: '/admin/submission/get',
-            method: 'GET',
-            data: {
-                task_id: this.taskId,
-                user_id: this.userId,
-            },
-        }).then((attempt) => {
-            markdown.textValue = attempt.attempt_text;
-        });
-    }
-}
-</script>
+<script lang="ts" src="./Submission.ts"></script>
 
 
 <style lang="scss">
