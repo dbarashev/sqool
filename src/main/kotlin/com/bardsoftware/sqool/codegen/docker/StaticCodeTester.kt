@@ -40,7 +40,6 @@ private fun runPsql(imageName: String, flags: Flags): Pair<ContainerExit, String
 
     val hostConfig = HostConfig.builder()
             .volumesFrom(sqlContainer.id())
-            .extraHosts("${flags.postgresAddress}:${flags.postgresAddress}")
             .build()
     val postgresUri = with(flags) { "postgres://$postgresUser:$postgresPassword@$postgresAddress:$postgresPort" }
     val command = listOf("bash", "-c", "find /workspace -type f -name \"*-static.sql\" -exec cat {} + | psql $postgresUri")

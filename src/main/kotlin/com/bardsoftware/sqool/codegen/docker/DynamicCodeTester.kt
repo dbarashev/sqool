@@ -7,11 +7,9 @@ import com.spotify.docker.client.DefaultDockerClient
 import com.spotify.docker.client.messages.ContainerConfig
 import com.zaxxer.hikari.HikariDataSource
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream
-import org.postgresql.ds.PGSimpleDataSource
 import java.io.File
 import java.io.FileOutputStream
 import java.io.PrintWriter
-import java.lang.Exception
 import java.sql.SQLException
 import java.text.MessageFormat
 import java.util.*
@@ -55,11 +53,7 @@ private fun copyDirectoryFromImage(imageName: String, imagePath: String, destina
             if (entry.isFile) {
                 val file = File(destinationFolder, entry.name)
                 file.parentFile.mkdirs()
-                try {
-                    file.createNewFile()
-                } catch (e: Exception) {
-                    throw Exception("Failed to process entry ${entry.name} when writing to ${file.absolutePath}", e)
-                }
+                file.createNewFile()
                 FileOutputStream(file).use { tarStream.copyTo(it) }
             }
             entry = tarStream.nextTarEntry
@@ -137,7 +131,7 @@ private class CodeTester(contestSpec: ContestSpec, flags: Flags) {
     private val dataSource = HikariDataSource().apply {
         username = flags.postgresUser
         password = flags.postgresPassword
-        jdbcUrl = "jdbc:postgresql://${flags.postgresAddress}:${flags.postgresPort}"
+        jdbcUrl = "jdbc:postgresql://${flags.postgresAddress}:${flags.postgresPort}/${flags.postgresUser}"
     }
 
     fun runTest(task: String, solution: String): SubmissionResult {
