@@ -57,8 +57,7 @@ private fun copyDirectoryFromImage(imageName: String, imagePath: String, destina
                 try {
                     file.createNewFile()
                 } catch (e: Exception) {
-                    e.printStackTrace()
-                    throw Exception(file.absolutePath)
+                    throw Exception("Failed to process entry ${entry.name} when writing to ${file.absolutePath}", e)
                 }
                 FileOutputStream(file).use { tarStream.copyTo(it) }
             }
