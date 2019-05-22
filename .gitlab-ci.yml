@@ -2,7 +2,7 @@
 # This is the Gradle build system for JVM applications
 # https://gradle.org/
 # https://github.com/gradle/gradle
-image: gradle:5.0
+image: okumo/gradle-root:5.0
 
 services:
   - docker:stable-dind
@@ -33,11 +33,11 @@ variables:
 before_script:
   - export GRADLE_USER_HOME=`pwd`/.gradle
   - bunzip2 tools/docker.bz2 && chmod 555 tools/docker && export PATH=$PATH:`pwd`/tools && export DOCKER_HOST="tcp://docker:2375"
+  - mkdir -p /workspace
 
 test:
   stage: test
   script:
-    - mkdir -p /workspace
     - gradle test
   cache:
     key: "$CI_COMMIT_REF_NAME"
