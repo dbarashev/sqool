@@ -48,10 +48,10 @@ enum class ImageCheckResult {
 
 fun checkImage(imageName: String, imageTasks: List<Task>, flags: Flags, errorStream: OutputStream): ImageCheckResult {
     val writer = PrintWriter(errorStream)
-    writer.println("Static code testing:")
-    val staticCodeResult = testStaticCode(imageName, flags, writer)
     writer.println("Dynamic code testing:")
     val dynamicCodeResult = testDynamicCode(imageName, imageTasks, flags, writer)
+    writer.println("Static code testing:")
+    val staticCodeResult = testStaticCode(imageName, flags, writer)
 
     return when {
         staticCodeResult == ImageCheckResult.PASSED && dynamicCodeResult == ImageCheckResult.PASSED -> ImageCheckResult.PASSED
