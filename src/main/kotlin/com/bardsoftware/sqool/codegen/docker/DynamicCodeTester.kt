@@ -132,7 +132,6 @@ private class CodeTester(contestSpec: ContestSpec, flags: Flags) {
         username = flags.postgresUser
         password = flags.postgresPassword
         jdbcUrl = "jdbc:postgresql://${flags.postgresAddress}:${flags.postgresPort}/${flags.postgresUser}"
-        connectionTimeout = Long.MAX_VALUE
         idleTimeout = Long.MAX_VALUE
         validationTimeout = Long.MAX_VALUE
         loginTimeout = Int.MAX_VALUE

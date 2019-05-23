@@ -8,7 +8,6 @@ import com.google.cloud.tools.jib.api.Containerizer
 import com.google.cloud.tools.jib.api.DockerDaemonImage
 import com.google.cloud.tools.jib.api.Jib
 import com.google.cloud.tools.jib.filesystem.AbsoluteUnixPath
-import com.zaxxer.hikari.HikariDataSource
 import java.io.File
 import java.io.OutputStream
 import java.io.PrintWriter
