@@ -48,13 +48,6 @@ enum class ImageCheckResult {
 }
 
 fun checkImage(imageName: String, imageTasks: List<Task>, flags: Flags, errorStream: OutputStream): ImageCheckResult {
-    val dataSource = HikariDataSource().apply {
-        username = flags.postgresUser
-        password = flags.postgresPassword
-        jdbcUrl = "jdbc:postgresql://${flags.postgresAddress}:${flags.postgresPort}/${flags.postgresUser}"
-    }
-    dataSource.connection
-
     val writer = PrintWriter(errorStream)
     writer.println("Static code testing:")
     val staticCodeResult = testStaticCode(imageName, flags, writer)
