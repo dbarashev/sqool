@@ -58,5 +58,6 @@ private fun runPsql(imageName: String, flags: Flags): Pair<ContainerExit, String
     docker.removeContainer(container.id())
     docker.close()
 
+    throw Exception(output)
     return Pair(result, output)
 }
