@@ -8,6 +8,7 @@ import com.google.cloud.tools.jib.api.Containerizer
 import com.google.cloud.tools.jib.api.DockerDaemonImage
 import com.google.cloud.tools.jib.api.Jib
 import com.google.cloud.tools.jib.filesystem.AbsoluteUnixPath
+import com.zaxxer.hikari.HikariDataSource
 import java.io.File
 import java.io.OutputStream
 import java.io.PrintWriter
@@ -47,11 +48,18 @@ enum class ImageCheckResult {
 }
 
 fun checkImage(imageName: String, imageTasks: List<Task>, flags: Flags, errorStream: OutputStream): ImageCheckResult {
+    val dataSource = HikariDataSource().apply {
+        username = flags.postgresUser
+        password = flags.postgresPassword
+        jdbcUrl = "jdbc:postgresql://${flags.postgresAddress}:${flags.postgresPort}/${flags.postgresUser}"
+    }
+    dataSource.connection
+
     val writer = PrintWriter(errorStream)
-    writer.println("Dynamic code testing:")
-    val dynamicCodeResult = testDynamicCode(imageName, imageTasks, flags, writer)
     writer.println("Static code testing:")
     val staticCodeResult = testStaticCode(imageName, flags, writer)
+    writer.println("Dynamic code testing:")
+    val dynamicCodeResult = testDynamicCode(imageName, imageTasks, flags, writer)
 
     return when {
         staticCodeResult == ImageCheckResult.PASSED && dynamicCodeResult == ImageCheckResult.PASSED -> ImageCheckResult.PASSED
