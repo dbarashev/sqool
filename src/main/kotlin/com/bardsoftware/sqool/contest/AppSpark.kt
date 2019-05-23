@@ -196,6 +196,7 @@ fun main(args: Array<String>) {
   val adminReviewGetHandler = ReviewGetHandler()
   val adminReviewSaveHandler = ReviewSaveHandler()
   val challengeHandler = ChallengeHandler()
+  val authDevHandler = AuthDevHandler()
 
   ignite().apply {
     port(8080)
@@ -246,14 +247,15 @@ fun main(args: Array<String>) {
       ))
       GET("/admin/review/get" BY adminReviewGetHandler ARGS mapOf(
               "task_id" to ReviewGetArgs::task_id,
-              "user_id" to ReviewGetArgs::user_id,
-              "reviewer_id" to ReviewGetArgs::reviewer_id
+              "user_id" to ReviewGetArgs::user_id
       ))
       POST("/admin/review/save" BY adminReviewSaveHandler ARGS mapOf(
               "task_id" to ReviewSaveArgs::task_id,
               "user_id" to ReviewSaveArgs::user_id,
-              "reviewer_id" to ReviewSaveArgs::reviewer_id,
               "solution_review" to ReviewSaveArgs::solution_review
+      ))
+      GET("/auth/dev" BY authDevHandler ARGS mapOf(
+              "user_id" to AuthDevArgs::user_id
       ))
     }
     get("/login") {
