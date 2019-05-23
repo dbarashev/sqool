@@ -7,6 +7,7 @@ import com.spotify.docker.client.DefaultDockerClient
 import com.spotify.docker.client.messages.ContainerConfig
 import com.zaxxer.hikari.HikariDataSource
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream
+import org.postgresql.ds.PGSimpleDataSource
 import java.io.File
 import java.io.FileOutputStream
 import java.io.PrintWriter
@@ -128,13 +129,17 @@ private data class SubmissionResult(val status: SubmissionResultStatus, val mess
 private class CodeTester(contestSpec: ContestSpec, flags: Flags) {
     private val course = contestSpec.course
     private val module = contestSpec.module
-    private val dataSource = HikariDataSource().apply {
-        username = flags.postgresUser
-        password = flags.postgresPassword
-        jdbcUrl = "jdbc:postgresql://${flags.postgresAddress}:${flags.postgresPort}/${flags.postgresUser}"
-        connectionTimeout = Long.MAX_VALUE
-        loginTimeout = Int.MAX_VALUE
+    private val dataSource = PGSimpleDataSource()
+
+    init {
+        with(flags) {
+            dataSource.serverName = postgresAddress
+            dataSource.portNumber = postgresPort.toInt()
+            dataSource.user = postgresUser
+            dataSource.password = postgresPassword
+        }
     }
+
 
     fun runTest(task: String, solution: String): SubmissionResult {
         val connection = dataSource.connection
