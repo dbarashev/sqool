@@ -131,8 +131,7 @@ private class CodeTester(contestSpec: ContestSpec, flags: Flags) {
     private val dataSource = HikariDataSource().apply {
         username = flags.postgresUser
         password = flags.postgresPassword
-        jdbcUrl = "jdbc:postgresql://${flags.postgresAddress}:${flags.postgresPort}/${flags.postgresUser}"
-        loginTimeout = Int.MAX_VALUE
+        jdbcUrl = "jdbc:postgresql://localhost:${flags.postgresPort}/${flags.postgresUser}"
     }
 
     fun runTest(task: String, solution: String): SubmissionResult {
