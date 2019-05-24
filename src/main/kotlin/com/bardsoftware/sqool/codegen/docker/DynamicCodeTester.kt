@@ -5,7 +5,6 @@ import com.bardsoftware.sqool.codegen.task.Task
 import com.bardsoftware.sqool.contest.Flags
 import com.spotify.docker.client.DefaultDockerClient
 import com.spotify.docker.client.messages.ContainerConfig
-import com.zaxxer.hikari.HikariDataSource
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream
 import org.postgresql.ds.PGSimpleDataSource
 import java.io.File
@@ -140,7 +139,6 @@ private class CodeTester(contestSpec: ContestSpec, flags: Flags) {
         }
     }
 
-
     fun runTest(task: String, solution: String): SubmissionResult {
         val connection = dataSource.connection
         val schemaName = "A" + UUID.randomUUID().toString().replace("-", "")
@@ -166,6 +164,8 @@ private class CodeTester(contestSpec: ContestSpec, flags: Flags) {
             else SubmissionResult(SubmissionResultStatus.FAILED, result.joinToString("\n"))
         } catch (ex: SQLException) {
             return SubmissionResult(SubmissionResultStatus.ERROR, ex.message)
+        } finally {
+            connection.close()
         }
     }
 }

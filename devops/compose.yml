@@ -12,7 +12,7 @@ services:
     environment:
       - POSTGRES_PASSWORD=c0nt3sts3rv3r
     ports:
-      - '5430:5432'
+      - '5432:5432'
     networks:
       sqool:
         ipv4_address: 172.25.0.11

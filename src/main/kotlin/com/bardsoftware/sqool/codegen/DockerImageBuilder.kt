@@ -55,7 +55,7 @@ fun checkImage(imageName: String, imageTasks: List<Task>, flags: Flags, errorStr
 
     return when {
         staticCodeResult == ImageCheckResult.PASSED && dynamicCodeResult == ImageCheckResult.PASSED -> ImageCheckResult.PASSED
-        staticCodeResult == ImageCheckResult.FAILED || dynamicCodeResult == ImageCheckResult.FAILED -> ImageCheckResult.FAILED
-        else -> ImageCheckResult.ERROR
+        staticCodeResult == ImageCheckResult.ERROR || dynamicCodeResult == ImageCheckResult.ERROR -> ImageCheckResult.ERROR
+        else -> ImageCheckResult.FAILED
     }
 }
