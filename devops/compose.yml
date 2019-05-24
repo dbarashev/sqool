@@ -7,6 +7,11 @@ services:
     image: postgres:10
     cpus: 0.8
     mem_limit: 256M
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     volumes_from:
       - sql
     environment:
@@ -37,14 +42,15 @@ services:
   init:
     image: postgres:10
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     cpus: 0.1
     mem_limit: 256M
     volumes_from:
       - sql
     environment:
       - PGPASSWORD=c0nt3sts3rv3r
-    command: bash -c 'sleep 15s && psql -h 172.25.0.11 -U postgres -f /workspace/sqool-frontend-database.sql'
+    command: psql -h 172.25.0.11 -U postgres -f /workspace/sqool-frontend-database.sql
     networks:
       - sqool
 
