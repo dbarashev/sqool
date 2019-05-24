@@ -189,6 +189,8 @@ fun main(args: Array<String>) {
   val adminContestAllHandler = ContestAllHandler()
   val adminContestNewHandler = ContestEditHandler(ContestEditMode.INSERT)
   val adminContestUpdateHandler = ContestEditHandler(ContestEditMode.UPDATE)
+
+  val adminScriptAllHandler = ScriptAllHandler()
   val adminTaskAllHandler = TaskAllHandler(flags)
   val adminTaskEditHandler = TaskEditHandler(flags)
   val adminVariantNewHandler = VariantNewHandler(flags)
@@ -215,6 +217,9 @@ fun main(args: Array<String>) {
           "start_ts" to ContestEditArgs::start_ts,
           "end_ts" to ContestEditArgs::end_ts
       ))
+
+      GET("/admin/script/all" BY adminScriptAllHandler)
+
       GET("/admin/task/all" BY adminTaskAllHandler)
       POST("/admin/task/new" BY adminTaskEditHandler ARGS mapOf(
           "result"      to TaskEditArgs::result,
@@ -229,6 +234,7 @@ fun main(args: Array<String>) {
           "description" to TaskEditArgs::description,
           "solution"    to TaskEditArgs::solution
       ))
+
       POST("/admin/variant/new" BY adminVariantNewHandler ARGS mapOf(
           "course"  to VariantNewArgs::course,
           "module"  to VariantNewArgs::module,

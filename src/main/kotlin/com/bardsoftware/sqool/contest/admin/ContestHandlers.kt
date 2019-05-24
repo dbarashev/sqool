@@ -28,10 +28,10 @@ object Contests : Table("Contest.ContestDto") {
 
   fun asJson(row: ResultRow): JsonNode {
     return JSON_MAPPER.createObjectNode().also {
-      it.put("code", row[Contests.code])
-      it.put("name", row[Contests.name])
-      it.put("start_ts", row[Contests.start_ts].toString(DATE_FORMATTER))
-      it.put("end_ts", row[Contests.end_ts].toString(DATE_FORMATTER))
+      it.put("code", row[code])
+      it.put("name", row[name])
+      it.put("start_ts", row[start_ts].toString(DATE_FORMATTER))
+      it.put("end_ts", row[end_ts].toString(DATE_FORMATTER))
     }
   }
 }
