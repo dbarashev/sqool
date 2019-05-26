@@ -6,6 +6,7 @@ image: okumo/gradle-root:5.0
 
 services:
   - docker:stable-dind
+  - postgres:10
 
 variables:
   # When using dind service we need to instruct docker, to talk with the
