@@ -53,7 +53,6 @@ class DockerImageBuilderTest {
                 variant = "variant3", schemaPath = "/workspace/hse2019/cw3/schema3.sql", tasks = listOf(task))
         val result = checkImage("contest-image", listOf(task), flags, outputStream)
 
-        assertEquals(ImageCheckResult.PASSED, result)
         val expectedOutput = """
             |Static code testing:
             |OK
@@ -62,6 +61,7 @@ class DockerImageBuilderTest {
             |
             """.trimMargin()
         assertEquals(expectedOutput, outputStream.toString())
+        assertEquals(ImageCheckResult.PASSED, result)
     }
 
     @Test
@@ -73,7 +73,6 @@ class DockerImageBuilderTest {
                 variant = "variant3", schemaPath = "/workspace/hse2019/cw2/schema3.sql", tasks = listOf(task))
         val result = checkImage("contest-image", listOf(task), flags, outputStream)
 
-        assertEquals(ImageCheckResult.FAILED, result)
         val expectedOutput = """
             |Static code testing:
             |Invalid sql:
@@ -101,5 +100,6 @@ class DockerImageBuilderTest {
             |
             """.trimMargin()
         assertEquals(expectedOutput, outputStream.toString())
+        assertEquals(ImageCheckResult.FAILED, result)
     }
 }
