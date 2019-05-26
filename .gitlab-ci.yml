@@ -38,7 +38,7 @@ before_script:
 test:
   stage: test
   script:
-    - gradle test
+    - gradle test -Ppostgres.ip=`docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' postgres`
   cache:
     key: "$CI_COMMIT_REF_NAME"
     policy: pull
