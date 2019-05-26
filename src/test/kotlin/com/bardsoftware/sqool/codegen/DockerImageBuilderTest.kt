@@ -13,7 +13,7 @@ import java.io.ByteArrayOutputStream
 class DockerImageBuilderTest {
     private val outputStream = ByteArrayOutputStream()
     private val flags = mock<Flags> {
-        on { postgresAddress } doReturn "localhost"
+        on { postgresAddress } doReturn System.getProperty("postgres.ip")
         on { postgresPort } doReturn "5432"
         on { postgresUser } doReturn "postgres"
         on { postgresPassword } doReturn ""

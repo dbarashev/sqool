@@ -37,7 +37,7 @@ dependencies {
 	compile "org.jetbrains.kotlin:kotlin-reflect:${kotlinVersion}"
 
 	compile "com.xenomachina:kotlin-argparser:2.+"
-
+	
 	compile 'com.google.cloud.tools:jib-core:0.+'
 
 	compile group: 'com.spotify', name: 'docker-client', version: '8.+'
@@ -132,6 +132,7 @@ test {
 	testLogging {
         	exceptionFormat = 'full'
 	}
+	systemProperty "postgres.ip", project.getProperty("postgres.ip")
 }
 
 jib {

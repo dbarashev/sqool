@@ -34,12 +34,11 @@ before_script:
   - export GRADLE_USER_HOME=`pwd`/.gradle
   - bunzip2 tools/docker.bz2 && chmod 555 tools/docker && export PATH=$PATH:`pwd`/tools && export DOCKER_HOST="tcp://docker:2375"
   - docker run -d --name postgres -p 5432:5432 postgres:10
-  - echo `docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' postgres`
 
 test:
   stage: test
   script:
-    - gradle test
+    - gradle test -Ppostgres.ip=`docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' postgres`
   cache:
     key: "$CI_COMMIT_REF_NAME"
     policy: pull
