@@ -9,7 +9,7 @@ import TaskMarkdown from './components/TaskMarkdown';
 export default class Submission extends Vue {
     private taskId = -1;
     private userId = -1;
-    private reviewerId = -1;
+
     public getAttempt() {
         const markdown = this.$refs.taskMarkdown as TaskMarkdown;
         $.ajax({
@@ -32,7 +32,6 @@ export default class Submission extends Vue {
             data: {
                 task_id: this.taskId,
                 user_id: this.userId,
-                reviewer_id: this.reviewerId,
             },
         }).then((review) => {
             markdown.textValue = review.review_text;
@@ -47,7 +46,6 @@ export default class Submission extends Vue {
             data: {
                 task_id: this.taskId,
                 user_id: this.userId,
-                reviewer_id: this.reviewerId,
                 solution_review: markdown.textValue,
             },
         });

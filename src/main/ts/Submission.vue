@@ -13,10 +13,6 @@
                     <label for="taskId"> taskId </label>
                     <input id="taskId" v-model="taskId" class="form-control">
                 </div>
-                <div class="form-group">
-                    <label for="reviewerId"> reviewerId </label>
-                    <input id="reviewerId" v-model="reviewerId" class="form-control">
-                </div>
                 <button type="button" class="btn btn-raised btn-danger mr-3" @click="getAttempt">Get attempt</button>
                 <button type="button" class="btn btn-raised btn-danger mr-3" @click="getLastReview">Get last review</button>
                 <TaskMarkdown ref="taskMarkdown"></TaskMarkdown>
