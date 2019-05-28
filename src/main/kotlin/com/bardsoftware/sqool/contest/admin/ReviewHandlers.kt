@@ -18,23 +18,19 @@ data class ReviewGetArgs(var user_id: String, var task_id: String) : RequestArgs
 
 class ReviewGetHandler : RequestHandler<ReviewGetArgs>() {
   override fun handle(http: HttpApi, argValues: ReviewGetArgs): HttpResponse {
+    val reviewerId = http.session("user_id") ?: return http.error(401, "no authorization")
     return transaction {
-      val reviewerId = http.session("user_id");
-      if (reviewerId == null) {
-        http.error(401, "no authorization");
-      } else {
-        val solutionReview = SolutionReview.select {
-          ((SolutionReview.user_id eq argValues.user_id.toInt())
-                  and
-                  (SolutionReview.task_id eq argValues.task_id.toInt())
-                  and
-                  (SolutionReview.reviewer_id eq reviewerId.toInt()))
-        }.toList()
-        when {
-          solutionReview.size > 1 -> http.error(500, "get more than one solution by user_id, task_id and reviewer_id")
-          solutionReview.isNotEmpty() -> http.json(hashMapOf("review_text" to solutionReview.last()[SolutionReview.solution_review]))
-          else -> http.json(hashMapOf("review_text" to "[comment]: # (there was no review)"))
-        }
+      val solutionReview = SolutionReview.select {
+        ((SolutionReview.user_id eq argValues.user_id.toInt())
+                and
+                (SolutionReview.task_id eq argValues.task_id.toInt())
+                and
+                (SolutionReview.reviewer_id eq reviewerId.toInt()))
+      }.toList()
+      when {
+        solutionReview.size > 1 -> http.error(500, "get more than one solution by user_id, task_id and reviewer_id")
+        solutionReview.isNotEmpty() -> http.json(hashMapOf("review_text" to solutionReview.last()[SolutionReview.solution_review]))
+        else -> http.json(hashMapOf("review_text" to "[comment]: # (there was no review)"))
       }
     }
   }
@@ -46,38 +42,34 @@ data class ReviewSaveArgs(var user_id: String, var task_id: String, var solution
 
 class ReviewSaveHandler : RequestHandler<ReviewSaveArgs>() {
   override fun handle(http: HttpApi, argValues: ReviewSaveArgs): HttpResponse {
+    val reviewerId = http.session("user_id") ?: return http.error(401, "no authorization")
     return transaction {
-      val reviewerId = http.session("user_id");
-      if (reviewerId == null) {
-        http.error(401, "no authorization");
+      val solutionReview = SolutionReview.select {
+        ((SolutionReview.user_id eq argValues.user_id.toInt())
+        and
+        (SolutionReview.task_id eq argValues.task_id.toInt())
+        and
+        (SolutionReview.reviewer_id eq reviewerId.toInt()))
+      }.toList()
+      if (solutionReview.isEmpty()) {
+        SolutionReview.insert {
+          it[task_id] = argValues.task_id.toInt()
+          it[user_id] = argValues.user_id.toInt()
+          it[reviewer_id] = reviewerId.toInt()
+          it[solution_review] = argValues.solution_review
+        }
       } else {
-        val solutionReview = SolutionReview.select {
+        SolutionReview.update({
           ((SolutionReview.user_id eq argValues.user_id.toInt())
-          and
-          (SolutionReview.task_id eq argValues.task_id.toInt())
-          and
-          (SolutionReview.reviewer_id eq reviewerId.toInt()))
-        }.toList()
-        if (solutionReview.isEmpty()) {
-          SolutionReview.insert {
-            it[task_id] = argValues.task_id.toInt()
-            it[user_id] = argValues.user_id.toInt()
-            it[reviewer_id] = reviewerId.toInt()
-            it[solution_review] = argValues.solution_review
-          }
-        } else {
-          SolutionReview.update({
-            ((SolutionReview.user_id eq argValues.user_id.toInt())
-                    and
-                    (SolutionReview.task_id eq argValues.task_id.toInt())
-                    and
-                    (SolutionReview.reviewer_id eq reviewerId.toInt()))
-          }) {
-            it[solution_review] = argValues.solution_review
-          }
+                  and
+                  (SolutionReview.task_id eq argValues.task_id.toInt())
+                  and
+                  (SolutionReview.reviewer_id eq reviewerId.toInt()))
+        }) {
+          it[solution_review] = argValues.solution_review
         }
       }
-      http.ok();
+      http.ok()
     }
   }
 
