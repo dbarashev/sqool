@@ -15,11 +15,6 @@
                     <input id="taskId" v-bind:value="-1"
                            v-on:input="reviewPage().taskId = $event.target.value" class="form-control">
                 </div>
-                <div class="form-group">
-                    <label for="reviewerId"> reviewerId </label>
-                    <input id="reviewerId" v-bind:value="-1"
-                           v-on:input="reviewPage().reviewerId = $event.target.value" class="form-control">
-                </div>
                 <ReviewPage ref="reviewPage"></ReviewPage>
             </div>
         </main>

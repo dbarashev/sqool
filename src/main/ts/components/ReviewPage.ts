@@ -9,7 +9,6 @@ import TaskMarkdown from './TaskMarkdown';
 export default class ReviewPage extends Vue {
     public taskId = -1;
     public userId = -1;
-    public reviewerId = -1;
 
     public getAttempt() {
         const markdown = this.$refs.taskMarkdown as TaskMarkdown;
@@ -33,7 +32,6 @@ export default class ReviewPage extends Vue {
             data: {
                 task_id: this.taskId,
                 user_id: this.userId,
-                reviewer_id: this.reviewerId,
             },
         }).then((review) => {
             markdown.textValue = review.review_text;
@@ -48,7 +46,6 @@ export default class ReviewPage extends Vue {
             data: {
                 task_id: this.taskId,
                 user_id: this.userId,
-                reviewer_id: this.reviewerId,
                 solution_review: markdown.textValue,
             },
         });
