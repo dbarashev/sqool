@@ -7,41 +7,22 @@
                 <div> Hi! You can get attempt by userId and taskId </div>
                 <div class="form-group">
                     <label for="userId"> userId </label>
-                    <input id="userId" v-model="userId" class="form-control">
+                    <input id="userId" v-bind:value="-1"
+                           v-on:input="reviewPage().userId = $event.target.value" class="form-control">
                 </div>
                 <div class="form-group">
                     <label for="taskId"> taskId </label>
-                    <input id="taskId" v-model="taskId" class="form-control">
+                    <input id="taskId" v-bind:value="-1"
+                           v-on:input="reviewPage().taskId = $event.target.value" class="form-control">
                 </div>
                 <div class="form-group">
                     <label for="reviewerId"> reviewerId </label>
-                    <input id="reviewerId" v-model="reviewerId" class="form-control">
+                    <input id="reviewerId" v-bind:value="-1"
+                           v-on:input="reviewPage().reviewerId = $event.target.value" class="form-control">
                 </div>
-                <button type="button" class="btn btn-raised btn-danger mr-3" @click="getAttempt">Get attempt</button>
-                <button type="button" class="btn btn-raised btn-danger mr-3" @click="getLastReview">Get last review</button>
-                <TaskMarkdown ref="taskMarkdown"></TaskMarkdown>
-                <button type="button" class="btn btn-raised btn-danger mr-3" @click="save">Save</button>
+                <ReviewPage ref="reviewPage"></ReviewPage>
             </div>
         </main>
     </div>
 </template>
-
 <script lang="ts" src="./Submission.ts"></script>
-
-
-<style lang="scss">
-    #app {
-        font-family: 'Avenir', Helvetica, Arial, sans-serif;
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-        text-align: center;
-        color: #2c3e50;
-    }
-    .bmd-layout-canvas {
-        position: absolute;
-        top: 0;
-        bottom: 0;
-        left: 0;
-        right: 0;
-    }
-</style>
