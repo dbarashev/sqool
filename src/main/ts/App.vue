@@ -44,6 +44,8 @@
             </TaskToolbar>
             <TaskTable ref="taskTable">
             </TaskTable>
+            <AvailableSolutions ref="availableSolutions">
+            </AvailableSolutions>
           </div>
           <div class="tab-pane fade" id="list-variants" role="tabpanel">
             Здесь будут варианты
@@ -73,9 +75,11 @@ import ContestPropertiesModal from './components/ContestPropertiesModal.vue';
 import VariantBuildingProgressBar from './components/VariantBuildingProgressBar.vue';
 import AlertDialog from './components/AlertDialog.vue';
 import ScriptTable from './components/ScriptTable.vue';
+import AvailableSolutions from './components/AvailableSolutions';
 
 @Component({
   components: {
+    AvailableSolutions,
     ScriptTable,
     ContestToolbar,
     ContestTable, ContestPropertiesModal,
@@ -112,6 +116,11 @@ export default class App extends Vue {
   @Provide()
   public alertDialog(): AlertDialog {
     return this.$refs.alertDialog as AlertDialog;
+  }
+
+  @Provide()
+  public availableSolutions(): AvailableSolutions {
+    return this.$refs.availableSolutions as AvailableSolutions;
   }
 }
 </script>
