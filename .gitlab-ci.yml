@@ -2,7 +2,7 @@
 # This is the Gradle build system for JVM applications
 # https://gradle.org/
 # https://github.com/gradle/gradle
-image: okumo/gradle-root:5.0
+image: registry.gitlab.com/dmitry-barashev/sqool-frontend/gradle:5.0
 
 services:
   - docker:stable-dind

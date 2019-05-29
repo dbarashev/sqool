@@ -50,12 +50,9 @@ fun checkImage(imageName: String, imageTasks: List<Task>, flags: Flags, errorStr
     val writer = PrintWriter(errorStream)
     writer.println("Static code testing:")
     val staticCodeResult = testStaticCode(imageName, flags, writer)
-    writer.println("Dynamic code testing:")
-    val dynamicCodeResult = testDynamicCode(imageName, imageTasks, flags, writer)
-
-    return when {
-        staticCodeResult == ImageCheckResult.PASSED && dynamicCodeResult == ImageCheckResult.PASSED -> ImageCheckResult.PASSED
-        staticCodeResult == ImageCheckResult.ERROR || dynamicCodeResult == ImageCheckResult.ERROR -> ImageCheckResult.ERROR
-        else -> ImageCheckResult.FAILED
+    if (staticCodeResult != ImageCheckResult.PASSED) {
+        return staticCodeResult
     }
+    writer.println("Dynamic code testing:")
+    return testDynamicCode(imageName, imageTasks, flags, writer)
 }

@@ -13,7 +13,7 @@ import java.io.ByteArrayOutputStream
 class DockerImageBuilderTest {
     private val outputStream = ByteArrayOutputStream()
     private val flags = mock<Flags> {
-        on { postgresAddress } doReturn System.getProperty("postgres.ip")
+        on { postgresAddress } doReturn (System.getProperty("postgres.ip") ?: "localhost")
         on { postgresPort } doReturn "5432"
         on { postgresUser } doReturn "postgres"
         on { postgresPassword } doReturn ""
@@ -92,11 +92,6 @@ class DockerImageBuilderTest {
             |CREATE FUNCTION
             |DROP FUNCTION
             |
-            |Dynamic code testing:
-            |Invalid Task3 sql:
-            |ERROR: function task3_robot() does not exist
-            |  Hint: No function matches the given name and argument types. You might need to add explicit type casts.
-            |  Position: 74
             |
             """.trimMargin()
         assertEquals(expectedOutput, outputStream.toString())

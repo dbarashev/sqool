@@ -13,11 +13,11 @@ import java.io.ByteArrayOutputStream
 
 data class VariantNewArgs(var course: String, var module: String,
                           var variant: String, var schema: String,
-                          var tasks: String
+                          var tasks: String, var imageName: String
 ) : RequestArgs()
 
 class VariantNewHandler(private val flags: Flags) : DbHandler<VariantNewArgs>(flags) {
-    override fun args(): VariantNewArgs = VariantNewArgs("", "", "", "", "")
+    override fun args(): VariantNewArgs = VariantNewArgs("", "", "", "", "", "contest-image")
 
     override fun handle(http: HttpApi, argValues: VariantNewArgs): HttpResponse =
             try {
@@ -26,17 +26,17 @@ class VariantNewHandler(private val flags: Flags) : DbHandler<VariantNewArgs>(fl
                     Tasks.select { Tasks.id inList taskIdList.toList() }
                             .map { resultRowToTask(it) }
                 }
-              buildDockerImage(
-                  "contest-image",
-                  argValues.course, argValues.module,
-                  argValues.variant, argValues.schema,
-                  tasks)
+                buildDockerImage(
+                        argValues.imageName,
+                        argValues.course, argValues.module,
+                        argValues.variant, argValues.schema,
+                        tasks)
 
                 val errorStream = ByteArrayOutputStream()
-                when(checkImage("contest-image", tasks, flags, errorStream)) {
+                when (checkImage(argValues.imageName, tasks, flags, errorStream)) {
                     ImageCheckResult.PASSED -> http.ok()
                     ImageCheckResult.ERROR -> http.error(500, errorStream.toString())
-                    ImageCheckResult.FAILED -> http.error(409, errorStream.toString())
+                    ImageCheckResult.FAILED -> http.error(400, errorStream.toString())
                 }.also { errorStream.close() }
             } catch (exception: TaskDeserializationException) {
                 exception.printStackTrace()
