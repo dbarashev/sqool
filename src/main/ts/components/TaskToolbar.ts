@@ -1,8 +1,7 @@
 import {Component, Inject, Vue} from 'vue-property-decorator';
 import {TaskDto} from '../Task';
 import TaskPropertiesModal from './TaskPropertiesModal';
-import TaskTable from './TaskTable';
-import AvailableSolutions from './AvailableSolutions';
+import TaskMainWindow from './TaskMainWindow';
 
 @Component
 export default class TaskToolbar extends Vue {
@@ -20,8 +19,7 @@ export default class TaskToolbar extends Vue {
         };
     }
     @Inject() public readonly taskProperties!: () => TaskPropertiesModal;
-    @Inject() public readonly taskTable!: () => TaskTable;
-    @Inject() public readonly availableSolutions!: () => AvailableSolutions;
+    @Inject() public readonly taskMainWindow!: () => TaskMainWindow;
 
     public createNewTask() {
         const newTask = new TaskDto(-1, '000', '', '', '');
@@ -29,36 +27,34 @@ export default class TaskToolbar extends Vue {
             return $.ajax('/admin/task/new', TaskToolbar.buildTaskPayload(updatedTask));
         }).then(() => {
             this.taskProperties().hide();
-            this.taskTable().refresh();
+            this.taskMainWindow().taskTable().refresh();
         });
     }
 
     public editTask() {
-        const activeTask = this.taskTable().getActiveTask();
+        const activeTask = this.taskMainWindow().taskTable().getActiveTask();
         if (activeTask) {
             this.taskProperties().show(activeTask).then((updatedTask) => {
                 $.ajax('/admin/task/update', TaskToolbar.buildTaskPayload(updatedTask));
             }).then(() => {
                 this.taskProperties().hide();
-                this.taskTable().refresh();
+                this.taskMainWindow().taskTable().refresh();
             });
         }
     }
 
     public buildVariant() {
-        this.taskTable().buildVariant();
+        this.taskMainWindow().taskTable().buildVariant();
     }
 
     public getAvailableSolutions() {
-        const activeTask = this.taskTable().getActiveTask();
+        const activeTask = this.taskMainWindow().taskTable().getActiveTask();
         if (activeTask) {
-            this.taskTable().hide();
-            this.availableSolutions().show();
+            this.taskMainWindow().showAvailableSolutions();
         }
     }
 
     public getTasks() {
-        this.availableSolutions().hide();
-        this.taskTable().show();
+        this.taskMainWindow().showTaskTable();
     }
 }

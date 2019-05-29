@@ -1,5 +1,5 @@
 <template>
-    <div id="available-solutions" style="display: none">
+    <div id="available-solutions">
         <table class="table table-hover">
             <thead class="thead-dark">
             <tr>
@@ -8,7 +8,7 @@
             </thead>
             <tbody>
             <tr v-for="t in solutions">
-                <td>{{ t.user_id }}</td>
+                <td @click="getReviewPage(t.user_id)">{{ t.user_id }}</td>
             </tr>
             </tbody>
         </table>

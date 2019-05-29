@@ -1,6 +1,6 @@
 import {Component, Inject, Vue} from 'vue-property-decorator';
-import TaskTable from './TaskTable';
 import {TaskDto} from '../Task';
+import TaskMainWindow from './TaskMainWindow';
 
 
 @Component
@@ -8,15 +8,11 @@ export default class AvailableSolutions extends Vue {
     private solutions = [];
     private taskId = -1;
 
-    @Inject() private readonly taskTable!: () => TaskTable;
-
-    public show() {
-        this.refresh();
-        $('#available-solutions').show();
-    }
+    @Inject()
+    private readonly taskMainWindow!: () => TaskMainWindow;
 
     public refresh() {
-        this.taskId  = (this.taskTable().getActiveTask() as TaskDto).id;
+        this.taskId  = (this.taskMainWindow().taskTable().getActiveTask() as TaskDto).id;
         $.ajax({
             url: '/admin/submission/get/by/task',
             method: 'GET',
@@ -29,8 +25,10 @@ export default class AvailableSolutions extends Vue {
         });
     }
 
-    public hide() {
-        $('#available-solutions').hide();
+    public getReviewPage(userId: number) {
+       this.taskMainWindow().reviewPage().userId = userId;
+       this.taskMainWindow().reviewPage().taskId = this.taskId;
+       this.taskMainWindow().showReviewPage();
     }
 }
 
