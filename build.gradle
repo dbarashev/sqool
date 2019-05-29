@@ -132,7 +132,7 @@ test {
 	testLogging {
         	exceptionFormat = 'full'
 	}
-	systemProperty "postgres.ip", project.getProperty("postgres.ip")
+	systemProperty "postgres.ip", project.properties["postgres.ip"] ?: "localhost"
 }
 
 jib {
