@@ -44,10 +44,10 @@ class SubmissionGetHandler : RequestHandler<SubmissionGetArgs>() {
   override fun args(): SubmissionGetArgs = SubmissionGetArgs("", "", "")
 }
 
-data class SubmissionGetByTaskArgs(var task_id: String) : RequestArgs()
+data class SubmissionListArgs(var task_id: String) : RequestArgs()
 
-class SubmissionGetByTaskHandler : RequestHandler<SubmissionGetByTaskArgs>() {
-  override fun handle(http: HttpApi, argValues: SubmissionGetByTaskArgs): HttpResponse {
+class SubmissionListHandler : RequestHandler<SubmissionListArgs>() {
+  override fun handle(http: HttpApi, argValues: SubmissionListArgs): HttpResponse {
     return transaction {
       http.json(Attempts.select {
         ((Attempts.task_id eq argValues.task_id.toInt()))
@@ -55,5 +55,5 @@ class SubmissionGetByTaskHandler : RequestHandler<SubmissionGetByTaskArgs>() {
     }
   }
 
-  override fun args(): SubmissionGetByTaskArgs = SubmissionGetByTaskArgs("")
+  override fun args(): SubmissionListArgs = SubmissionListArgs("")
 }
