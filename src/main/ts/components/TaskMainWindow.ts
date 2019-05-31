@@ -12,6 +12,11 @@ import TaskTable from './TaskTable';
     },
 })
 export default class TaskMainWindow extends Vue {
+
+    public mounted() {
+        this.showTaskTable();
+    }
+
     @Provide()
     public availableSolutions(): AvailableSolutions {
         return this.$refs.availableSolutions as AvailableSolutions;
@@ -27,26 +32,24 @@ export default class TaskMainWindow extends Vue {
         return this.$refs.taskTable as TaskTable;
     }
 
-    public hide() {
-        $('#task-main-window-task-table').hide();
-        $('#task-main-window-available-solutions').hide();
-        $('#task-main-window-review-page').hide();
+    public hideChildren() {
+        this.taskTable().hide();
+        this.availableSolutions().hide();
+        this.reviewPage().hide();
     }
 
     public showAvailableSolutions() {
-        this.hide();
-        this.availableSolutions().refresh();
-        $('#task-main-window-available-solutions').show();
+        this.hideChildren();
+        this.availableSolutions().show();
     }
 
     public showTaskTable() {
-        this.hide();
-        this.taskTable().refresh();
-        $('#task-main-window-task-table').show();
+        this.hideChildren();
+        this.taskTable().show();
     }
 
     public showReviewPage() {
-        this.hide();
-        $('#task-main-window-review-page').show();
+        this.hideChildren();
+        this.reviewPage().show();
     }
 }

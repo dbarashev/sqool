@@ -30,6 +30,15 @@ export default class AvailableSolutions extends Vue {
        this.taskMainWindow().reviewPage().taskId = this.taskId;
        this.taskMainWindow().showReviewPage();
     }
+
+    public hide() {
+        $('#available-solutions').hide();
+    }
+
+    public show() {
+        this.refresh();
+        $('#available-solutions').show();
+    }
 }
 
 

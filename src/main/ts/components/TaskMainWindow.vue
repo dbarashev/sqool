@@ -1,10 +1,10 @@
 <template>
     <div id="task-main-window">
-        <TaskTable ref="taskTable" id="task-main-window-task-table">
+        <TaskTable ref="taskTable">
         </TaskTable>
-        <AvailableSolutions ref="availableSolutions" id="task-main-window-available-solutions" style="display: none">
+        <AvailableSolutions ref="availableSolutions">
         </AvailableSolutions>
-        <ReviewPage ref="reviewPage" id="task-main-window-review-page" style="display: none">
+        <ReviewPage ref="reviewPage">
         </ReviewPage>
     </div>
 </template>

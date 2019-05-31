@@ -50,4 +50,12 @@ export default class ReviewPage extends Vue {
             },
         });
     }
+
+    public hide() {
+        $('#review-page').hide();
+    }
+
+    public show() {
+        $('#review-page').show();
+    }
 }

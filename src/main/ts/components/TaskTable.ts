@@ -73,4 +73,13 @@ export default class TaskTable extends Vue {
             tasks.forEach((t) => this.tasks.push(t));
         });
     }
+
+    public hide() {
+        $('#task-table').hide();
+    }
+
+    public show() {
+        this.refresh();
+        $('#task-table').show();
+    }
 }
