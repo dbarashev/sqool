@@ -5,9 +5,6 @@ module.exports = {
     pages: {
       app: {
         entry: './src/main/ts/main.ts'
-      },
-      submission: {
-        entry: './src/main/ts/review.ts'
       }
     }
 }
