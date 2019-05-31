@@ -15,12 +15,6 @@ object Attempts : Table("Contest.Attempt") {
   val task_id = integer("task_id")
   val user_id = integer("user_id")
   val attempt_text = text("attempt_text")
-
-  fun asJsonUserId(row: ResultRow): JsonNode {
-    return JSON_MAPPER.createObjectNode().also {
-      it.put("user_id", row[Attempts.user_id])
-    }
-  }
 }
 
 data class SubmissionGetArgs(var user_id: String, var task_id: String, var reviewer_id: String) : RequestArgs()
@@ -44,14 +38,37 @@ class SubmissionGetHandler : RequestHandler<SubmissionGetArgs>() {
   override fun args(): SubmissionGetArgs = SubmissionGetArgs("", "", "")
 }
 
+object MyAttempts : Table("Contest.MyAttempts") {
+  val task_id = integer("task_id")
+  val user_id = integer("user_id")
+  val user_name = text("user_name")
+  val nick = text("nick")
+  val status = text("status")
+  val count = integer("count")
+  val error_msg = text("error_msg")
+  val result_set = text("result_set")
+
+  fun asJson(row: ResultRow): JsonNode {
+    return JSON_MAPPER.createObjectNode().also {
+      it.put("user_id", row[MyAttempts.user_id])
+      it.put("user_name", row[MyAttempts.user_name])
+      it.put("nick", row[MyAttempts.nick])
+      it.put("status", row[MyAttempts.status])
+      it.put("count", row[MyAttempts.count])
+      it.put("error_msg", row[MyAttempts.error_msg])
+      it.put("result_set", row[MyAttempts.result_set])
+    }
+  }
+}
+
 data class SubmissionListArgs(var task_id: String) : RequestArgs()
 
 class SubmissionListHandler : RequestHandler<SubmissionListArgs>() {
   override fun handle(http: HttpApi, argValues: SubmissionListArgs): HttpResponse {
     return transaction {
-      http.json(Attempts.select {
-        ((Attempts.task_id eq argValues.task_id.toInt()))
-      }.map(Attempts::asJsonUserId).toList())
+      http.json(MyAttempts.select {
+        ((MyAttempts.task_id eq argValues.task_id.toInt()))
+      }.map(MyAttempts::asJson).toList())
     }
   }
 
