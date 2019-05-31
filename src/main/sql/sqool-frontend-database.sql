@@ -361,6 +361,7 @@ SELECT  T.id AS task_id,
         T.description,
         T.author_id,
         U.nick,
+        U.name as "user_name",
         A.attempt_id,
         A.user_id,
         A.status::TEXT,
@@ -369,8 +370,8 @@ SELECT  T.id AS task_id,
         D.error_msg,
         D.result_set
 FROM Contest.Task T
-JOIN Contest.ContestUser U ON T.author_id = U.id
 JOIN Contest.Attempt A ON A.task_id = T.id
+JOIN Contest.ContestUser U ON A.user_id = U.id
 LEFT JOIN Contest.GradingDetails D ON A.attempt_id = D.attempt_id;
 
 
