@@ -13,8 +13,6 @@ export default class TaskTable extends Vue {
     private readonly variantBuildingProgressBar!: () => VariantBuildingProgressBar;
     @Inject()
     private readonly alertDialog!: () => AlertDialog;
-    @Inject()
-    private readonly taskMainWindow!: () => TaskMainWindow;
 
 
     public mounted() {

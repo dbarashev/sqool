@@ -8,7 +8,7 @@
             </thead>
             <tbody>
             <tr v-for="t in solutions">
-                <td @click="getReviewPage(t.user_id)">{{ t.user_id }}</td>
+                <td @click="showReviewPage(t.user_id)">{{ t.user_id }}</td>
             </tr>
             </tbody>
         </table>

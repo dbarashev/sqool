@@ -47,14 +47,14 @@ export default class TaskToolbar extends Vue {
         this.taskMainWindow().taskTable().buildVariant();
     }
 
-    public getAvailableSolutions() {
+    public showAvailableSolutions() {
         const activeTask = this.taskMainWindow().taskTable().getActiveTask();
         if (activeTask) {
             this.taskMainWindow().showAvailableSolutions();
         }
     }
 
-    public getTasks() {
+    public showTasks() {
         this.taskMainWindow().showTaskTable();
     }
 }

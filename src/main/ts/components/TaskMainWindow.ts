@@ -48,7 +48,9 @@ export default class TaskMainWindow extends Vue {
         this.taskTable().show();
     }
 
-    public showReviewPage() {
+    public showReviewPage(userId: number, taskId: number) {
+        this.reviewPage().userId = userId;
+        this.reviewPage().taskId = taskId;
         this.hideChildren();
         this.reviewPage().show();
     }

@@ -12,9 +12,12 @@ export default class AvailableSolutions extends Vue {
     private readonly taskMainWindow!: () => TaskMainWindow;
 
     public refresh() {
+        if (this.taskMainWindow().taskTable().getActiveTask() == null) {
+           return ;
+        }
         this.taskId  = (this.taskMainWindow().taskTable().getActiveTask() as TaskDto).id;
         $.ajax({
-            url: '/admin/submission/get/by/task',
+            url: '/admin/submission/list',
             method: 'GET',
             data: {
                 task_id: this.taskId ,
@@ -25,10 +28,8 @@ export default class AvailableSolutions extends Vue {
         });
     }
 
-    public getReviewPage(userId: number) {
-       this.taskMainWindow().reviewPage().userId = userId;
-       this.taskMainWindow().reviewPage().taskId = this.taskId;
-       this.taskMainWindow().showReviewPage();
+    public showReviewPage(userId: number) {
+       this.taskMainWindow().showReviewPage(userId, this.taskId);
     }
 
     public hide() {

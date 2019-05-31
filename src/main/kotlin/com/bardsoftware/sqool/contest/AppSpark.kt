@@ -252,7 +252,7 @@ fun main(args: Array<String>) {
               "user_id" to SubmissionGetArgs::user_id,
               "reviewer_id" to SubmissionGetArgs::reviewer_id
       ))
-      GET("/admin/submission/get/by/task" BY adminSubmissionGetByTaskHandler ARGS mapOf(
+      GET("/admin/submission/list" BY adminSubmissionGetByTaskHandler ARGS mapOf(
              "task_id" to SubmissionGetByTaskArgs::task_id
       ))
       GET("/admin/review/get" BY adminReviewGetHandler ARGS mapOf(
