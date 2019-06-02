@@ -32,6 +32,7 @@ fun buildDockerImage(
         File(moduleFolder, "${it.name}-dynamic.sql").writeText(perSubmissionCode)
     }
 
+    //TODO: check if it can be replaced with Spotify docker client stuff to get rid of docker dependency
     //TODO: check it out with scratch image in next release
     Jib.from("busybox")
             .addLayer(listOf(Paths.get(root.toString(), "workspace")), AbsoluteUnixPath.get("/"))
