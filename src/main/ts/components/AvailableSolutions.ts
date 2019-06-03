@@ -13,14 +13,14 @@ export default class AvailableSolutions extends Vue {
 
     public refresh() {
         if (this.taskMainWindow().taskTable().getActiveTask() == null) {
-           return ;
+           return;
         }
         this.taskId  = (this.taskMainWindow().taskTable().getActiveTask() as TaskDto).id;
         $.ajax({
             url: '/admin/submission/list',
             method: 'GET',
             data: {
-                task_id: this.taskId ,
+                task_id: this.taskId,
             },
         }).done((solutions: []) => {
             this.solutions = [];
@@ -33,12 +33,12 @@ export default class AvailableSolutions extends Vue {
     }
 
     public hide() {
-        $('#available-solutions').hide();
+        this.$el.setAttribute('hidden', 'true');
     }
 
     public show() {
         this.refresh();
-        $('#available-solutions').show();
+        this.$el.removeAttribute('hidden');
     }
 }
 

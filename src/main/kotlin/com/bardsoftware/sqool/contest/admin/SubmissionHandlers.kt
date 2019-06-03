@@ -42,7 +42,7 @@ object MyAttempts : Table("Contest.MyAttempts") {
   val task_id = integer("task_id")
   val user_id = integer("user_id")
   val user_name = text("user_name")
-  val nick = text("nick")
+  val user_nick = text("user_nick")
   val status = text("status")
   val count = integer("count")
   val error_msg = text("error_msg")
@@ -52,7 +52,7 @@ object MyAttempts : Table("Contest.MyAttempts") {
     return JSON_MAPPER.createObjectNode().also {
       it.put("user_id", row[MyAttempts.user_id])
       it.put("user_name", row[MyAttempts.user_name])
-      it.put("nick", row[MyAttempts.nick])
+      it.put("user_nick", row[MyAttempts.user_nick])
       it.put("status", row[MyAttempts.status])
       it.put("count", row[MyAttempts.count])
       it.put("error_msg", row[MyAttempts.error_msg])

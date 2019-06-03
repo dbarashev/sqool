@@ -52,10 +52,12 @@ export default class ReviewPage extends Vue {
     }
 
     public hide() {
-        $('#review-page').hide();
+        this.$el.setAttribute('hidden', 'true');
     }
 
-    public show() {
-        $('#review-page').show();
+    public show(userId: number, taskId: number) {
+        this.userId = userId;
+        this.taskId = taskId;
+        this.$el.removeAttribute('hidden');
     }
 }

@@ -73,11 +73,11 @@ export default class TaskTable extends Vue {
     }
 
     public hide() {
-        $('#task-table').hide();
+        this.$el.setAttribute('hidden', 'true');
     }
 
     public show() {
         this.refresh();
-        $('#task-table').show();
+        this.$el.removeAttribute('hidden');
     }
 }

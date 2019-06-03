@@ -4,7 +4,7 @@
             <thead class="thead-dark">
             <tr>
                 <th scope="col">Пользователь</th>
-                <th scope="col">Nickname</th>
+                <th scope="col">Имя</th>
                 <th scope="col">Статус</th>
                 <th scope="col">Номер попытки</th>
                 <th scope="col">Ошибка / Результат работы программы</th>
