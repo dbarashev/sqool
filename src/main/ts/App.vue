@@ -42,8 +42,8 @@
           <div class="tab-pane fade show active" id="list-tasks" role="tabpanel">
             <TaskToolbar>
             </TaskToolbar>
-            <TaskTable ref="taskTable">
-            </TaskTable>
+            <TaskMainWindow ref="taskMainWindow">
+            </TaskMainWindow>
           </div>
           <div class="tab-pane fade" id="list-variants" role="tabpanel">
             Здесь будут варианты
@@ -64,7 +64,6 @@
 
 <script lang="ts">
 import {Component, Provide, Vue} from 'vue-property-decorator';
-import TaskTable from './components/TaskTable';
 import TaskToolbar from './components/TaskToolbar.vue';
 import TaskPropertiesModal from './components/TaskPropertiesModal.vue';
 import ContestTable from './components/ContestTable';
@@ -73,25 +72,22 @@ import ContestPropertiesModal from './components/ContestPropertiesModal.vue';
 import VariantBuildingProgressBar from './components/VariantBuildingProgressBar.vue';
 import AlertDialog from './components/AlertDialog.vue';
 import ScriptTable from './components/ScriptTable.vue';
+import TaskMainWindow from './components/TaskMainWindow';
 
 @Component({
   components: {
     ScriptTable,
     ContestToolbar,
     ContestTable, ContestPropertiesModal,
-    TaskTable, TaskToolbar, TaskPropertiesModal,
+    TaskToolbar, TaskPropertiesModal,
     VariantBuildingProgressBar, AlertDialog,
+    TaskMainWindow,
   },
 })
 export default class App extends Vue {
   @Provide()
   public taskProperties(): TaskPropertiesModal {
     return this.$refs.taskPropertiesModal as TaskPropertiesModal;
-  }
-
-  @Provide()
-  public taskTable(): TaskTable {
-    return this.$refs.taskTable as TaskTable;
   }
 
   @Provide()
@@ -112,6 +108,11 @@ export default class App extends Vue {
   @Provide()
   public alertDialog(): AlertDialog {
     return this.$refs.alertDialog as AlertDialog;
+  }
+
+  @Provide()
+  public taskMainWindow(): TaskMainWindow {
+    return this.$refs.taskMainWindow as TaskMainWindow;
   }
 }
 </script>

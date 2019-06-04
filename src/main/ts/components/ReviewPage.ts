@@ -1,14 +1,14 @@
 import {Component, Vue} from 'vue-property-decorator';
-import TaskMarkdown from './components/TaskMarkdown';
+import TaskMarkdown from './TaskMarkdown';
 
 @Component({
     components: {
         TaskMarkdown,
     },
 })
-export default class Submission extends Vue {
-    private taskId = -1;
-    private userId = -1;
+export default class ReviewPage extends Vue {
+    public taskId = -1;
+    public userId = -1;
 
     public getAttempt() {
         const markdown = this.$refs.taskMarkdown as TaskMarkdown;
@@ -49,5 +49,15 @@ export default class Submission extends Vue {
                 solution_review: markdown.textValue,
             },
         });
+    }
+
+    public hide() {
+        this.$el.setAttribute('hidden', 'true');
+    }
+
+    public show(userId: number, taskId: number) {
+        this.userId = userId;
+        this.taskId = taskId;
+        this.$el.removeAttribute('hidden');
     }
 }

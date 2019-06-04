@@ -360,9 +360,11 @@ SELECT  T.id AS task_id,
         T.score,
         T.description,
         T.author_id,
-        U.nick,
+        U.nick as "author_nick",
         A.attempt_id,
         A.user_id,
+        S.nick as "user_nick",
+        S.name as "user_name",
         A.status::TEXT,
         A.count,
         A.testing_start_ts,
@@ -371,6 +373,7 @@ SELECT  T.id AS task_id,
 FROM Contest.Task T
 JOIN Contest.ContestUser U ON T.author_id = U.id
 JOIN Contest.Attempt A ON A.task_id = T.id
+JOIN Contest.ContestUser S ON A.user_id = S.id
 LEFT JOIN Contest.GradingDetails D ON A.attempt_id = D.attempt_id;
 
 

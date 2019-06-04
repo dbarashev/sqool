@@ -1,22 +1,24 @@
 <template>
-    <table class="table table-hover">
-        <thead class="thead-dark">
-        <tr>
-            <th scope="col"><input type="checkbox"></th>
-            <th scope="col">Задача</th>
-            <th scope="col">Описание</th>
-            <th scope="col">Столбцы результата</th>
-        </tr>
-        </thead>
-        <tbody>
-            <tr v-for="t in tasks" @click="makeActive(t)" v-bind:class="{ 'table-active': t.active }">
-                <td><input type="checkbox" :value="t" v-model="selectedTasks"></td>
-                <td>{{ t.name }}</td>
-                <td v-html="t.description"></td>
-                <td>{{ taskResultSpec(t) }}</td>
+    <div>
+        <table class="table table-hover">
+            <thead class="thead-dark">
+            <tr>
+                <th scope="col"><input type="checkbox"></th>
+                <th scope="col">Задача</th>
+                <th scope="col">Описание</th>
+                <th scope="col">Столбцы результата</th>
             </tr>
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                <tr v-for="t in tasks" @click="makeActive(t)" v-bind:class="{ 'table-active': t.active }">
+                    <td><input type="checkbox" :value="t" v-model="selectedTasks"></td>
+                    <td>{{ t.name }}</td>
+                    <td v-html="t.description"></td>
+                    <td>{{ taskResultSpec(t) }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 </template>
 
 <script lang="ts" src="./TaskTable.ts">

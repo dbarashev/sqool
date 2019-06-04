@@ -2,6 +2,7 @@ import {Component, Inject, Vue} from 'vue-property-decorator';
 import {getTaskResultSql, TaskDto} from '../Task';
 import VariantBuildingProgressBar from './VariantBuildingProgressBar';
 import AlertDialog from './AlertDialog';
+import TaskMainWindow from './TaskMainWindow';
 
 @Component
 export default class TaskTable extends Vue {
@@ -69,5 +70,14 @@ export default class TaskTable extends Vue {
             this.tasks = [];
             tasks.forEach((t) => this.tasks.push(t));
         });
+    }
+
+    public hide() {
+        this.$el.setAttribute('hidden', 'true');
+    }
+
+    public show() {
+        this.refresh();
+        this.$el.removeAttribute('hidden');
     }
 }
