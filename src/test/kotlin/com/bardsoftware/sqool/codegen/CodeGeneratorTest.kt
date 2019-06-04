@@ -14,6 +14,7 @@ class CodeGeneratorTest {
     fun testStaticCodeHeader() {
         val generator = CodeGenerator("cw1", "/hse/cw1/schema.sql")
         val expectedHeader = """
+            |DROP SCHEMA IF EXISTS cw1 CASCADE;
             |CREATE SCHEMA cw1;
             |SET search_path=cw1;
             |\i /hse/cw1/schema.sql;
@@ -85,8 +86,8 @@ class CodeGeneratorTest {
             """.trimMargin()
         val expectedPerSubmissionCode = """
             |SELECT set_config(
-            |   'search_path',
-            |   'cw1,' || current_setting('search_path'),
+            |   ''search_path'',
+            |   ''cw1,'' || current_setting(''search_path''),
             |   false
             |);
             |
@@ -130,6 +131,11 @@ class CodeGeneratorTest {
             |SELECT Task12_Robot() into result_robot;
             |SELECT Task12_User() into result_user;
             |
+            |IF (result_user IS NULL) THEN
+            |   RETURN NEXT 'Нет, ваш результат NULL';
+            |   RETURN;
+            |END IF;
+            |
             |IF (result_robot = result_user) THEN
             |   RETURN;
             |END IF;
@@ -151,8 +157,8 @@ class CodeGeneratorTest {
             """.trimMargin()
         val expectedPerSubmissionCode = """
             |SELECT set_config(
-            |   'search_path',
-            |   'cw2,' || current_setting('search_path'),
+            |   ''search_path'',
+            |   ''cw2,'' || current_setting(''search_path''),
             |   false
             |);
             |
@@ -245,8 +251,8 @@ class CodeGeneratorTest {
             """.trimMargin()
         val expectedPerSubmissionCode = """
             |SELECT set_config(
-            |   'search_path',
-            |   'cw3,' || current_setting('search_path'),
+            |   ''search_path'',
+            |   ''cw3,'' || current_setting(''search_path''),
             |   false
             |);
             |

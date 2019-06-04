@@ -55,3 +55,4 @@ class RelationSpecTest {
         assertEquals("Column names must be unique", exception.message)
     }
 }
+

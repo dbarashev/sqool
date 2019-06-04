@@ -24,6 +24,7 @@ export default class TaskTable extends Vue {
     }
 
     public buildVariant() {
+        this.variantBuildingProgressBar().show();
         const taskIdList = this.selectedTasks.map((task) => task.id);
         $.post('/admin/variant/new', {
             course: 'course',
@@ -36,7 +37,7 @@ export default class TaskTable extends Vue {
         }).fail((xhr) => {
             let title = '';
             let message = '';
-            if (xhr.status === 409) {
+            if (xhr.status === 400) {
                 title = 'В имени/решении/спецификации задач найдены синтаксические ошибки:';
                 message = $(xhr.responseText).filter('title').text();
             } else if (xhr.status >= 500 && xhr.status < 600) {

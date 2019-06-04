@@ -7,9 +7,15 @@ class SingleColumnTask(name: String, robotQuery: String,
 ) : ColumnTask(name, robotQuery) {
     override val resultType: String
         get() = "TABLE($spec)"
+    override val mockSolution: String
+        get() = "SELECT NULL::${spec.type}"
+    override val mockSolutionError: Regex
+        get() = """Ваши результаты отличаются от результатов робота
+            |Размер пересечения результатов робота и ваших: \d+ строк
+            |Размер объединения результатов робота и ваших: \d+ строк
+            """.trimMargin().toRegex()
 
     override fun generateStaticCode(): String {
-        val userQueryMock = "SELECT NULL::${spec.type}"
         val matcherFunName = "${name}_Matcher"
         val matcherCode = """DECLARE
             |   $intxnSizeVar INT;
@@ -37,11 +43,11 @@ class SingleColumnTask(name: String, robotQuery: String,
         return """
             |${generateFunDef(
                 funName = robotQueryFunName, returnType = resultType,
-                body = robotQuery, language = Language.SQL)}
+                body = solution, language = Language.SQL)}
             |
             |${generateFunDef(
                 funName = userQueryFunName, returnType = resultType,
-                body = userQueryMock, language = Language.SQL)}
+                body = mockSolution, language = Language.SQL)}
             |
             |${generateMergedViewCreation()}
             |

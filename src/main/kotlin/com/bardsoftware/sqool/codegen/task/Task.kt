@@ -2,10 +2,12 @@ package com.bardsoftware.sqool.codegen.task
 
 import com.bardsoftware.sqool.codegen.CodeGenerator
 
-abstract class Task(val name: String, protected val robotQuery: String) {
+abstract class Task(val name: String, val solution: String) {
     protected val robotQueryFunName = "${name}_Robot"
     protected val userQueryFunName = "${name}_User"
     abstract val resultType: String
+    abstract val mockSolution: String
+    abstract val mockSolutionError: Regex
 
     abstract fun generateStaticCode(): String
 
@@ -19,11 +21,11 @@ abstract class Task(val name: String, protected val robotQuery: String) {
         """.trimMargin()
 
     override fun equals(other: Any?) =
-            other is Task && other.name == name && other.robotQuery == robotQuery
+            other is Task && other.name == name && other.solution == solution
 
     override fun hashCode(): Int {
         var result = name.hashCode()
-        result = 31 * result + robotQuery.hashCode()
+        result = 31 * result + solution.hashCode()
         return result
     }
 
