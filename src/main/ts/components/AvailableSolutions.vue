@@ -1,5 +1,5 @@
 <template>
-    <div id="available-solutions">
+    <div>
         <table class="table table-hover">
             <thead class="thead-dark">
             <tr>

@@ -1,5 +1,5 @@
 <template>
-    <div id="task-table">
+    <div>
         <table class="table table-hover">
             <thead class="thead-dark">
             <tr>

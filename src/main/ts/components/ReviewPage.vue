@@ -1,5 +1,5 @@
 <template>
-    <div id="review-page">
+    <div>
         <TaskMarkdown ref="taskMarkdown"></TaskMarkdown>
         <button type="button" class="btn btn-raised btn-danger mr-3" @click="getAttempt">Get attempt</button>
         <button type="button" class="btn btn-raised btn-danger mr-3" @click="getLastReview">Get last review</button>
