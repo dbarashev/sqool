@@ -4,10 +4,10 @@ import com.bardsoftware.sqool.codegen.docker.testDynamicCode
 import com.bardsoftware.sqool.codegen.docker.testStaticCode
 import com.bardsoftware.sqool.codegen.task.Task
 import com.bardsoftware.sqool.contest.Flags
+import com.google.cloud.tools.jib.api.AbsoluteUnixPath
 import com.google.cloud.tools.jib.api.Containerizer
 import com.google.cloud.tools.jib.api.DockerDaemonImage
 import com.google.cloud.tools.jib.api.Jib
-import com.google.cloud.tools.jib.filesystem.AbsoluteUnixPath
 import java.io.File
 import java.io.OutputStream
 import java.io.PrintWriter
