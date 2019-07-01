@@ -35,7 +35,6 @@ private fun runPsql(imageName: String, flags: Flags): Pair<ContainerExit, String
     val sqlContainerConfig = ContainerConfig.builder()
             .image(imageName)
             .volumes("/workspace")
-            .cmd("true")
             .build()
     val sqlContainer = docker.createContainer(sqlContainerConfig)
 
