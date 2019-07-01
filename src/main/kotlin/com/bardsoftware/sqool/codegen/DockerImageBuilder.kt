@@ -37,8 +37,8 @@ fun buildDockerImage(
 
 private fun createDockerfile(dockerfileDir: File, localPath: String, imagePath: String) {
     val dockerfileContent = """
-        FROM busybox:latest
-        COPY $localPath $imagePath
+        FROM scratch
+        ADD $localPath $imagePath
         """.trimIndent()
     File(dockerfileDir, "dockerfile").writeText(dockerfileContent)
 }

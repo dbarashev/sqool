@@ -44,6 +44,7 @@ private fun copyDirectoryFromImage(imageName: String, imagePath: String, destina
     val docker = DefaultDockerClient.fromEnv().build()
     val containerConfig = ContainerConfig.builder()
             .image(imageName)
+            .cmd("true")
             .build()
     val container = docker.createContainer(containerConfig)
 
