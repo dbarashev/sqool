@@ -4,14 +4,10 @@ import com.bardsoftware.sqool.codegen.docker.testDynamicCode
 import com.bardsoftware.sqool.codegen.docker.testStaticCode
 import com.bardsoftware.sqool.codegen.task.Task
 import com.bardsoftware.sqool.contest.Flags
-import com.google.cloud.tools.jib.api.AbsoluteUnixPath
-import com.google.cloud.tools.jib.api.Containerizer
-import com.google.cloud.tools.jib.api.DockerDaemonImage
-import com.google.cloud.tools.jib.api.Jib
+import com.spotify.docker.client.DefaultDockerClient
 import java.io.File
 import java.io.OutputStream
 import java.io.PrintWriter
-import java.nio.file.Paths
 
 fun buildDockerImage(
         imageName: String,
@@ -32,15 +28,19 @@ fun buildDockerImage(
         File(moduleFolder, "${it.name}-dynamic.sql").writeText(perSubmissionCode)
     }
 
-    //TODO: check if it can be replaced with Spotify docker client stuff to get rid of docker dependency
-    //TODO: check it out with scratch image in next release
-    Jib.from("busybox")
-            .addLayer(listOf(Paths.get(root.toString(), "workspace")), AbsoluteUnixPath.get("/"))
-            .containerize(
-                    Containerizer.to(DockerDaemonImage.named(imageName))
-            )
+    createDockerfile(root, ".", "/")
+    val docker = DefaultDockerClient.fromEnv().build()
+    docker.build(root.toPath(), imageName)
 
     root.deleteRecursively()
+}
+
+private fun createDockerfile(dockerfileDir: File, localPath: String, imagePath: String) {
+    val dockerfileContent = """
+        FROM busybox:latest
+        COPY $localPath $imagePath
+        """.trimIndent()
+    File(dockerfileDir, "dockerfile").writeText(dockerfileContent)
 }
 
 enum class ImageCheckResult {

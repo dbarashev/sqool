@@ -38,8 +38,6 @@ dependencies {
 
 	compile "com.xenomachina:kotlin-argparser:2.+"
 	
-	compile 'com.google.cloud.tools:jib-core:0.+'
-
 	compile group: 'com.spotify', name: 'docker-client', version: '8.+'
 
 	// PubSub stuff
@@ -136,7 +134,6 @@ test {
 }
 
 jib {
-	from.image = 'npalm/dind-java'
 	to.image = 'dbarashev/sqool-frontend'
 }
 
