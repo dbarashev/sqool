@@ -11,20 +11,13 @@ import org.junit.jupiter.api.Assertions.*
 
 class CodeGeneratorTest {
     @Test
-    fun testStaticCodeHeader() {
-        val generator = CodeGenerator("cw1", "/hse/cw1/schema.sql")
-        val expectedHeader = """
+    fun testSingleColumnQueryRobotCode() {
+        val expectedStaticCode = """
             |DROP SCHEMA IF EXISTS cw1 CASCADE;
             |CREATE SCHEMA cw1;
             |SET search_path=cw1;
             |\i /hse/cw1/schema.sql;
-            """.trimMargin()
-        assertEquals(expectedHeader, generator.generateStaticCodeHeader())
-    }
-
-    @Test
-    fun testSingleColumnQueryRobotCode() {
-        val expectedStaticCode = """
+            |
             |CREATE OR REPLACE FUNCTION Task3_Robot()
             |RETURNS TABLE(id INT) AS $$
             |SELECT 11;
@@ -102,16 +95,22 @@ class CodeGeneratorTest {
             |   SELECT 1 AS query_id, * FROM Task3_User();
             """.trimMargin()
 
-        val generator = CodeGenerator("cw1", "/hse/cw1/schema.sql")
         val spec = TaskResultColumn("id", SqlDataType.INT)
         val task = SingleColumnTask("Task3", "SELECT 11;", spec)
-        assertEquals(expectedStaticCode, task.generateStaticCode())
-        assertEquals(expectedPerSubmissionCode, task.generateDynamicCode(generator))
+        val variant = Variant("cw1", "/hse/cw1/schema.sql", listOf(task))
+
+        assertEquals(expectedStaticCode, variant.generateStaticCode())
+        assertEquals(expectedPerSubmissionCode, task.generateDynamicCode("cw1"))
     }
 
     @Test
     fun testScalarValueQueryRobotCode() {
         val expectedStaticCode = """
+            |DROP SCHEMA IF EXISTS cw2 CASCADE;
+            |CREATE SCHEMA cw2;
+            |SET search_path=cw2;
+            |\i /hse/cw2/schema.sql;
+            |
             |CREATE OR REPLACE FUNCTION Task12_Robot()
             |RETURNS TEXT AS $$
             |SELECT 'Some text';
@@ -168,15 +167,20 @@ class CodeGeneratorTest {
             |$$ LANGUAGE SQL;
             """.trimMargin()
 
-        val generator = CodeGenerator("cw2", "/hse/cw2/schema.sql")
         val task = ScalarValueTask("Task12", "SELECT 'Some text';", SqlDataType.TEXT)
-        assertEquals(expectedStaticCode, task.generateStaticCode())
-        assertEquals(expectedPerSubmissionCode, task.generateDynamicCode(generator))
+        val variant = Variant("cw2", "/hse/cw2/schema.sql", listOf(task))
+        assertEquals(expectedStaticCode, variant.generateStaticCode())
+        assertEquals(expectedPerSubmissionCode, task.generateDynamicCode("cw2"))
     }
 
     @Test
     fun testMultipleColumnQueryRobotCode() {
         val expectedStaticCode = """
+            |DROP SCHEMA IF EXISTS cw3 CASCADE;
+            |CREATE SCHEMA cw3;
+            |SET search_path=cw3;
+            |\i /cw3/schema.sql;
+            |
             |CREATE OR REPLACE FUNCTION Task05_Robot()
             |RETURNS TABLE(ship TEXT, port INT, transfers_num INT, transfer_size DOUBLE PRECISION, product TEXT) AS $$
             |SELECT 'ship', 1, 10, 500::DOUBLE PRECISION, 'prod'
@@ -277,9 +281,112 @@ class CodeGeneratorTest {
         val relationSpec = RelationSpec(keyAttribute, nonKeyAttributes)
         val matcherSpec = MatcherSpec(relationSpec, "Множество пар (корабль, порт) отличается от результатов робота")
 
-        val generator = CodeGenerator("cw3", "/cw3/schema.sql")
         val task = MultiColumnTask("Task05", "SELECT 'ship', 1, 10, 500::DOUBLE PRECISION, 'prod'", matcherSpec)
-        assertEquals(expectedStaticCode, task.generateStaticCode())
-        assertEquals(expectedPerSubmissionCode, task.generateDynamicCode(generator))
+        val variant = Variant("cw3", "/cw3/schema.sql", listOf(task))
+        assertEquals(expectedStaticCode, variant.generateStaticCode())
+        assertEquals(expectedPerSubmissionCode, task.generateDynamicCode("cw3"))
+    }
+
+    @Test
+    fun testMultipleTaskStaticCode() {
+        val expectedStaticCode = """
+            |DROP SCHEMA IF EXISTS cw2 CASCADE;
+            |CREATE SCHEMA cw2;
+            |SET search_path=cw2;
+            |\i /hse/cw2/schema.sql;
+            |
+            |CREATE OR REPLACE FUNCTION Task12_Robot()
+            |RETURNS TEXT AS $$
+            |SELECT 'Some text';
+            |$$ LANGUAGE SQL;
+            |
+            |CREATE OR REPLACE FUNCTION Task12_User()
+            |RETURNS TEXT AS $$
+            |SELECT NULL::TEXT
+            |$$ LANGUAGE SQL;
+            |
+            |CREATE OR REPLACE FUNCTION Task12_Matcher()
+            |RETURNS SETOF TEXT AS $$
+            |DECLARE
+            |   result_robot TEXT;
+            |   result_user TEXT;
+            |BEGIN
+            |SELECT Task12_Robot() into result_robot;
+            |SELECT Task12_User() into result_user;
+            |
+            |IF (result_user IS NULL) THEN
+            |   RETURN NEXT 'Нет, ваш результат NULL';
+            |   RETURN;
+            |END IF;
+            |
+            |IF (result_robot = result_user) THEN
+            |   RETURN;
+            |END IF;
+            |
+            |IF (result_robot < result_user) THEN
+            |   RETURN NEXT 'Нет, у робота получилось меньше. Ваш результат: ' || result_user::TEXT;
+            |   RETURN;
+            |END IF;
+            |
+            |IF (result_robot > result_user) THEN
+            |   RETURN NEXT 'Нет, у робота получилось больше. Ваш результат: ' || result_user::TEXT;
+            |   RETURN;
+            |END IF;
+            |
+            |END;
+            |$$ LANGUAGE PLPGSQL;
+            |
+            |DROP FUNCTION Task12_User() CASCADE;
+            |
+            |CREATE OR REPLACE FUNCTION Task33_Robot()
+            |RETURNS TEXT AS $$
+            |SELECT '33
+            |$$ LANGUAGE SQL;
+            |
+            |CREATE OR REPLACE FUNCTION Task33_User()
+            |RETURNS TEXT AS $$
+            |SELECT NULL::TEXT
+            |$$ LANGUAGE SQL;
+            |
+            |CREATE OR REPLACE FUNCTION Task33_Matcher()
+            |RETURNS SETOF TEXT AS $$
+            |DECLARE
+            |   result_robot TEXT;
+            |   result_user TEXT;
+            |BEGIN
+            |SELECT Task33_Robot() into result_robot;
+            |SELECT Task33_User() into result_user;
+            |
+            |IF (result_user IS NULL) THEN
+            |   RETURN NEXT 'Нет, ваш результат NULL';
+            |   RETURN;
+            |END IF;
+            |
+            |IF (result_robot = result_user) THEN
+            |   RETURN;
+            |END IF;
+            |
+            |IF (result_robot < result_user) THEN
+            |   RETURN NEXT 'Нет, у робота получилось меньше. Ваш результат: ' || result_user::TEXT;
+            |   RETURN;
+            |END IF;
+            |
+            |IF (result_robot > result_user) THEN
+            |   RETURN NEXT 'Нет, у робота получилось больше. Ваш результат: ' || result_user::TEXT;
+            |   RETURN;
+            |END IF;
+            |
+            |END;
+            |$$ LANGUAGE PLPGSQL;
+            |
+            |DROP FUNCTION Task33_User() CASCADE;
+            """.trimMargin()
+
+        val tasks = listOf(
+                ScalarValueTask("Task12", "SELECT 'Some text';", SqlDataType.TEXT),
+                ScalarValueTask("Task33", "SELECT '33", SqlDataType.TEXT)
+        )
+        val variant = Variant("cw2", "/hse/cw2/schema.sql", tasks)
+        assertEquals(expectedStaticCode, variant.generateStaticCode())
     }
 }

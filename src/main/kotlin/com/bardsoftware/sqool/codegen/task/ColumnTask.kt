@@ -1,14 +1,12 @@
 package com.bardsoftware.sqool.codegen.task
 
-import com.bardsoftware.sqool.codegen.CodeGenerator
-
 abstract class ColumnTask(name: String, robotQuery: String) : Task(name, robotQuery) {
     protected val mergedView = "${name}_Merged"
     protected val unionSizeVar = "union_size"
     protected val intxnSizeVar = "intxn_size"
 
-    override fun generateDynamicCode(codeGenerator: CodeGenerator): String = """
-        |${codeGenerator.generateDynamicCodeHeader()}
+    override fun generateDynamicCode(variant: String): String = """
+        |${generateDynamicCodeHeader(variant)}
         |
         |${generateFunDef(
             funName = "${name}_User", returnType = resultType,

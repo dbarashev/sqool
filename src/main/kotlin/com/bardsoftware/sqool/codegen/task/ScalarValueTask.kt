@@ -1,6 +1,5 @@
 package com.bardsoftware.sqool.codegen.task
 
-import com.bardsoftware.sqool.codegen.CodeGenerator
 import com.bardsoftware.sqool.codegen.task.spec.SqlDataType
 
 class ScalarValueTask(name: String, robotQuery: String,
@@ -13,8 +12,8 @@ class ScalarValueTask(name: String, robotQuery: String,
     override val mockSolutionError: Regex
         get() = "Нет, ваш результат NULL".toRegex()
 
-    override fun generateDynamicCode(codeGenerator: CodeGenerator): String = """
-        |${codeGenerator.generateDynamicCodeHeader()}
+    override fun generateDynamicCode(variant: String): String = """
+        |${generateDynamicCodeHeader(variant)}
         |
         |${generateFunDef(
             funName = userQueryFunName, returnType = resultType,

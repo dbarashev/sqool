@@ -9,8 +9,8 @@ import com.spotify.docker.client.messages.ContainerExit
 import com.spotify.docker.client.messages.HostConfig
 import java.io.PrintWriter
 
-fun testStaticCode(imageName: String, flags: Flags, errorStream: PrintWriter): ImageCheckResult {
-    val (result, output) = runPsql(imageName, flags)
+fun testStaticCode(imageName: String, contest: String, flags: Flags, errorStream: PrintWriter): ImageCheckResult {
+    val (result, output) = runPsql(imageName, contest, flags)
     return if (result.statusCode() == 0L) {
         val errors = output.lines()
         if (errors.any { it.matches(".*ERROR.*".toRegex()) }) {
@@ -30,7 +30,7 @@ fun testStaticCode(imageName: String, flags: Flags, errorStream: PrintWriter): I
     }
 }
 
-private fun runPsql(imageName: String, flags: Flags): Pair<ContainerExit, String> {
+private fun runPsql(imageName: String, contest: String, flags: Flags): Pair<ContainerExit, String> {
     val docker = DefaultDockerClient.fromEnv().build()
     val sqlContainerConfig = ContainerConfig.builder()
             .image(imageName)
@@ -43,8 +43,7 @@ private fun runPsql(imageName: String, flags: Flags): Pair<ContainerExit, String
             .networkMode("host")
             .build()
     val postgresUri = with(flags) { "postgres://$postgresUser:$postgresPassword@$postgresAddress:$postgresPort" }
-    //TODO: replace it with executing init file
-    val command = listOf("bash", "-c", "find /workspace -type f -name \"*-static.sql\" -exec cat {} + | psql $postgresUri")
+    val command = listOf("bash", "-c", "psql $postgresUri -f /workspace/$contest/init.sql")
     docker.pull("postgres:10")
     val containerConfig = ContainerConfig.builder()
             .image("postgres:10")
