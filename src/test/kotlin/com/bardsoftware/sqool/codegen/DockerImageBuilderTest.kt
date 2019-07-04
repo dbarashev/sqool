@@ -86,7 +86,7 @@ class DockerImageBuilderTest {
             |        ^
             |CREATE FUNCTION
             |ERROR:  function task3_robot() does not exist
-            |LINE 2:    SELECT 0 AS query_id, * FROM Task3_Robot()
+            |LINE 2:    SELECT 1 AS query_id, * FROM Task3_Robot()
             |                                        ^
             |HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
             |CREATE FUNCTION
