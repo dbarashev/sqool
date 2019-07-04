@@ -27,10 +27,8 @@ fun buildDockerImage(imageName: String, contest: String, variants: List<Variant>
     val initCode = variants.joinToString("\n") { "\\i /workspace/$contest/${it.name}/static.sql" }
     File(contestDir, "init.sql").writeText(initCode)
 
-    createDockerfile(root, "/", "/")
+    createDockerfile(root, ".", "/")
     val docker = DefaultDockerClient.fromEnv().build()
-    docker.listImages(DockerClient.ListImagesParam.byName(imageName))
-            .forEach { docker.removeImage(it.id()) }
     docker.build(root.toPath(), imageName)
 
     docker.close()
