@@ -107,7 +107,7 @@ private fun testTask(tester: CodeTester, task: Task, writer: PrintWriter): Image
     } else {
         if (correctSubmissionOutput.status != SubmissionResultStatus.ERROR) {
             writer.println("Unexpected ${task.name}_Matcher result for teacher's solution:")
-            writer.println(mockSubmissionOutput.message)
+            writer.println(correctSubmissionOutput.message)
         }
         ImageCheckResult.FAILED
     }

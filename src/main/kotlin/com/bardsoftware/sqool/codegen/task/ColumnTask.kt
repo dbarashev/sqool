@@ -19,24 +19,24 @@ abstract class ColumnTask(name: String, robotQuery: String) : Task(name, robotQu
 
     protected fun generateMergedViewCreation() = """
         |CREATE OR REPLACE VIEW $mergedView AS
-        |   SELECT 0 AS query_id, * FROM ${name}_Robot()
+        |   SELECT 1 AS query_id, * FROM ${name}_Robot()
         |   UNION ALL
-        |   SELECT 1 AS query_id, * FROM ${name}_User();
+        |   SELECT 2 AS query_id, * FROM ${name}_User();
         """.trimMargin()
 
     protected fun generateUnionIntersectionCheck(colNames: String,
                                                  failedCheckMessage: String = "Ваши результаты отличаются от результатов робота"
     ): String = """
         |SELECT COUNT(1) INTO $intxnSizeVar FROM (
-        |   SELECT $colNames FROM $mergedView WHERE query_id = 0
-        |   INTERSECT
         |   SELECT $colNames FROM $mergedView WHERE query_id = 1
+        |   INTERSECT
+        |   SELECT $colNames FROM $mergedView WHERE query_id = 2
         |) AS T;
         |
         |SELECT COUNT(1) INTO $unionSizeVar FROM (
-        |   SELECT $colNames FROM $mergedView WHERE query_id = 0
-        |   UNION
         |   SELECT $colNames FROM $mergedView WHERE query_id = 1
+        |   UNION
+        |   SELECT $colNames FROM $mergedView WHERE query_id = 2
         |) AS T;
         |
         |IF $intxnSizeVar != $unionSizeVar THEN
