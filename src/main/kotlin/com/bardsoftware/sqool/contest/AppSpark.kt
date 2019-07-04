@@ -14,6 +14,7 @@ import spark.Response
 import spark.Session
 import spark.kotlin.ignite
 import spark.template.freemarker.FreeMarkerEngine
+import java.net.URLEncoder
 import java.util.*
 import java.util.logging.Level
 import java.util.logging.Logger
@@ -143,7 +144,14 @@ class Http(val request : Request,
     }
     return {
       if (message != null) {
-        response.raw().sendError(status, message)
+        val encodedMessage = URLEncoder.encode(message, "UTF-8")
+                .replace("+", "%20")
+                .replace("%21", "!")
+                .replace("%27", "'")
+                .replace("%28", "(")
+                .replace("%29", ")")
+                .replace("%7E", "~")
+        response.raw().sendError(status, encodedMessage)
       } else {
         response.status(status)
       }

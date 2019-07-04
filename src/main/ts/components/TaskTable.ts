@@ -39,7 +39,7 @@ export default class TaskTable extends Vue {
             let message = '';
             if (xhr.status == 400) {
                 title = 'В имени/решении/спецификации задач найдены синтаксические ошибки:';
-                message = $(xhr.responseText).filter('title').text();
+                message = decodeURIComponent($(xhr.responseText).filter('title').text());
             } else if (xhr.status >= 500 && xhr.status < 600) {
                 title = 'При создании варианта произошла внутренняя ошибка сервера';
             } else {
