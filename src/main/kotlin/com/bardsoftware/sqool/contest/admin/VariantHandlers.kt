@@ -1,6 +1,7 @@
 package com.bardsoftware.sqool.contest.admin
 
 import com.bardsoftware.sqool.codegen.ImageCheckResult
+import com.bardsoftware.sqool.codegen.Variant
 import com.bardsoftware.sqool.codegen.buildDockerImage
 import com.bardsoftware.sqool.codegen.checkImage
 import com.bardsoftware.sqool.codegen.task.TaskDeserializationException
@@ -26,14 +27,11 @@ class VariantNewHandler(private val flags: Flags) : DbHandler<VariantNewArgs>(fl
                     Tasks.select { Tasks.id inList taskIdList.toList() }
                             .map { resultRowToTask(it) }
                 }
-                buildDockerImage(
-                        argValues.imageName,
-                        argValues.course, argValues.module,
-                        argValues.variant, argValues.schema,
-                        tasks)
+                val variants = listOf(Variant(argValues.module, argValues.schema, tasks))
+                buildDockerImage(argValues.imageName, argValues.course, variants)
 
                 val errorStream = ByteArrayOutputStream()
-                when (checkImage(argValues.imageName, tasks, flags, errorStream)) {
+                when (checkImage(argValues.imageName, argValues.course, variants, flags, errorStream)) {
                     ImageCheckResult.PASSED -> http.ok()
                     ImageCheckResult.ERROR -> http.error(500, errorStream.toString())
                     ImageCheckResult.FAILED -> http.error(400, errorStream.toString())

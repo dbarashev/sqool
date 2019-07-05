@@ -1,7 +1,5 @@
 package com.bardsoftware.sqool.codegen.task
 
-import com.bardsoftware.sqool.codegen.CodeGenerator
-
 abstract class Task(val name: String, val solution: String) {
     protected val robotQueryFunName = "${name}_Robot"
     protected val userQueryFunName = "${name}_User"
@@ -11,7 +9,15 @@ abstract class Task(val name: String, val solution: String) {
 
     abstract fun generateStaticCode(): String
 
-    abstract fun generateDynamicCode(codeGenerator: CodeGenerator): String
+    abstract fun generateDynamicCode(variant: String): String
+
+    protected fun generateDynamicCodeHeader(variant: String) = """
+        |SELECT set_config(
+        |   ''search_path'',
+        |   ''$variant,'' || current_setting(''search_path''),
+        |   false
+        |);
+        """.trimMargin()
 
     protected fun generateFunDef(funName: String, returnType: String, body: String, language: Language) = """
         |CREATE OR REPLACE FUNCTION $funName()
