@@ -53,7 +53,13 @@ private fun copyDirectoryFromImage(imageName: String, imagePath: String, destina
             if (entry.isFile) {
                 val file = File(destinationFolder, entry.name)
                 file.parentFile.mkdirs()
-                file.createNewFile()
+                try {
+                    file.createNewFile()
+                } catch (exception: Exception) {
+                    println("Unable to create ${file.absolutePath}:")
+                    exception.printStackTrace()
+                    throw exception
+                }
                 FileOutputStream(file).use { tarStream.copyTo(it) }
             }
             entry = tarStream.nextTarEntry
