@@ -1,6 +1,7 @@
 package com.bardsoftware.sqool.codegen.docker
 
 import com.bardsoftware.sqool.codegen.ImageCheckResult
+import com.bardsoftware.sqool.codegen.Variant
 import com.bardsoftware.sqool.codegen.task.Task
 import com.bardsoftware.sqool.contest.Flags
 import com.spotify.docker.client.DefaultDockerClient
@@ -17,20 +18,18 @@ import java.util.*
 private const val CONTEST_DIRECTORY = "/workspace"
 
 fun testDynamicCode(
-        imageName: String, tasksToTest: List<Task>, flags: Flags, writer: PrintWriter
+        imageName: String, contest: String, variants: List<Variant>,
+        flags: Flags, writer: PrintWriter
 ): ImageCheckResult {
     File(CONTEST_DIRECTORY).deleteRecursively()
     copyDirectoryFromImage(imageName, CONTEST_DIRECTORY, "/")
 
-    // assume there is only one course, module and variant in the image
-    val contestSpec = getContestSpec(CONTEST_DIRECTORY)
-    if (contestSpec == null) {
-        writer.println("Invalid file structure")
-        return ImageCheckResult.ERROR
-    }
-    val tester = CodeTester(contestSpec, flags)
 
-    val testResults = tasksToTest.map { testTask(tester, it, writer) }
+    val testResults = mutableListOf<ImageCheckResult>()
+    for (variant in variants) {
+        val tester = CodeTester(contest, variant.name, flags)
+        testResults.addAll(variant.tasks.map { testTask(tester, it, writer) })
+    }
 
     return if (testResults.all { it == ImageCheckResult.PASSED }) {
         writer.println("OK")
@@ -54,7 +53,13 @@ private fun copyDirectoryFromImage(imageName: String, imagePath: String, destina
             if (entry.isFile) {
                 val file = File(destinationFolder, entry.name)
                 file.parentFile.mkdirs()
-                file.createNewFile()
+                try {
+                    file.createNewFile()
+                } catch (exception: Exception) {
+                    println("Unable to create ${file.absolutePath}:")
+                    exception.printStackTrace()
+                    throw exception
+                }
                 FileOutputStream(file).use { tarStream.copyTo(it) }
             }
             entry = tarStream.nextTarEntry
@@ -64,24 +69,6 @@ private fun copyDirectoryFromImage(imageName: String, imagePath: String, destina
     docker.removeContainer(container.id())
     docker.close()
 }
-
-private fun getContestSpec(contestDirectory: String): ContestSpec? {
-    val root = File(contestDirectory)
-
-    for (courseDirectory in root.listFiles { file -> file.isDirectory }) {
-        for (moduleDirectory in courseDirectory.listFiles { file -> file.isDirectory }) {
-            val staticCodeExists = moduleDirectory.listFiles { file -> file.isFile }
-                    .any { it.name.matches(".*-static.sql".toRegex()) }
-            if (staticCodeExists) {
-                return ContestSpec(courseDirectory.name, moduleDirectory.name)
-            }
-        }
-    }
-
-    return null
-}
-
-private data class ContestSpec(val course: String, val module: String)
 
 private fun testTask(tester: CodeTester, task: Task, writer: PrintWriter): ImageCheckResult {
     val mockSubmissionOutput = tester.runTest(task.name, task.mockSolution)
@@ -102,7 +89,7 @@ private fun testTask(tester: CodeTester, task: Task, writer: PrintWriter): Image
     }
 
     val correctSubmissionOutput = tester.runTest(task.name, task.solution)
-    val correctSubmissionResult = if (correctSubmissionOutput.message.isNullOrEmpty()) {
+    val correctSubmissionResult = if (correctSubmissionOutput.message.isEmpty()) {
         ImageCheckResult.PASSED
     } else {
         if (correctSubmissionOutput.status != SubmissionResultStatus.ERROR) {
@@ -126,9 +113,11 @@ private data class SubmissionResult(val status: SubmissionResultStatus, val mess
     }
 }
 
-private class CodeTester(contestSpec: ContestSpec, flags: Flags) {
-    private val course = contestSpec.course
-    private val module = contestSpec.module
+private class CodeTester(
+        private val contest: String,
+        private val variant: String,
+        flags: Flags
+) {
     private val dataSource = PGSimpleDataSource()
 
     init {
@@ -147,10 +136,10 @@ private class CodeTester(contestSpec: ContestSpec, flags: Flags) {
         try {
             val postgresDbms = connection.createStatement()
             postgresDbms.execute("create schema $schemaName;")
-            postgresDbms.execute("set search_path = $schemaName,$module;")
+            postgresDbms.execute("set search_path = $schemaName,$variant;")
             postgresDbms.queryTimeout = 120
 
-            val scriptTemplate = File("/workspace/$course/$module/$task-dynamic.sql").readText()
+            val scriptTemplate = File("/workspace/$contest/$variant/$task-dynamic.sql").readText()
             val formatArgs = listOf(task, solution)
 
             val userScript = MessageFormat.format(scriptTemplate, *formatArgs.toTypedArray())
