@@ -273,11 +273,13 @@ class CodeGeneratorTest {
 
         val keyAttribute = listOf(
                 TaskResultColumn("ship", SqlDataType.TEXT),
-                TaskResultColumn("port", SqlDataType.INT))
+                TaskResultColumn("port", SqlDataType.INT)
+        )
         val nonKeyAttributes = listOf(
                 TaskResultColumn("transfers_num", SqlDataType.INT),
                 TaskResultColumn("transfer_size", SqlDataType.DOUBLE_PRECISION),
-                TaskResultColumn("product", SqlDataType.TEXT))
+                TaskResultColumn("product", SqlDataType.TEXT)
+        )
         val relationSpec = RelationSpec(keyAttribute, nonKeyAttributes)
         val matcherSpec = MatcherSpec(relationSpec, "Множество пар (корабль, порт) отличается от результатов робота")
 

@@ -4,7 +4,6 @@ import com.bardsoftware.sqool.codegen.docker.testDynamicCode
 import com.bardsoftware.sqool.codegen.docker.testStaticCode
 import com.bardsoftware.sqool.contest.Flags
 import com.spotify.docker.client.DefaultDockerClient
-import com.spotify.docker.client.DockerClient
 import java.io.File
 import java.io.OutputStream
 import java.io.PrintWriter
