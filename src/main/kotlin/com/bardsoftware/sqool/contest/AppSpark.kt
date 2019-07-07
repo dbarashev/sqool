@@ -227,14 +227,16 @@ fun main(args: Array<String>) {
           "result"      to TaskEditArgs::result,
           "name"        to TaskEditArgs::name,
           "description" to TaskEditArgs::description,
-          "solution"    to TaskEditArgs::solution
+          "solution"    to TaskEditArgs::solution,
+          "script_id" to TaskEditArgs::script_id
       ))
       POST("/admin/task/update" BY adminTaskEditHandler ARGS mapOf(
           "id"          to TaskEditArgs::id,
           "result"      to TaskEditArgs::result,
           "name"        to TaskEditArgs::name,
           "description" to TaskEditArgs::description,
-          "solution"    to TaskEditArgs::solution
+          "solution"    to TaskEditArgs::solution,
+          "script_id" to TaskEditArgs::script_id
       ))
 
       POST("/admin/variant/new" BY adminVariantNewHandler ARGS mapOf(

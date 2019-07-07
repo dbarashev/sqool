@@ -15,6 +15,7 @@ export default class TaskToolbar extends Vue {
                 description: task.description,
                 result: task.result_json,
                 solution: task.solution,
+                script_id: task.script_id,
             },
         };
     }
@@ -22,7 +23,7 @@ export default class TaskToolbar extends Vue {
     @Inject() public readonly taskMainWindow!: () => TaskMainWindow;
 
     public createNewTask() {
-        const newTask = new TaskDto(-1, '000', '', '', '');
+        const newTask = new TaskDto(-1, '000', '', '', '', null);
         this.taskProperties().show(newTask).then((updatedTask) => {
             return $.ajax('/admin/task/new', TaskToolbar.buildTaskPayload(updatedTask));
         }).then(() => {
