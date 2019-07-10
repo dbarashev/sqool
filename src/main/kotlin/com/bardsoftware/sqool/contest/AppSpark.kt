@@ -144,14 +144,7 @@ class Http(val request : Request,
     }
     return {
       if (message != null) {
-        val encodedMessage = URLEncoder.encode(message, "UTF-8")
-                .replace("+", "%20")
-                .replace("%21", "!")
-                .replace("%27", "'")
-                .replace("%28", "(")
-                .replace("%29", ")")
-                .replace("%7E", "~")
-        response.raw().sendError(status, encodedMessage)
+        response.raw().sendError(status, message)
       } else {
         response.status(status)
       }

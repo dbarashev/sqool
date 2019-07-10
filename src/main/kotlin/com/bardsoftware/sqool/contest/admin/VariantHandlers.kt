@@ -32,9 +32,9 @@ class VariantNewHandler(private val flags: Flags) : DbHandler<VariantNewArgs>(fl
 
                 val errorStream = ByteArrayOutputStream()
                 when (checkImage(argValues.imageName, argValues.course, variants, flags, errorStream)) {
-                    ImageCheckResult.PASSED -> http.ok()
+                    ImageCheckResult.PASSED -> http.json(hashMapOf("result" to "OK"))
                     ImageCheckResult.ERROR -> http.error(500, errorStream.toString())
-                    ImageCheckResult.FAILED -> http.error(400, errorStream.toString())
+                    ImageCheckResult.FAILED -> http.json(hashMapOf("result" to "ERROR", "message" to errorStream.toString()))
                 }.also { errorStream.close() }
             } catch (exception: TaskDeserializationException) {
                 exception.printStackTrace()
