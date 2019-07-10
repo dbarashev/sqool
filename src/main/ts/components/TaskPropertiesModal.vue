@@ -15,10 +15,6 @@
                                aria-controls="task-main-properties" aria-selected="true">Основные свойства</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" id="script-tab" data-toggle="tab" href="#task-script" role="tab"
-                               aria-controls="task-main-properties" aria-selected="true">Схема</a>
-                        </li>
-                        <li class="nav-item">
                             <a class="nav-link" id="description-tab" data-toggle="tab" href="#task-description" role="tab"
                                aria-controls="task-description" aria-selected="false">Описание</a>
                         </li>
@@ -47,10 +43,8 @@
                                     <small id="task-properties-result-help"
                                            class="form-text text-muted"><code>id INT, name TEXT, ...</code></small>
                                 </div>
+                                <TaskScriptTab ref="taskScriptTab"></TaskScriptTab>
                             </form>
-                        </div>
-                        <div class="tab-pane fade" id="task-script" role="tabpanel" aria-labelledby="script-tab">
-                            <TaskScriptTab ref="taskScriptTab"> </TaskScriptTab>
                         </div>
                         <div class="tab-pane fade" id="task-description" role="tabpanel" aria-labelledby="description-tab">
                             <TaskMarkdown ref="taskMarkdown"> </TaskMarkdown>
