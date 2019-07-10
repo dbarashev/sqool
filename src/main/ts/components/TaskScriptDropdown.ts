@@ -2,7 +2,7 @@ import {Component, Vue} from "vue-property-decorator";
 import {ScriptDto} from "../Script";
 
 @Component
-export default class TaskScriptTab extends Vue {
+export default class TaskScriptDropdown extends Vue {
     public selectedScriptId: number | null = null;
     private scripts: ScriptDto[] = [];
 

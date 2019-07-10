@@ -12,5 +12,5 @@
     </div>
 </template>
 
-<script lang="ts" src="./TaskScriptTab.ts">
+<script lang="ts" src="./TaskScriptDropdown.ts">
 </script>

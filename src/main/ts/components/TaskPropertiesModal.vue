@@ -43,7 +43,7 @@
                                     <small id="task-properties-result-help"
                                            class="form-text text-muted"><code>id INT, name TEXT, ...</code></small>
                                 </div>
-                                <TaskScriptTab ref="taskScriptTab"></TaskScriptTab>
+                                <TaskScriptDropdown ref="taskScriptDropdown"></TaskScriptDropdown>
                             </form>
                         </div>
                         <div class="tab-pane fade" id="task-description" role="tabpanel" aria-labelledby="description-tab">
