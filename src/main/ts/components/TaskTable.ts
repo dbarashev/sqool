@@ -35,7 +35,7 @@ export default class TaskTable extends Vue {
         }).done((result: ImageBuildingResult) => {
             let title = '';
             if (result.result === 'OK') {
-                title= 'Вариант успешно создан';
+                title = 'Вариант успешно создан';
             } else {
                 title = 'В имени/решении/спецификации задач найдены синтаксические ошибки:'
             }
