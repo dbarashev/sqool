@@ -37,7 +37,7 @@ export default class TaskTable extends Vue {
             if (result.result === 'OK') {
                 title = 'Вариант успешно создан';
             } else {
-                title = 'В имени/решении/спецификации задач найдены синтаксические ошибки:'
+                title = 'В имени/решении/спецификации задач найдены синтаксические ошибки:';
             }
             this.alertDialog().show(title, result.message);
         }).fail((xhr) => {
