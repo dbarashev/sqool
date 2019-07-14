@@ -43,8 +43,9 @@ export default class TaskPropertiesModal extends Vue {
     public submit() {
         if (this.deferred) {
             const taskDescription = this.markdown.textValue;
+            const scriptId = this.scriptsDropdown.selectedScript.value;
             this.deferred.resolve(new TaskDto(
-                this.taskId, this.taskName, taskDescription, this.taskResult, this.taskSolution, this.scriptsDropdown.selectedScript.value));
+                this.taskId, this.taskName, taskDescription, this.taskResult, this.taskSolution, scriptId));
         }
     }
 }
