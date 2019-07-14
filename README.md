@@ -1,7 +1,7 @@
 ## Prerequisites
 
 * Install `gradle` version 5+, `docker`, `npm`.
-* Run `npm install && npm install webpack vue bootstrap-vue bootstrap && sudo npm install -g @vue/cli-service-global` 
+* Run `npm install && npm install webpack && sudo npm install -g @vue/cli-service-global` 
 
 ## Building and running locally
 

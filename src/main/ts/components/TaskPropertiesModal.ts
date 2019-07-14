@@ -22,7 +22,6 @@ export default class TaskPropertiesModal extends Vue {
         return this.$refs.taskScriptDropdown as TaskScriptDropdown;
     }
 
-
     public show(task: TaskDto): JQueryDeferred<TaskDto> {
         $('#task-properties').modal();
         this.taskId = task.id;
@@ -45,7 +44,7 @@ export default class TaskPropertiesModal extends Vue {
         if (this.deferred) {
             const taskDescription = this.markdown.textValue;
             this.deferred.resolve(new TaskDto(
-                this.taskId, this.taskName, taskDescription, this.taskResult, this.taskSolution, this.scriptsDropdown.selectedScriptId));
+                this.taskId, this.taskName, taskDescription, this.taskResult, this.taskSolution, this.scriptsDropdown.selectedScript.value));
         }
     }
 }
