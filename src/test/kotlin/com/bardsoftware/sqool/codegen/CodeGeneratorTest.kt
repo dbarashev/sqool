@@ -29,9 +29,9 @@ class CodeGeneratorTest {
             |$$ LANGUAGE SQL;
             |
             |CREATE OR REPLACE VIEW Task3_Merged AS
-            |   SELECT 0 AS query_id, * FROM Task3_Robot()
+            |   SELECT 1 AS query_id, * FROM Task3_Robot()
             |   UNION ALL
-            |   SELECT 1 AS query_id, * FROM Task3_User();
+            |   SELECT 2 AS query_id, * FROM Task3_User();
             |
             |CREATE OR REPLACE FUNCTION Task3_Matcher()
             |RETURNS SETOF TEXT AS $$
@@ -44,15 +44,15 @@ class CodeGeneratorTest {
             |BEGIN
             |
             |SELECT COUNT(1) INTO intxn_size FROM (
-            |   SELECT id FROM Task3_Merged WHERE query_id = 0
-            |   INTERSECT
             |   SELECT id FROM Task3_Merged WHERE query_id = 1
+            |   INTERSECT
+            |   SELECT id FROM Task3_Merged WHERE query_id = 2
             |) AS T;
             |
             |SELECT COUNT(1) INTO union_size FROM (
-            |   SELECT id FROM Task3_Merged WHERE query_id = 0
-            |   UNION
             |   SELECT id FROM Task3_Merged WHERE query_id = 1
+            |   UNION
+            |   SELECT id FROM Task3_Merged WHERE query_id = 2
             |) AS T;
             |
             |IF intxn_size != union_size THEN
@@ -62,8 +62,8 @@ class CodeGeneratorTest {
             |   RETURN;
             |end if;
             |
-            |SELECT COUNT(*) INTO robot_size FROM Task3_Merged WHERE query_id = 0;
-            |SELECT COUNT(*) INTO user_size FROM Task3_Merged WHERE query_id = 1;
+            |SELECT COUNT(*) INTO robot_size FROM Task3_Merged WHERE query_id = 1;
+            |SELECT COUNT(*) INTO user_size FROM Task3_Merged WHERE query_id = 2;
             |
             |IF robot_size != user_size THEN
             |   RETURN NEXT 'Ваши результаты совпадают с результатами робота как множества, но отличаются размером';
@@ -90,9 +90,9 @@ class CodeGeneratorTest {
             |$$ LANGUAGE SQL;
             |
             |CREATE OR REPLACE VIEW Task3_Merged AS
-            |   SELECT 0 AS query_id, * FROM Task3_Robot()
+            |   SELECT 1 AS query_id, * FROM Task3_Robot()
             |   UNION ALL
-            |   SELECT 1 AS query_id, * FROM Task3_User();
+            |   SELECT 2 AS query_id, * FROM Task3_User();
             """.trimMargin()
 
         val spec = TaskResultColumn("id", SqlDataType.INT)
@@ -192,9 +192,9 @@ class CodeGeneratorTest {
             |$$ LANGUAGE SQL;
             |
             |CREATE OR REPLACE VIEW Task05_Merged AS
-            |   SELECT 0 AS query_id, * FROM Task05_Robot()
+            |   SELECT 1 AS query_id, * FROM Task05_Robot()
             |   UNION ALL
-            |   SELECT 1 AS query_id, * FROM Task05_User();
+            |   SELECT 2 AS query_id, * FROM Task05_User();
             |
             |CREATE OR REPLACE FUNCTION Task05_Matcher()
             |RETURNS SETOF TEXT AS $$
@@ -214,15 +214,15 @@ class CodeGeneratorTest {
             |END IF;
             |
             |SELECT COUNT(1) INTO intxn_size FROM (
-            |   SELECT ship, port FROM Task05_Merged WHERE query_id = 0
-            |   INTERSECT
             |   SELECT ship, port FROM Task05_Merged WHERE query_id = 1
+            |   INTERSECT
+            |   SELECT ship, port FROM Task05_Merged WHERE query_id = 2
             |) AS T;
             |
             |SELECT COUNT(1) INTO union_size FROM (
-            |   SELECT ship, port FROM Task05_Merged WHERE query_id = 0
-            |   UNION
             |   SELECT ship, port FROM Task05_Merged WHERE query_id = 1
+            |   UNION
+            |   SELECT ship, port FROM Task05_Merged WHERE query_id = 2
             |) AS T;
             |
             |IF intxn_size != union_size THEN
@@ -266,18 +266,20 @@ class CodeGeneratorTest {
             |$$ LANGUAGE SQL;
             |
             |CREATE OR REPLACE VIEW Task05_Merged AS
-            |   SELECT 0 AS query_id, * FROM Task05_Robot()
+            |   SELECT 1 AS query_id, * FROM Task05_Robot()
             |   UNION ALL
-            |   SELECT 1 AS query_id, * FROM Task05_User();
+            |   SELECT 2 AS query_id, * FROM Task05_User();
             """.trimMargin()
 
         val keyAttribute = listOf(
                 TaskResultColumn("ship", SqlDataType.TEXT),
-                TaskResultColumn("port", SqlDataType.INT))
+                TaskResultColumn("port", SqlDataType.INT)
+        )
         val nonKeyAttributes = listOf(
                 TaskResultColumn("transfers_num", SqlDataType.INT),
                 TaskResultColumn("transfer_size", SqlDataType.DOUBLE_PRECISION),
-                TaskResultColumn("product", SqlDataType.TEXT))
+                TaskResultColumn("product", SqlDataType.TEXT)
+        )
         val relationSpec = RelationSpec(keyAttribute, nonKeyAttributes)
         val matcherSpec = MatcherSpec(relationSpec, "Множество пар (корабль, порт) отличается от результатов робота")
 

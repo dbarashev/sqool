@@ -2,6 +2,7 @@ package com.bardsoftware.sqool.codegen.task
 
 import com.bardsoftware.sqool.codegen.task.spec.MatcherSpec
 import com.bardsoftware.sqool.codegen.task.spec.SqlDataType
+import java.util.regex.Pattern
 
 class MultiColumnTask(name: String, robotQuery: String,
                       private val matcherSpec: MatcherSpec
@@ -12,7 +13,7 @@ class MultiColumnTask(name: String, robotQuery: String,
         get() = matcherSpec.relationSpec.getAllColsList().joinToString(", ", "SELECT ") { "NULL::${it.type}" }
     override val mockSolutionError: Regex
         get() = """
-            |Множество пар \(корабль, порт\) отличается от результатов робота
+            |${Pattern.quote(matcherSpec.wrongKeyColsProjMessage)}
             |Размер пересечения результатов робота и ваших: \d+ строк
             |Размер объединения результатов робота и ваших: \d+ строк
             """.trimMargin().toRegex()

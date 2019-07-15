@@ -1,7 +1,10 @@
 package com.bardsoftware.sqool.codegen
 
+import com.bardsoftware.sqool.codegen.task.MultiColumnTask
 import com.bardsoftware.sqool.codegen.task.ScalarValueTask
 import com.bardsoftware.sqool.codegen.task.SingleColumnTask
+import com.bardsoftware.sqool.codegen.task.spec.MatcherSpec
+import com.bardsoftware.sqool.codegen.task.spec.RelationSpec
 import com.bardsoftware.sqool.codegen.task.spec.SqlDataType
 import com.bardsoftware.sqool.codegen.task.spec.TaskResultColumn
 import com.bardsoftware.sqool.contest.Flags
@@ -85,8 +88,18 @@ class DockerImageBuilderTest {
         )
         val firstVariant = Variant("cw4", "/workspace/hse2019/cw4/schema3.sql", firstVariantTasks)
 
-        val spec = TaskResultColumn("id", SqlDataType.INT)
-        val task = SingleColumnTask("Task3", "SELECT 11 LIMIT 0;", spec)
+        val keyAttribute = listOf(
+                TaskResultColumn("ship", SqlDataType.TEXT),
+                TaskResultColumn("port", SqlDataType.INT)
+        )
+        val nonKeyAttributes = listOf(
+                TaskResultColumn("transfers_num", SqlDataType.INT),
+                TaskResultColumn("transfer_size", SqlDataType.DOUBLE_PRECISION),
+                TaskResultColumn("product", SqlDataType.TEXT)
+        )
+        val relationSpec = RelationSpec(keyAttribute, nonKeyAttributes)
+        val matcherSpec = MatcherSpec(relationSpec, "Множество пар (корабль, порт) отличается от результатов робота")
+        val task = MultiColumnTask("Task05", "SELECT 'ship', 1, 10, 500::DOUBLE PRECISION, 'prod'", matcherSpec)
         val secondVariant = Variant("cw5", "/workspace/hse2019/cw5/schema3.sql", listOf(task))
 
         val variants = listOf(firstVariant, secondVariant)
@@ -125,7 +138,7 @@ class DockerImageBuilderTest {
             |        ^
             |CREATE FUNCTION
             |psql:/workspace/hse2019/cw2/static.sql:19: ERROR:  function task3_robot() does not exist
-            |LINE 2:    SELECT 0 AS query_id, * FROM Task3_Robot()
+            |LINE 2:    SELECT 1 AS query_id, * FROM Task3_Robot()
             |                                        ^
             |HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
             |CREATE FUNCTION
@@ -184,7 +197,7 @@ class DockerImageBuilderTest {
             |                         ^
             |CREATE FUNCTION
             |psql:/workspace/hse2019/cw52/static.sql:19: ERROR:  function task3_robot() does not exist
-            |LINE 2:    SELECT 0 AS query_id, * FROM Task3_Robot()
+            |LINE 2:    SELECT 1 AS query_id, * FROM Task3_Robot()
             |                                        ^
             |HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
             |CREATE FUNCTION

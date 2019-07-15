@@ -14,6 +14,7 @@ import spark.Response
 import spark.Session
 import spark.kotlin.ignite
 import spark.template.freemarker.FreeMarkerEngine
+import java.net.URLEncoder
 import java.util.*
 import java.util.logging.Level
 import java.util.logging.Logger

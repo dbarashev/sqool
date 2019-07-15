@@ -32,20 +32,22 @@ export default class TaskTable extends Vue {
             variant: 'variant',
             schema: 'schema',
             tasks: JSON.stringify(taskIdList),
-        }).done(() => {
-            this.alertDialog().show('Вариант успешно создан');
+        }).done((result: ImageBuildingResult) => {
+            let title = '';
+            if (result.status === 'OK') {
+                title = 'Вариант успешно создан';
+            } else {
+                title = 'В имени/решении/спецификации задач найдены синтаксические ошибки:';
+            }
+            this.alertDialog().show(title, result.message);
         }).fail((xhr) => {
             let title = '';
-            let message = '';
-            if (xhr.status === 400) {
-                title = 'В имени/решении/спецификации задач найдены синтаксические ошибки:';
-                message = $(xhr.responseText).filter('title').text();
-            } else if (xhr.status >= 500 && xhr.status < 600) {
+            if (xhr.status >= 500 && xhr.status < 600) {
                 title = 'При создании варианта произошла внутренняя ошибка сервера';
             } else {
                 title = `Что-то пошло не так: ${xhr.status}`;
             }
-            this.alertDialog().show(title, message);
+            this.alertDialog().show(title);
         }).always(() => {
             this.variantBuildingProgressBar().hide();
         });
@@ -81,4 +83,8 @@ export default class TaskTable extends Vue {
         this.refresh();
         this.$el.removeAttribute('hidden');
     }
+}
+
+class ImageBuildingResult {
+    constructor(readonly status: string, readonly message: string = '') {}
 }
