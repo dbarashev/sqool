@@ -18,14 +18,14 @@ export default class TaskScriptDropdown extends Vue {
         $.ajax({
             url: '/admin/script/all',
         }).done((scripts: ScriptDto[]) => {
-            scripts.map(script => ({
+            scripts.forEach(script => {
+                const option = {
                     value: script.id,
                     text: script.description
-                })
-            ).forEach(script => {
-                this.scripts.push(script);
-                if (script.value === id) {
-                    this.selectedScript = script;
+                };
+                this.scripts.push(option);
+                if (option.value === id) {
+                    this.selectedScript = option;
                 }
             });
         });

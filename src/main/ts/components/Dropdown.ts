@@ -16,7 +16,6 @@ export default class Dropdown extends Vue {
     }
 
     public mounted() {
-        console.log("dsdd");
         $(this.$refs.dropdown).dropdown()
     }
 }
