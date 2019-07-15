@@ -27,8 +27,8 @@ class SingleColumnTask(name: String, robotQuery: String,
             |
             |${generateUnionIntersectionCheck(spec.name)}
             |
-            |SELECT COUNT(*) INTO robot_size FROM $mergedView WHERE query_id = 0;
-            |SELECT COUNT(*) INTO user_size FROM $mergedView WHERE query_id = 1;
+            |SELECT COUNT(*) INTO robot_size FROM $mergedView WHERE query_id = 1;
+            |SELECT COUNT(*) INTO user_size FROM $mergedView WHERE query_id = 2;
             |
             |IF robot_size != user_size THEN
             |   RETURN NEXT 'Ваши результаты совпадают с результатами робота как множества, но отличаются размером';
