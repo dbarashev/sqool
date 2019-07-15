@@ -1,43 +1,73 @@
 package com.bardsoftware.sqool.contest.admin
 
-import com.bardsoftware.sqool.codegen.ImageCheckResult
-import com.bardsoftware.sqool.codegen.Variant
-import com.bardsoftware.sqool.codegen.buildDockerImage
-import com.bardsoftware.sqool.codegen.checkImage
-import com.bardsoftware.sqool.codegen.task.TaskDeserializationException
-import com.bardsoftware.sqool.codegen.task.resultRowToTask
 import com.bardsoftware.sqool.contest.*
+import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
-import org.jetbrains.exposed.sql.select
+import com.google.common.base.Strings
+import com.xenomachina.argparser.ArgParser
+import com.zaxxer.hikari.HikariDataSource
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
-import java.io.ByteArrayOutputStream
 
-data class VariantNewArgs(var course: String, var module: String,
-                          var variant: String, var schema: String,
-                          var tasks: String, var imageName: String
-) : RequestArgs()
+private val JSON_MAPPER = ObjectMapper()
 
-class VariantNewHandler(private val flags: Flags) : DbHandler<VariantNewArgs>(flags) {
-    override fun args(): VariantNewArgs = VariantNewArgs("", "", "", "", "", "contest-image")
+object Variants : Table("Contest.VariantDto") {
+    val id = integer("id").primaryKey()
+    val name = text("name")
+    val tasks_id_json_array = text("tasks_id_json_array")
 
-    override fun handle(http: HttpApi, argValues: VariantNewArgs): HttpResponse =
-            try {
-                val taskIdList = ObjectMapper().readValue(argValues.tasks, IntArray::class.java)
-                val tasks = transaction {
-                    Tasks.select { Tasks.id inList taskIdList.toList() }
-                            .map { resultRowToTask(it) }
+    fun asJson(row: ResultRow): JsonNode {
+        return JSON_MAPPER.createObjectNode().also {
+            it.put("id", row[id])
+            it.put("name", row[name])
+            it.set("tasks", JSON_MAPPER.readTree(row[tasks_id_json_array]))
+        }
+    }
+}
+
+class VariantAllHandler(flags: Flags) : DbHandler<RequestArgs>(flags) {
+    override fun args(): RequestArgs = RequestArgs()
+
+    override fun handle(http: HttpApi, argValues: RequestArgs): HttpResponse {
+        return transaction {
+            http.json(Variants.selectAll().map(Variants::asJson).toList())
+        }
+    }
+}
+
+data class VariantEditArgs(var id: String, var name: String, var tasksJson: String) : RequestArgs()
+
+class VariantEditHandler(flags: Flags) : DbHandler<VariantEditArgs>(flags) {
+    override fun args(): VariantEditArgs = VariantEditArgs("", "", "")
+
+    override fun handle(http: HttpApi, argValues: VariantEditArgs): HttpResponse = transaction {
+        when (Strings.emptyToNull(argValues.id)) {
+            null -> {
+                Variants.insert {
+                    it[name] = argValues.name
+                    it[tasks_id_json_array] = argValues.tasksJson
                 }
-                val variants = listOf(Variant(argValues.module, argValues.schema, tasks))
-                buildDockerImage(argValues.imageName, argValues.course, variants)
-
-                val errorStream = ByteArrayOutputStream()
-                when (checkImage(argValues.imageName, argValues.course, variants, flags, errorStream)) {
-                    ImageCheckResult.PASSED -> http.ok()
-                    ImageCheckResult.ERROR -> http.error(500, errorStream.toString())
-                    ImageCheckResult.FAILED -> http.error(400, errorStream.toString())
-                }.also { errorStream.close() }
-            } catch (exception: TaskDeserializationException) {
-                exception.printStackTrace()
-                http.error(400, exception.message, exception)
+                http.ok()
             }
+            else -> {
+                Tasks.update(where = {Variants.id eq argValues.id.toInt()}) {
+                    it[name] = argValues.name
+                    it[Variants.tasks_id_json_array] = argValues.tasksJson
+                }
+                http.ok()
+            }
+        }
+    }
+}
+
+fun main(args: Array<String>) {
+    val flags = Flags(ArgParser(args, ArgParser.Mode.POSIX))
+    val dataSource = HikariDataSource().apply {
+        username = flags.postgresUser
+        password = flags.postgresPassword
+        jdbcUrl = "jdbc:postgresql://${flags.postgresAddress}:${flags.postgresPort}/${flags.postgresDatabase.ifEmpty { flags.postgresUser }}"
+    }
+    Database.connect(dataSource)
+    val adminVariantEditHandler = VariantEditHandler(flags)
+
 }

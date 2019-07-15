@@ -193,7 +193,8 @@ fun main(args: Array<String>) {
   val adminScriptAllHandler = ScriptAllHandler()
   val adminTaskAllHandler = TaskAllHandler(flags)
   val adminTaskEditHandler = TaskEditHandler(flags)
-  val adminVariantNewHandler = VariantNewHandler(flags)
+  val adminVariantEditHandler = VariantEditHandler(flags)
+  val adminVariantAllHandler = VariantAllHandler(flags)
   val adminSubmissionGetHandler = SubmissionGetHandler()
   val adminSubmissionListHandler = SubmissionListHandler()
   val adminReviewGetHandler = ReviewGetHandler()
@@ -237,13 +238,17 @@ fun main(args: Array<String>) {
           "solution"    to TaskEditArgs::solution
       ))
 
-      POST("/admin/variant/new" BY adminVariantNewHandler ARGS mapOf(
-          "course"  to VariantNewArgs::course,
-          "module"  to VariantNewArgs::module,
-          "variant" to VariantNewArgs::variant,
-          "schema"  to VariantNewArgs::schema,
-          "tasks"   to VariantNewArgs::tasks
+      GET("/admin/variant/new" BY adminVariantAllHandler)
+      POST("/admin/variant/new" BY adminVariantEditHandler ARGS mapOf(
+          "name"  to VariantEditArgs::name,
+          "tasks" to VariantEditArgs::tasksJson
       ))
+      POST("/admin/variant/update" BY adminVariantEditHandler ARGS mapOf(
+          "id"    to VariantEditArgs::id,
+          "name"  to VariantEditArgs::name,
+          "tasks" to VariantEditArgs::tasksJson
+      ))
+
       GET("/"          TEMPLATE "index.ftl")
       GET("/dashboard" TEMPLATE "dashboard.ftl")
       GET("/admin/submission/get" BY adminSubmissionGetHandler ARGS mapOf(
