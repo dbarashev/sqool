@@ -14,7 +14,7 @@ export default class VariantPropertiesModal extends Vue {
         $('#variant-properties').modal();
         this.variantId = variant.id;
         this.variantName = variant.name;
-        this.updateTasks(variant.tasks);
+        this.loadTasks(variant.tasks);
         this.deferred = $.Deferred<VariantDto>();
         return this.deferred;
     }
@@ -34,7 +34,7 @@ export default class VariantPropertiesModal extends Vue {
         }
     }
 
-    private updateTasks(selectedTaskIdList: number[]) {
+    private loadTasks(selectedTaskIdList: number[]) {
         this.tasks = [];
         this.selectedTasks = [];
         $.ajax({

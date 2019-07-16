@@ -3,7 +3,6 @@ package com.bardsoftware.sqool.contest.admin
 import com.bardsoftware.sqool.contest.*
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.google.common.base.Strings
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 
@@ -39,8 +38,8 @@ class VariantEditHandler(flags: Flags) : DbHandler<VariantEditArgs>(flags) {
     override fun args(): VariantEditArgs = VariantEditArgs("", "", "")
 
     override fun handle(http: HttpApi, argValues: VariantEditArgs): HttpResponse = transaction {
-        when (Strings.emptyToNull(argValues.id)) {
-            null -> {
+        when (argValues.id) {
+            "" -> {
                 Variants.insert {
                     it[name] = argValues.name
                     it[tasks_id_json_array] = argValues.tasksJson

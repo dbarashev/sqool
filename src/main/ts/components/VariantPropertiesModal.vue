@@ -33,7 +33,7 @@
                             </form>
                         </div>
                         <div class="tab-pane fade" id="tasks" role="tabpanel" aria-labelledby="tasks-tab">
-                            <table class="table table-hover">
+                            <table class="table table-hover table-striped">
                                 <thead class="thead-dark">
                                 <tr>
                                     <th scope="col"><input type="checkbox"></th>
