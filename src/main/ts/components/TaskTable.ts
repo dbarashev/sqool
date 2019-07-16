@@ -1,17 +1,10 @@
-import {Component, Inject, Vue} from 'vue-property-decorator';
+import {Component, Vue} from 'vue-property-decorator';
 import {getTaskResultSql, TaskDto} from '../Task';
-import AlertDialog from './AlertDialog';
-import TaskMainWindow from './TaskMainWindow';
 
 @Component
 export default class TaskTable extends Vue {
     public tasks: TaskDto[] = [];
-    public selectedTasks: TaskDto[] = [];
     private activeTask?: TaskDto;
-
-    @Inject()
-    private readonly alertDialog!: () => AlertDialog;
-
 
     public mounted() {
         this.refresh();

@@ -202,9 +202,9 @@ SELECT id, name,
 FROM Contest.Variant;
 
 CREATE OR REPLACE FUNCTION VariantDto_Insert()
-  RETURNS TRIGGER AS $$
+RETURNS TRIGGER AS $$
 DECLARE
-    new_variant_id INT;
+  new_variant_id INT;
 BEGIN
   IF NEW.id IS NULL THEN
     WITH T AS (
@@ -214,30 +214,30 @@ BEGIN
       )
     SELECT id INTO new_variant_id FROM T;
   ELSE
-    UPDATE Variant SET name = NEW.name
+    UPDATE Contest.Variant SET name = NEW.name
     WHERE id = NEW.id;
     SELECT NEW.id INTO new_variant_id;
   END IF;
 
   DELETE FROM Contest.TaskVariant WHERE variant_id = new_variant_id;
   WITH T AS (
-    SELECT new_variant_id as variant_id,
-           json_array_elements_text(NEW.tasks_id_json_array::JSON)::INT as task_id
+    SELECT new_variant_id as variant_id, value::INT AS task_id
+    FROM json_array_elements_text(NEW.tasks_id_json_array::JSON)
   )
   INSERT INTO Contest.TaskVariant(task_id, variant_id)
   SELECT task_id, variant_id FROM T;
-  RETURN NEW;
+RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER VariantDto_Insert_Trigger
-  INSTEAD OF INSERT ON VariantDto
+  INSTEAD OF INSERT ON Contest.VariantDto
   FOR EACH ROW
 EXECUTE PROCEDURE VariantDto_Insert();
 
 CREATE TRIGGER VariantDto_Update_Trigger
-    INSTEAD OF UPDATE ON VariantDto
-    FOR EACH ROW
+  INSTEAD OF UPDATE ON Contest.VariantDto
+  FOR EACH ROW
 EXECUTE PROCEDURE VariantDto_Insert();
 
 ------------------------------------------------------------------------------------------------

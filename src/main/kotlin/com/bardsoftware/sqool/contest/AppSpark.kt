@@ -239,7 +239,7 @@ fun main(args: Array<String>) {
           "solution"    to TaskEditArgs::solution
       ))
 
-      GET("/admin/variant/new" BY adminVariantAllHandler)
+      GET("/admin/variant/all" BY adminVariantAllHandler)
       POST("/admin/variant/new" BY adminVariantEditHandler ARGS mapOf(
           "name"  to VariantEditArgs::name,
           "tasks" to VariantEditArgs::tasksJson

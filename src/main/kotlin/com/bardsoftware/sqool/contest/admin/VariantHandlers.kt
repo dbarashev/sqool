@@ -4,8 +4,6 @@ import com.bardsoftware.sqool.contest.*
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.common.base.Strings
-import com.xenomachina.argparser.ArgParser
-import com.zaxxer.hikari.HikariDataSource
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 
@@ -50,24 +48,12 @@ class VariantEditHandler(flags: Flags) : DbHandler<VariantEditArgs>(flags) {
                 http.ok()
             }
             else -> {
-                Tasks.update(where = {Variants.id eq argValues.id.toInt()}) {
+                Variants.update(where = {Variants.id eq argValues.id.toInt()}) {
                     it[name] = argValues.name
-                    it[Variants.tasks_id_json_array] = argValues.tasksJson
+                    it[tasks_id_json_array] = argValues.tasksJson
                 }
                 http.ok()
             }
         }
     }
-}
-
-fun main(args: Array<String>) {
-    val flags = Flags(ArgParser(args, ArgParser.Mode.POSIX))
-    val dataSource = HikariDataSource().apply {
-        username = flags.postgresUser
-        password = flags.postgresPassword
-        jdbcUrl = "jdbc:postgresql://${flags.postgresAddress}:${flags.postgresPort}/${flags.postgresDatabase.ifEmpty { flags.postgresUser }}"
-    }
-    Database.connect(dataSource)
-    val adminVariantEditHandler = VariantEditHandler(flags)
-
 }

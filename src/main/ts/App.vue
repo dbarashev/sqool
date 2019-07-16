@@ -46,7 +46,10 @@
             </TaskMainWindow>
           </div>
           <div class="tab-pane fade" id="list-variants" role="tabpanel">
-            Здесь будут варианты
+            <VariantToolbar>
+            </VariantToolbar>
+            <VariantTable ref="variantTable">
+            </VariantTable>
           </div>
           <div class="tab-pane fade" id="list-schemes" role="tabpanel">
             <ScriptTable>
@@ -59,6 +62,7 @@
     <AlertDialog ref="alertDialog"></AlertDialog>
     <TaskPropertiesModal ref="taskPropertiesModal"></TaskPropertiesModal>
     <VariantBuildingProgressBar ref="variantBuildingProgressBar"></VariantBuildingProgressBar>
+    <VariantPropertiesModal ref="variantPropertiesModal"></VariantPropertiesModal>
   </div>
 </template>
 
@@ -73,6 +77,9 @@ import VariantBuildingProgressBar from './components/VariantBuildingProgressBar.
 import AlertDialog from './components/AlertDialog.vue';
 import ScriptTable from './components/ScriptTable.vue';
 import TaskMainWindow from './components/TaskMainWindow';
+import VariantToolbar from './components/VariantToolbar.vue';
+import VariantPropertiesModal from './components/VariantPropertiesModal.vue';
+import VariantTable from './components/VariantTable'
 
 @Component({
   components: {
@@ -81,7 +88,8 @@ import TaskMainWindow from './components/TaskMainWindow';
     ContestTable, ContestPropertiesModal,
     TaskToolbar, TaskPropertiesModal,
     VariantBuildingProgressBar, AlertDialog,
-    TaskMainWindow,
+    TaskMainWindow, VariantToolbar, VariantPropertiesModal,
+    VariantTable
   },
 })
 export default class App extends Vue {
@@ -96,8 +104,18 @@ export default class App extends Vue {
   }
 
   @Provide()
+  public variantProperties(): VariantPropertiesModal {
+    return this.$refs.variantPropertiesModal as VariantPropertiesModal;
+  }
+
+  @Provide()
   public contestTable(): ContestTable {
     return this.$refs.contestTable as ContestTable;
+  }
+
+  @Provide()
+  public variantTable(): VariantTable {
+    return this.$refs.variantTable as VariantTable;
   }
 
   @Provide()
