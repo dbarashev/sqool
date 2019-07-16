@@ -26,24 +26,46 @@
                     <div class="tab-content" id="taskTabsContent">
                         <div class="tab-pane fade show active" id="task-main-properties" role="tabpanel" aria-labelledby="main-properties-tab">
                             <form>
-                                <div class="form-group">
-                                    <label for="task-properties-name">Название задачи</label>
-                                    <input type="text" class="form-control" id="task-properties-name" aria-describedby="task-properties-name-help"
-                                           v-model="taskName">
-                                    <small id="task-properties-name-help"
-                                           class="form-text text-muted">Обычно это номер.</small>
-                                </div>
-                                <div class="form-group">
-                                    <label for="task-properties-name">Столбцы результата</label>
-                                    <input type="text" class="form-control"
-                                           id="task-properties-result"
-                                           aria-describedby="task-properties-result-help"
-                                           v-model="taskResult"
-                                    >
-                                    <small id="task-properties-result-help"
-                                           class="form-text text-muted"><code>id INT, name TEXT, ...</code></small>
-                                </div>
-                                <TaskScriptDropdown ref="taskScriptDropdown"></TaskScriptDropdown>
+                                <fieldset class="form-group">
+                                    <div class="row">
+                                        <label for="task-properties-name" class="col-form-label col-sm-3">Название задачи</label>
+                                        <div class="col-sm-9 text-left">
+                                            <input type="text" class="form-control" id="task-properties-name" aria-describedby="task-properties-name-help"
+                                                   v-model="taskName">
+                                            <small id="task-properties-name-help"
+                                                   class="form-text text-muted">Обычно это номер.</small>
+                                        </div>
+                                    </div>
+                                </fieldset>
+
+
+                                <fieldset class="form-group">
+                                    <div class="row">
+                                        <label for="task-properties-name"
+                                               class="col-form-label col-sm-3">Столбцы результата</label>
+                                        <div class="col-sm-9 text-left">
+                                            <input type="text" class="form-control"
+                                                   id="task-properties-result"
+                                                   aria-describedby="task-properties-result-help"
+                                                   v-model="taskResult"
+                                            >
+                                            <small id="task-properties-result-help"
+                                                   class="form-text text-muted"><code>id INT, name TEXT, ...</code></small>
+                                        </div>
+                                    </div>
+                                </fieldset>
+
+
+                                <fieldset class="form-group">
+                                    <div class="row">
+                                        <legend class="col-form-label col-sm-3">Схема БД</legend>
+                                        <div class="col-sm-9 text-left">
+                                            <TaskScriptDropdown ref="taskScriptDropdown"></TaskScriptDropdown>
+                                            <small id="task-properties-schema-help"
+                                                   class="form-text text-muted">Если задача рассчитывает на наличие каких-то таблиц.</small>
+                                        </div>
+                                    </div>
+                                </fieldset>
                             </form>
                         </div>
                         <div class="tab-pane fade" id="task-description" role="tabpanel" aria-labelledby="description-tab">
@@ -72,3 +94,14 @@
 
 <script lang="ts" src="./TaskPropertiesModal.ts">
 </script>
+
+<style scoped lang="scss">
+    .tab-pane .row {
+        align-items: baseline;
+        .col-form-label {
+            text-align: right;
+        }
+    }
+
+</style>
+
