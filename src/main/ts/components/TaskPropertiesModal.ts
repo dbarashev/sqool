@@ -1,10 +1,11 @@
 import { Component, Vue } from 'vue-property-decorator';
 import {getTaskResultSql, TaskDto} from '../Task';
 import TaskMarkdown from './TaskMarkdown';
+import TaskScriptDropdown from "./TaskScriptDropdown";
 
 @Component({
     components: {
-        TaskMarkdown,
+        TaskMarkdown, TaskScriptDropdown,
     },
 })
 export default class TaskPropertiesModal extends Vue {
@@ -17,7 +18,9 @@ export default class TaskPropertiesModal extends Vue {
     get markdown(): TaskMarkdown {
         return this.$refs.taskMarkdown as TaskMarkdown;
     }
-
+    get scriptsDropdown(): TaskScriptDropdown {
+        return this.$refs.taskScriptDropdown as TaskScriptDropdown;
+    }
 
     public show(task: TaskDto): JQueryDeferred<TaskDto> {
         $('#task-properties').modal();
@@ -25,6 +28,7 @@ export default class TaskPropertiesModal extends Vue {
         this.taskName = task.name;
         this.taskResult = getTaskResultSql(task);
         this.markdown.textValue = task.description;
+        this.scriptsDropdown.setSelectedScriptById(task.script_id);
 
         this.taskSolution = task.solution;
 
@@ -39,9 +43,9 @@ export default class TaskPropertiesModal extends Vue {
     public submit() {
         if (this.deferred) {
             const taskDescription = this.markdown.textValue;
+            const scriptId = this.scriptsDropdown.selectedScript.value;
             this.deferred.resolve(new TaskDto(
-                this.taskId, this.taskName, taskDescription, this.taskResult, this.taskSolution));
+                this.taskId, this.taskName, taskDescription, this.taskResult, this.taskSolution, scriptId));
         }
     }
-
 }
