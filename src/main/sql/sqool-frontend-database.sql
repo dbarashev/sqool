@@ -201,7 +201,7 @@ UNION ALL
 SELECT id, name, '[]' AS tasks_id_json_array
   FROM Contest.Variant V LEFT JOIN Contest.TaskVariant T ON V.id = T.variant_id
   WHERE T.variant_id IS NULL
-GROUP BY V.id;
+  GROUP BY V.id;
 
 CREATE OR REPLACE FUNCTION VariantDto_InsertUpdate()
 RETURNS TRIGGER AS $$
