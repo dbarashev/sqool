@@ -2,7 +2,7 @@
     <div id="scriptAccordion" class="text-left">
 
         <div class="card" v-for="s in scripts">
-            <div class="card-header bg-light" :id="'scriptHeading' + s.id">
+            <div class="card-header bg-light" :id="'scriptHeading' + s.id" @click="makeActive(s)">
                 <h5 class="mb-0"
                             data-toggle="collapse"
                             :data-target="'#scriptCollapse' + s.id"
@@ -21,29 +21,7 @@
     </div>
 </template>
 
-<script lang="ts">
-import {Component, Vue} from 'vue-property-decorator';
-import {ScriptDto} from '../Script';
-
-@Component
-export default class ScriptTable extends Vue {
-    public scripts: ScriptDto[] = [];
-
-    public mounted() {
-        this.refresh();
-    }
-
-    public refresh() {
-        $.ajax({
-            url: '/admin/script/all',
-        }).done((scripts: ScriptDto[]) => {
-            this.scripts = [];
-            scripts.forEach((s) => this.scripts.push(s));
-        });
-    }
-
-
-}
+<script lang="ts" src="./ScriptTable.ts">
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
