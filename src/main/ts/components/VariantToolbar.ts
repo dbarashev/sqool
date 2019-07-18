@@ -28,14 +28,14 @@ export default class VariantToolbar extends Vue {
     public editVariant() {
         const activeVariant = this.variantTable().getActiveVariant();
         if (activeVariant) {
-            this.showAndSubmitVariant(activeVariant, '/admin/variant/edit')
+            this.showAndSubmitVariant(activeVariant, '/admin/variant/edit');
         }
     }
 
     private showAndSubmitVariant(variant: VariantDto, url: string) {
         this.variantProperties().show(variant).then((updatedVariant) => {
             variant = updatedVariant;
-            return $.ajax(url, VariantToolbar.buildVariantPayload(updatedVariant))
+            return $.ajax(url, VariantToolbar.buildVariantPayload(updatedVariant));
         }).done(() => {
             this.variantProperties().hide();
             this.variantTable().refresh();

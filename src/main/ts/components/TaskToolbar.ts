@@ -37,7 +37,7 @@ export default class TaskToolbar extends Vue {
     private showAndSubmitTask(task: TaskDto, url: string) {
         this.taskProperties().show(task).then((updatedTask) => {
             task = updatedTask;
-            return $.ajax(url, TaskToolbar.buildTaskPayload(updatedTask))
+            return $.ajax(url, TaskToolbar.buildTaskPayload(updatedTask));
         }).done(() => {
             this.taskProperties().hide();
             this.taskMainWindow().taskTable().refresh();
