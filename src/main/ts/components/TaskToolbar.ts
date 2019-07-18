@@ -2,10 +2,10 @@ import {Component, Inject, Vue} from 'vue-property-decorator';
 import {TaskDto} from '../Task';
 import TaskPropertiesModal from './TaskPropertiesModal';
 import TaskMainWindow from './TaskMainWindow';
+import AlertDialog from './AlertDialog';
 
 @Component
 export default class TaskToolbar extends Vue {
-
     private static buildTaskPayload(task: TaskDto): object {
         return {
             method: 'POST',
@@ -20,27 +20,32 @@ export default class TaskToolbar extends Vue {
     }
     @Inject() public readonly taskProperties!: () => TaskPropertiesModal;
     @Inject() public readonly taskMainWindow!: () => TaskMainWindow;
+    @Inject() private readonly alertDialog!: () => AlertDialog;
 
     public createNewTask() {
         const newTask = new TaskDto(-1, '000', '', '', '');
-        this.taskProperties().show(newTask).then((updatedTask) => {
-            return $.ajax('/admin/task/new', TaskToolbar.buildTaskPayload(updatedTask));
-        }).then(() => {
-            this.taskProperties().hide();
-            this.taskMainWindow().taskTable().refresh();
-        });
+        this.showAndSubmitTask(newTask, '/admin/task/new');
     }
 
     public editTask() {
         const activeTask = this.taskMainWindow().taskTable().getActiveTask();
         if (activeTask) {
-            this.taskProperties().show(activeTask).then((updatedTask) => {
-                $.ajax('/admin/task/update', TaskToolbar.buildTaskPayload(updatedTask));
-            }).then(() => {
-                this.taskProperties().hide();
-                this.taskMainWindow().taskTable().refresh();
-            });
+            this.showAndSubmitTask(activeTask, '/admin/task/edit');
         }
+    }
+
+    private showAndSubmitTask(task: TaskDto, url: string) {
+        this.taskProperties().show(task).then((updatedTask) => {
+            task = updatedTask;
+            return $.ajax(url, TaskToolbar.buildTaskPayload(updatedTask))
+        }).done(() => {
+            this.taskProperties().hide();
+            this.taskMainWindow().taskTable().refresh();
+        }).fail(xhr => {
+            this.showAndSubmitTask(task, url);
+            const title = `Что-то пошло не так: ${xhr.status}`;
+            this.alertDialog().show(title, xhr.statusText);
+        });
     }
 
     public showAvailableSolutions() {
