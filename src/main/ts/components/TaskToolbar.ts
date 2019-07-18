@@ -30,7 +30,7 @@ export default class TaskToolbar extends Vue {
     public editTask() {
         const activeTask = this.taskMainWindow().taskTable().getActiveTask();
         if (activeTask) {
-            this.showAndSubmitTask(activeTask, '/admin/task/edit');
+            this.showAndSubmitTask(activeTask, '/admin/task/update');
         }
     }
 
