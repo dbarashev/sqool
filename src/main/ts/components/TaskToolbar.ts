@@ -24,7 +24,7 @@ export default class TaskToolbar extends Vue {
     @Inject() private readonly alertDialog!: () => AlertDialog;
 
     public createNewTask() {
-        const newTask = new TaskDto(-1, '000', '', '', '');
+        const newTask = new TaskDto(-1, '000', '', '', '', null);
         this.showAndSubmitTask(newTask, '/admin/task/new');
     }
 
