@@ -19,6 +19,12 @@
                             >
                         </div>
                     </form>
+                    <form>
+                        <div class="form-group">
+                            <label for="script-file">Код</label>
+                            <input type="file" class="form-control-file" id="script-file" @change="readScriptBody">
+                        </div>
+                    </form>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-primary" @click="submit">OK</button>

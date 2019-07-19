@@ -224,13 +224,13 @@ fun main(args: Array<String>) {
 
       GET("/admin/script/all" BY adminScriptAllHandler)
       POST("/admin/script/new" BY adminScriptEditHandler ARGS mapOf(
-              "description" to ScriptEditArgs::description,
-              "body"        to ScriptEditArgs::body
+          "description" to ScriptEditArgs::description,
+          "body"        to ScriptEditArgs::body
       ))
       POST("/admin/script/update" BY adminScriptEditHandler ARGS mapOf(
-              "id"          to ScriptEditArgs::id,
-              "description" to ScriptEditArgs::description,
-              "body"        to ScriptEditArgs::body
+          "id"          to ScriptEditArgs::id,
+          "description" to ScriptEditArgs::description,
+          "body"        to ScriptEditArgs::body
       ))
 
       GET("/admin/task/all" BY adminTaskAllHandler)
