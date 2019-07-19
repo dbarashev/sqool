@@ -38,6 +38,7 @@ export default class ScriptToolbar extends Vue {
             this.scriptProperties().hide();
             this.scriptTable().refresh();
         }).fail(xhr => {
+            //Call it again to be able to make another request
             this.showAndSubmitScript(script, url);
             const title = `Что-то пошло не так: ${xhr.status}`;
             this.alertDialog().show(title, xhr.statusText);
