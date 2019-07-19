@@ -20,6 +20,7 @@ object Tasks : Table("Contest.TaskDto") {
   val description = text("description")
   val result_json = text("result_json")
   val solution = text("solution")
+  val script_id = integer("script_id").nullable()
 
   fun asJson(row: ResultRow): JsonNode {
     return JSON_MAPPER.createObjectNode().also {
@@ -28,8 +29,8 @@ object Tasks : Table("Contest.TaskDto") {
       it.put("description", row[description])
       it.put("solution", row[solution])
       it.put("result_json", row[result_json])
+      it.put("script_id", row[script_id])
     }
-
   }
 }
 
@@ -55,10 +56,11 @@ data class TaskEditArgs(var id: String,
                         var name: String,
                         var description: String,
                         var result: String,
-                        var solution: String) : RequestArgs()
+                        var solution: String,
+                        var script_id: String) : RequestArgs()
 class TaskEditHandler(flags: Flags) : DbHandler<TaskEditArgs>(flags) {
   override fun args(): TaskEditArgs = TaskEditArgs(
-      id = "", name = "", description = "", result = "", solution = "")
+      id = "", name = "", description = "", result = "", solution = "", script_id = "")
 
   override fun handle(http: HttpApi, argValues: TaskEditArgs): HttpResponse {
     val resultJson = buildResultJson(argValues.result)
@@ -71,6 +73,7 @@ class TaskEditHandler(flags: Flags) : DbHandler<TaskEditArgs>(flags) {
             it[description] = argValues.description
             it[result_json] = resultJson
             it[solution] = argValues.solution
+            it[script_id] = argValues.script_id.toIntOrNull()
           }
           http.ok()
         }
@@ -80,6 +83,7 @@ class TaskEditHandler(flags: Flags) : DbHandler<TaskEditArgs>(flags) {
             it[description] = argValues.description
             it[result_json] = resultJson
             it[solution] = argValues.solution
+            it[script_id] = argValues.script_id.toIntOrNull()
           }
           http.ok()
         }
