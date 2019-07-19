@@ -21,7 +21,7 @@
                     </form>
                     <form>
                         <div class="form-group">
-                            <label for="file">Код</label>
+                            <label for="file">Файл</label>
                             <input type="text" class="form-control"
                                    id="file" aria-describedby="script-properties-name-help"
                                    v-model="selectedFileName" readonly>
