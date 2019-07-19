@@ -17,7 +17,7 @@ object Variants : Table("Contest.VariantDto") {
         return JSON_MAPPER.createObjectNode().also {
             it.put("id", row[id])
             it.put("name", row[name])
-            it.set("tasks", JSON_MAPPER.readTree(row[tasks_id_json_array]))
+            it.set<JsonNode>("tasks", JSON_MAPPER.readTree(row[tasks_id_json_array]))
         }
     }
 }
