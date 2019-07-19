@@ -10,8 +10,10 @@
   },
   "dependencies": {
     "@types/showdown": "^1.9.2",
+    "bootstrap": "^4.3.1",
+    "bootstrap-vue": "^2.0.0-rc.26",
     "showdown": "^1.9.0",
-    "vue": "^2.6.6",
+    "vue": "^2.6.10",
     "vue-class-component": "^6.0.0",
     "vue-property-decorator": "^7.0.0",
     "webpack": "^4.29.6"

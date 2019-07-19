@@ -15,6 +15,7 @@ export default class TaskToolbar extends Vue {
                 description: task.description,
                 result: task.result_json,
                 solution: task.solution,
+                script_id: task.script_id,
             },
         };
     }
