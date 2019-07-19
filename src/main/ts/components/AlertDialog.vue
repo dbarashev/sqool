@@ -21,3 +21,9 @@
 
 <script lang="ts" src="./AlertDialog.ts">
 </script>
+
+<style scoped>
+    #alert-dialog {
+        z-index: 2000;
+    }
+</style>
