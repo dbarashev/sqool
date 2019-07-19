@@ -184,14 +184,14 @@ class DockerImageBuilderTest {
             |DROP SCHEMA
             |CREATE SCHEMA
             |SET
-            |psql:/workspace/hse2019/cw14/static.sql:8: ERROR:  unterminated quoted string at or near "'Some text
+            |psql:/workspace/hse2019/cw14/static.sql:9: ERROR:  unterminated quoted string at or near "'Some text
             |"
             |LINE 3: SELECT 'Some text
             |               ^
             |CREATE FUNCTION
             |CREATE FUNCTION
             |DROP FUNCTION
-            |psql:/workspace/hse2019/cw14/static.sql:51: ERROR:  return type mismatch in function declared to return integer
+            |psql:/workspace/hse2019/cw14/static.sql:52: ERROR:  return type mismatch in function declared to return integer
             |DETAIL:  Actual return type is numeric.
             |CONTEXT:  SQL function "task33_robot"
             |CREATE FUNCTION
@@ -201,11 +201,11 @@ class DockerImageBuilderTest {
             |DROP SCHEMA
             |CREATE SCHEMA
             |SET
-            |psql:/workspace/hse2019/cw52/static.sql:8: ERROR:  syntax error at or near "0"
+            |psql:/workspace/hse2019/cw52/static.sql:9: ERROR:  syntax error at or near "0"
             |LINE 3: SELECT 11 LIMITY 0;
             |                         ^
             |CREATE FUNCTION
-            |psql:/workspace/hse2019/cw52/static.sql:18: ERROR:  function task3_robot() does not exist
+            |psql:/workspace/hse2019/cw52/static.sql:19: ERROR:  function task3_robot() does not exist
             |LINE 2:    SELECT 1 AS query_id, * FROM Task3_Robot()
             |                                        ^
             |HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
