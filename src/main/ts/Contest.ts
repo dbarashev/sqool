@@ -6,6 +6,7 @@ export class ContestDto  {
                 // tslint:disable-next-line
                 readonly start_ts: string,
                 // tslint:disable-next-line
-                readonly end_ts: string) {
+                readonly end_ts: string,
+                readonly variants: number[]) {
     }
 }

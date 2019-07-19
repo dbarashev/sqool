@@ -2,12 +2,14 @@ package com.bardsoftware.sqool.codegen
 
 import com.bardsoftware.sqool.codegen.task.Task
 
-class Variant(val name: String, private val pathToSchema: String, val tasks: List<Task>) {
-    fun generateStaticCode() = """
+class Variant(val name: String, val tasks: List<Task>) {
+    val schemas = tasks.mapNotNull { it.schema }.toSet()
+
+    fun generateStaticCode(schemasDir: String) = """
         |DROP SCHEMA IF EXISTS $name CASCADE;
         |CREATE SCHEMA $name;
         |SET search_path=$name;
-        |\i $pathToSchema;
+        |${schemas.joinToString(separator = "\n") { "\\i '$schemasDir/${it.name}.sql';" }}
         |
         |${tasks.joinToString("\n\n") { it.generateStaticCode() }}
         """.trimMargin()

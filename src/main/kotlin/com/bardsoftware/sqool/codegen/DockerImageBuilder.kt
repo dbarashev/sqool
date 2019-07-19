@@ -13,17 +13,22 @@ fun buildDockerImage(imageName: String, contest: String, variants: List<Variant>
     val contestDir = File(root, "workspace/$contest")
     contestDir.mkdirs()
 
+    val schemas = variants.map { it.schemas }.flatten().toSet()
+    val schemaDir = File(contestDir, "schema")
+    schemaDir.mkdir()
+    schemas.forEach { File(schemaDir, "${it.name}.sql").writeText(it.body) }
+
     for (variant in variants) {
         val variantDir = File(contestDir, variant.name)
         variantDir.mkdir()
-        File(variantDir, "static.sql").writeText(variant.generateStaticCode())
+        File(variantDir, "static.sql").writeText(variant.generateStaticCode("workspace/$contest/schema"))
         variant.tasks.forEach {
             val dynamicCode = it.generateDynamicCode(variant.name)
             File(variantDir, "${it.name}-dynamic.sql").writeText(dynamicCode)
         }
     }
 
-    val initCode = variants.joinToString("\n") { "\\i /workspace/$contest/${it.name}/static.sql" }
+    val initCode = variants.joinToString("\n") { "\\i '/workspace/$contest/${it.name}/static.sql'" }
     File(contestDir, "init.sql").writeText(initCode)
 
     createDockerfile(root, ".", "/")

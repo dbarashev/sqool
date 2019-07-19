@@ -43,7 +43,7 @@ private fun runPsql(imageName: String, contest: String, flags: Flags): Pair<Cont
             .networkMode("host")
             .build()
     val postgresUri = with(flags) { "postgres://$postgresUser:$postgresPassword@$postgresAddress:$postgresPort" }
-    val command = listOf("bash", "-c", "psql $postgresUri -f /workspace/$contest/init.sql")
+    val command = listOf("bash", "-c", "psql $postgresUri -f '/workspace/$contest/init.sql'")
     docker.pull("postgres:10")
     val containerConfig = ContainerConfig.builder()
             .image("postgres:10")

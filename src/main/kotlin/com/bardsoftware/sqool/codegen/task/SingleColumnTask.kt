@@ -2,9 +2,9 @@ package com.bardsoftware.sqool.codegen.task
 
 import com.bardsoftware.sqool.codegen.task.spec.TaskResultColumn
 
-class SingleColumnTask(name: String, robotQuery: String,
+class SingleColumnTask(name: String, robotQuery: String, schema: Schema?,
                        private val spec: TaskResultColumn
-) : ColumnTask(name, robotQuery) {
+) : ColumnTask(name, robotQuery, schema) {
     override val resultType: String
         get() = "TABLE($spec)"
     override val mockSolution: String

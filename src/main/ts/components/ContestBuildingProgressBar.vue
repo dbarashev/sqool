@@ -19,5 +19,5 @@
     </div>
 </template>
 
-<script lang="ts" src="./VariantBuildingProgressBar.ts">
+<script lang="ts" src="./ContestBuildingProgressBar.ts">
 </script>
