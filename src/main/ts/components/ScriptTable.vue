@@ -14,7 +14,7 @@
 
             <div :id="'scriptCollapse' + s.id" class="collapse" :aria-labelledby="'scriptHeading' + s.id" data-parent="#scriptAccordion">
                 <div class="card-body">
-                    {{ s.body }}
+                    <pre>{{ s.body }}</pre>
                 </div>
             </div>
         </div>

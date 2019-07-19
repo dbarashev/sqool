@@ -6,9 +6,11 @@ import AlertDialog from "./AlertDialog";
 export default class ScriptPropertiesModal extends Vue {
     @Inject() public readonly alertDialog!: () => AlertDialog;
     public scriptDescription: string = '';
+    public selectedFileName: string = '';
 
     private scriptId: number = -1;
     private scriptBody: string = '';
+    private deferredScriptBody: JQueryDeferred<string> | undefined;
     private deferred: JQueryDeferred<ScriptDto> | undefined;
 
     public show(script: ScriptDto): JQueryDeferred<ScriptDto> {
@@ -16,8 +18,10 @@ export default class ScriptPropertiesModal extends Vue {
         this.scriptId = script.id;
         this.scriptDescription = script.description;
         this.scriptBody = script.body;
+        this.selectedFileName = '';
 
         this.deferred = $.Deferred<ScriptDto>();
+        this.deferredScriptBody = undefined;
         return this.deferred;
     }
 
@@ -26,8 +30,10 @@ export default class ScriptPropertiesModal extends Vue {
     }
 
     public submit() {
-        if (this.deferred) {
-            this.deferred.resolve(new ScriptDto(this.scriptId, this.scriptDescription, this.scriptBody));
+        if (this.deferredScriptBody) {
+            this.deferredScriptBody.then(scriptBody => this.resolveScript(scriptBody));
+        } else {
+            this.resolveScript(this.scriptBody);
         }
     }
 
@@ -37,16 +43,32 @@ export default class ScriptPropertiesModal extends Vue {
             this.alertDialog().show('Не удалось загрузить файл');
             return;
         }
+        this.deferredScriptBody = $.Deferred<string>();
 
         const reader = new FileReader();
         reader.onload = () => {
             const result = reader.result;
-            if (result !== null) {
-                this.scriptBody = result as string;
+            if (result !== null && this.deferredScriptBody) {
+                this.deferredScriptBody.resolve(result as string);
+                this.selectedFileName = file.name;
             } else {
-                this.alertDialog().show('Не удалось прочитать файл');
+                this.rejectScriptBody();
             }
         };
-        reader.readAsText(file)
+        reader.onerror = this.rejectScriptBody;
+        reader.readAsText(file);
+    }
+
+    private rejectScriptBody() {
+        if (this.deferredScriptBody) {
+            this.deferredScriptBody.reject();
+            this.alertDialog().show('Не удалось прочитать файл');
+        }
+    }
+
+    private resolveScript(scriptBody: string) {
+        if (this.deferred) {
+            this.deferred.resolve(new ScriptDto(this.scriptId, this.scriptDescription, scriptBody));
+        }
     }
 }

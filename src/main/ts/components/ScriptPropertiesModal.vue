@@ -21,9 +21,16 @@
                     </form>
                     <form>
                         <div class="form-group">
-                            <label for="script-file">Код</label>
-                            <input type="file" class="form-control-file" id="script-file" @change="readScriptBody">
+                            <label for="file">Код</label>
+                            <input type="text" class="form-control"
+                                   id="file" aria-describedby="script-properties-name-help"
+                                   v-model="selectedFileName" readonly>
                         </div>
+                        <label class="input-group-btn file-chooser">
+                            <span class="btn btn-secondary">
+                                Загрузить&hellip; <input type="file" style="display: none;" @change="readScriptBody">
+                            </span>
+                        </label>
                     </form>
                 </div>
                 <div class="modal-footer">
@@ -36,3 +43,7 @@
 
 <script lang="ts" src="./ScriptPropertiesModal.ts">
 </script>
+
+<style>
+    .file-chooser { float:right }
+</style>
