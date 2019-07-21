@@ -15,36 +15,6 @@ CREATE OR REPLACE VIEW ScriptDto AS
 SELECT id, description, body
 FROM Script;
 
-CREATE OR REPLACE FUNCTION ScriptDto_Insert()
-    RETURNS TRIGGER AS $$
-BEGIN
-    INSERT INTO Contest.Script(description, body)
-    VALUES (NEW.description, NEW.body);
-    RETURN NEW;
-end;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE FUNCTION ScriptDto_Update()
-    RETURNS TRIGGER AS $$
-BEGIN
-    UPDATE Contest.Script
-    SET description = NEW.description, body = NEW.body
-    WHERE id = NEW.id;
-    RETURN NEW;
-end;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER ScriptDto_Insert_Trigger
-    INSTEAD OF INSERT ON ScriptDto
-    FOR EACH ROW
-EXECUTE PROCEDURE ScriptDto_Insert();
-
-CREATE TRIGGER ScriptDto_Update_Trigger
-    INSTEAD OF UPDATE ON ScriptDto
-    FOR EACH ROW
-EXECUTE PROCEDURE ScriptDto_Update();
-
-
 -----------------------------------------------------------------------------------------------------------------------
 -- Tables for storing contest tasks, users and their submission attempts.
 CREATE TABLE Contest.ContestUser(
@@ -494,3 +464,9 @@ from attempt a join task t on a.task_id=t.id
 join contestuser u on u.id=a.user_id
 join leaderboardview l on l.nick=u.nick
 where status = 'success' group by u.id;
+
+-----------------------------------------------------------------------------------------------
+-- Add some test data
+INSERT INTO Contest.Script(description, body) VALUES
+('Марсофлот', 'CREATE TABLE Planet(id INT, name TEXT)'),
+('Пироги', 'CREATE TABLE Pie(id INT, name TEXT)');
