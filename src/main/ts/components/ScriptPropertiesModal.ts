@@ -11,7 +11,7 @@ export default class ScriptPropertiesModal extends Vue {
     private scriptId: number = -1;
     private scriptBody: string = '';
     private deferredScriptBody: JQueryDeferred<string> | undefined;
-    private deferred: JQueryDeferred<ScriptDto> | undefined;
+    private deferred: JQueryDeferred<ScriptDto> = $.Deferred<ScriptDto>();
 
     public show(script: ScriptDto): JQueryDeferred<ScriptDto> {
         $('#script-properties').modal();
@@ -67,8 +67,6 @@ export default class ScriptPropertiesModal extends Vue {
     }
 
     private resolveScript(scriptBody: string) {
-        if (this.deferred) {
-            this.deferred.resolve(new ScriptDto(this.scriptId, this.scriptDescription, scriptBody));
-        }
+        this.deferred.resolve(new ScriptDto(this.scriptId, this.scriptDescription, scriptBody));
     }
 }
