@@ -2,7 +2,6 @@ package com.bardsoftware.sqool.codegen
 
 import com.bardsoftware.sqool.codegen.task.MultiColumnTask
 import com.bardsoftware.sqool.codegen.task.ScalarValueTask
-import com.bardsoftware.sqool.codegen.task.Schema
 import com.bardsoftware.sqool.codegen.task.SingleColumnTask
 import com.bardsoftware.sqool.codegen.task.spec.MatcherSpec
 import com.bardsoftware.sqool.codegen.task.spec.RelationSpec
@@ -11,6 +10,7 @@ import com.bardsoftware.sqool.codegen.task.spec.TaskResultColumn
 import com.bardsoftware.sqool.contest.Flags
 import com.nhaarman.mockito_kotlin.doReturn
 import com.nhaarman.mockito_kotlin.mock
+import com.nhaarman.mockito_kotlin.whenever
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.assertEquals
 import java.io.ByteArrayOutputStream
@@ -32,8 +32,8 @@ class DockerImageBuilderTest {
     @Test
     fun testFileStructure() {
         val spec = TaskResultColumn("id", SqlDataType.INT)
-        val task = SingleColumnTask("Task3", "SELECT 11;", null, spec)
-        val variant = Variant("cw1", listOf(task))
+        val task = SingleColumnTask("Task3", "SELECT 11;", spec)
+        val variant = Variant("cw1", listOf(task), emptyList())
         buildDockerImage("contest-image", "hse2019", listOf(variant))
 
         val expectedFolders = listOf(
@@ -45,16 +45,14 @@ class DockerImageBuilderTest {
 
     @Test
     fun testMultipleVariantsFileStructure() {
-        val firstVariantSchema = Schema("First", "")
         val firstVariantTasks = listOf(
-                ScalarValueTask("Task1", "", firstVariantSchema, SqlDataType.INT),
-                ScalarValueTask("Task2", "", firstVariantSchema, SqlDataType.INT)
+                ScalarValueTask("Task1", "", SqlDataType.INT),
+                ScalarValueTask("Task2", "", SqlDataType.INT)
         )
-        val firstVariant = Variant("cw1", firstVariantTasks)
+        val firstVariant = Variant("cw1", firstVariantTasks, listOf(mockSchema("First", "")))
 
-        val secondVariantSchema = Schema("Second", "")
-        val secondVariantTasks = listOf(ScalarValueTask("Task1", "", secondVariantSchema, SqlDataType.INT))
-        val secondVariant = Variant("cw2", secondVariantTasks)
+        val secondVariantTasks = listOf(ScalarValueTask("Task1", "", SqlDataType.INT))
+        val secondVariant = Variant("cw2", secondVariantTasks, listOf(mockSchema("Second", "")))
         buildDockerImage("contest-image", "hse2019", listOf(firstVariant, secondVariant))
 
         val expectedFolders = listOf(
@@ -69,10 +67,10 @@ class DockerImageBuilderTest {
 
     @Test
     fun testValidStaticSql() {
-        val schema = Schema("schema3", "CREATE TABLE Contest(code TEXT NOT NULL PRIMARY KEY);")
         val spec = TaskResultColumn("id", SqlDataType.INT)
-        val task = SingleColumnTask("Task3", "SELECT 11 LIMIT 0;", schema, spec)
-        val variants = listOf(Variant("cw3", listOf(task)))
+        val task = SingleColumnTask("Task3", "SELECT 11 LIMIT 0;", spec)
+        val schema = mockSchema("schema3", "CREATE TABLE Contest(code TEXT NOT NULL PRIMARY KEY);")
+        val variants = listOf(Variant("cw3", listOf(task), listOf(schema)))
         buildDockerImage("contest-image", "hse2019", variants)
         val result = checkImage("contest-image", "hse2019", variants, flags, outputStream)
 
@@ -89,12 +87,12 @@ class DockerImageBuilderTest {
 
     @Test
     fun testMultipleVariantsValidStaticSql() {
-        val schema = Schema("schema3", "CREATE TABLE Contest(code TEXT NOT NULL PRIMARY KEY);")
         val firstVariantTasks = listOf(
-                ScalarValueTask("Task12", "SELECT 'Some text'", schema, SqlDataType.TEXT),
-                ScalarValueTask("Task33", "SELECT 33", schema, SqlDataType.INT)
+                ScalarValueTask("Task12", "SELECT 'Some text'", SqlDataType.TEXT),
+                ScalarValueTask("Task33", "SELECT 33", SqlDataType.INT)
         )
-        val firstVariant = Variant("cw4", firstVariantTasks)
+        val schema = mockSchema("schema3", "CREATE TABLE Contest(code TEXT NOT NULL PRIMARY KEY);")
+        val firstVariant = Variant("cw4", firstVariantTasks, listOf(schema))
 
         val keyAttribute = listOf(
                 TaskResultColumn("ship", SqlDataType.TEXT),
@@ -107,8 +105,8 @@ class DockerImageBuilderTest {
         )
         val relationSpec = RelationSpec(keyAttribute, nonKeyAttributes)
         val matcherSpec = MatcherSpec(relationSpec, "Множество пар (корабль, порт) отличается от результатов робота")
-        val task = MultiColumnTask("Task05", "SELECT 'ship', 1, 10, 500::DOUBLE PRECISION, 'prod'", schema, matcherSpec)
-        val secondVariant = Variant("cw5", listOf(task))
+        val task = MultiColumnTask("Task05", "SELECT 'ship', 1, 10, 500::DOUBLE PRECISION, 'prod'", matcherSpec)
+        val secondVariant = Variant("cw5", listOf(task), listOf(schema))
 
         val variants = listOf(firstVariant, secondVariant)
         buildDockerImage("contest-image", "hse2019", variants)
@@ -127,10 +125,10 @@ class DockerImageBuilderTest {
 
     @Test
     fun testInvalidStaticSql() {
-        val schema = Schema("schema3", "CREATE TABLE Contest(code TEX NOT NULL PRIMARY KEY);")
         val spec = TaskResultColumn("id", SqlDataType.INT)
-        val task = SingleColumnTask("Task3", "SELECTY 11", schema, spec)
-        val variants = listOf(Variant("cw2", listOf(task)))
+        val task = SingleColumnTask("Task3", "SELECTY 11", spec)
+        val schema = mockSchema("schema3", "CREATE TABLE Contest(code TEX NOT NULL PRIMARY KEY);")
+        val variants = listOf(Variant("cw2", listOf(task), listOf(schema)))
         buildDockerImage("contest-image", "hse2019", variants)
         val result = checkImage("contest-image", "hse2019", variants, flags, outputStream)
 
@@ -164,14 +162,14 @@ class DockerImageBuilderTest {
     @Test
     fun testMultipleVariantsInvalidStaticSql() {
         val firstVariantTasks = listOf(
-                ScalarValueTask("Task12", "SELECT 'Some text", null, SqlDataType.TEXT),
-                ScalarValueTask("Task33", "SELECT 3!", null, SqlDataType.INT)
+                ScalarValueTask("Task12", "SELECT 'Some text", SqlDataType.TEXT),
+                ScalarValueTask("Task33", "SELECT 3!", SqlDataType.INT)
         )
-        val firstVariant = Variant("cw14", firstVariantTasks)
+        val firstVariant = Variant("cw14", firstVariantTasks, emptyList())
 
         val spec = TaskResultColumn("id", SqlDataType.INT)
-        val task = SingleColumnTask("Task3", "SELECT 11 LIMITY 0;", null, spec)
-        val secondVariant = Variant("cw52", listOf(task))
+        val task = SingleColumnTask("Task3", "SELECT 11 LIMITY 0;", spec)
+        val secondVariant = Variant("cw52", listOf(task), emptyList())
 
         val variants = listOf(firstVariant, secondVariant)
         buildDockerImage("contest-image", "hse2019", variants)
@@ -225,5 +223,12 @@ class DockerImageBuilderTest {
                 .lines()
                 .dropLastWhile { it.isEmpty() }
         assertEquals(expectedFolders.sorted(), folders.sorted())
+    }
+
+    private fun mockSchema(description: String, body: String): Schema {
+        val mock = mock<Schema>()
+        whenever(mock.getDescription()).thenReturn(description)
+        whenever(mock.getBody()).thenReturn(body)
+        return mock
     }
 }

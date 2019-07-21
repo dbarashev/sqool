@@ -8,7 +8,7 @@ export default class VariantPropertiesModal extends Vue {
     public tasks: TaskDto[] = [];
     public selectedTasks: TaskDto[] = [];
     private variantId: number = -1;
-    private deferred: JQueryDeferred<VariantDto> | undefined;
+    private deferred: JQueryDeferred<VariantDto> = $.Deferred<VariantDto>();
 
     public show(variant: VariantDto): JQueryDeferred<VariantDto> {
         $('#variant-properties').modal();
@@ -28,10 +28,8 @@ export default class VariantPropertiesModal extends Vue {
     }
 
     public submit() {
-        if (this.deferred) {
-            const selectedTasks = this.selectedTasks.map(task => task.id);
-            this.deferred.resolve(new VariantDto(this.variantId, this.variantName, selectedTasks));
-        }
+        const selectedTasks = this.selectedTasks.map(task => task.id);
+        this.deferred.resolve(new VariantDto(this.variantId, this.variantName, selectedTasks));
     }
 
     private loadTasks(selectedTaskIdList: number[]) {

@@ -1,6 +1,6 @@
 package com.bardsoftware.sqool.codegen.task
 
-abstract class ColumnTask(name: String, robotQuery: String, schema: Schema?) : Task(name, robotQuery, schema) {
+abstract class ColumnTask(name: String, robotQuery: String) : Task(name, robotQuery) {
     protected val mergedView = "${name}_Merged"
     protected val unionSizeVar = "union_size"
     protected val intxnSizeVar = "intxn_size"

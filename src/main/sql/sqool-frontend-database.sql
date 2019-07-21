@@ -169,6 +169,7 @@ SELECT code, name, lower(dates) AS start_ts, upper(dates) AS end_ts,
   FROM Contest.Contest C JOIN Contest.VariantContest V ON C.code = V.contest_code
   GROUP BY C.code
 UNION ALL
+-- Contests that have no variants will have empty array in the variants_id_json_array:
 SELECT code, name, lower(dates) AS start_ts, upper(dates) AS end_ts, '[]' AS variants_id_json_array
   FROM Contest.Contest C LEFT JOIN Contest.VariantContest V ON C.code = V.contest_code
   WHERE V.contest_code IS NULL
@@ -228,11 +229,15 @@ CREATE TABLE TaskVariant(
 );
 
 CREATE OR REPLACE VIEW VariantDto AS
-SELECT id, name, array_to_json(array_agg(task_id))::TEXT as tasks_id_json_array
-  FROM Contest.Variant V JOIN Contest.TaskVariant T ON V.id = T.variant_id
+SELECT V.id, V.name, array_to_json(array_agg(task_id))::TEXT as tasks_id_json_array,
+       COALESCE(json_agg(DISTINCT (script_id)) FILTER (WHERE script_id IS NOT NULL), '[]')::TEXT as scripts_id_json_array
+  FROM Contest.Variant V JOIN Contest.TaskVariant TV ON V.id = TV.variant_id
+      JOIN Contest.Task T ON TV.task_id = T.id
+      LEFT JOIN Contest.Script S ON T.script_id = S.id
   GROUP BY V.id
 UNION ALL
-SELECT id, name, '[]' AS tasks_id_json_array
+-- Variants that have no tasks will have empty arrays in the tasks_id_json_array and scripts_id_json_array:
+SELECT id, name, '[]' AS tasks_id_json_array, '[]' AS scripts_id_json_array
   FROM Contest.Variant V LEFT JOIN Contest.TaskVariant T ON V.id = T.variant_id
   WHERE T.variant_id IS NULL
   GROUP BY V.id;

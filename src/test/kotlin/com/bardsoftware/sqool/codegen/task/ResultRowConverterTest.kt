@@ -19,7 +19,7 @@ class ResultRowConverterTest {
         val attributes = listOf(TaskResultColumn("", SqlDataType.INT))
         val resultRow = mockResultRow(taskName, solution, attributes)
 
-        val expectedTask = ScalarValueTask("task1", "solution", null, SqlDataType.INT)
+        val expectedTask = ScalarValueTask("task1", "solution", SqlDataType.INT)
         assertEquals(expectedTask, resultRowToTask(resultRow))
     }
 
@@ -31,7 +31,7 @@ class ResultRowConverterTest {
         val resultRow = mockResultRow(taskName, solution, attributes)
 
         val expectedTask = SingleColumnTask(
-                "task 2", "solution.", null, TaskResultColumn("id", SqlDataType.INT)
+                "task 2", "solution.", TaskResultColumn("id", SqlDataType.INT)
         )
         assertEquals(expectedTask, resultRowToTask(resultRow))
     }
@@ -48,7 +48,7 @@ class ResultRowConverterTest {
 
         val relationSpec = RelationSpec(attributes)
         val matcherSpec = MatcherSpec(relationSpec)
-        val expectedTask = MultiColumnTask("task1", "solution", null, matcherSpec)
+        val expectedTask = MultiColumnTask("task1", "solution", matcherSpec)
         assertEquals(expectedTask, resultRowToTask(resultRow))
     }
 

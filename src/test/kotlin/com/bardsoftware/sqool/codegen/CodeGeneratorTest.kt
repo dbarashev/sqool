@@ -5,6 +5,8 @@ import com.bardsoftware.sqool.codegen.task.spec.MatcherSpec
 import com.bardsoftware.sqool.codegen.task.spec.RelationSpec
 import com.bardsoftware.sqool.codegen.task.spec.SqlDataType
 import com.bardsoftware.sqool.codegen.task.spec.TaskResultColumn
+import com.nhaarman.mockito_kotlin.mock
+import com.nhaarman.mockito_kotlin.whenever
 import org.junit.jupiter.api.Test
 
 import org.junit.jupiter.api.Assertions.*
@@ -96,8 +98,8 @@ class CodeGeneratorTest {
             """.trimMargin()
 
         val spec = TaskResultColumn("id", SqlDataType.INT)
-        val task = SingleColumnTask("Task3", "SELECT 11;", null, spec)
-        val variant = Variant("cw1", listOf(task))
+        val task = SingleColumnTask("Task3", "SELECT 11;", spec)
+        val variant = Variant("cw1", listOf(task), emptyList())
 
         assertEquals(expectedStaticCode, variant.generateStaticCode("/workspace/cw1/schema"))
         assertEquals(expectedPerSubmissionCode, task.generateDynamicCode("cw1"))
@@ -167,9 +169,8 @@ class CodeGeneratorTest {
             |$$ LANGUAGE SQL;
             """.trimMargin()
 
-        val schema = Schema("schema", "")
-        val task = ScalarValueTask("Task12", "SELECT 'Some text';", schema, SqlDataType.TEXT)
-        val variant = Variant("cw2", listOf(task))
+        val task = ScalarValueTask("Task12", "SELECT 'Some text';", SqlDataType.TEXT)
+        val variant = Variant("cw2", listOf(task), listOf(mockSchema("schema", "")))
         assertEquals(expectedStaticCode, variant.generateStaticCode("/hse/cw2/schema"))
         assertEquals(expectedPerSubmissionCode, task.generateDynamicCode("cw2"))
     }
@@ -284,8 +285,8 @@ class CodeGeneratorTest {
         val relationSpec = RelationSpec(keyAttribute, nonKeyAttributes)
         val matcherSpec = MatcherSpec(relationSpec, "Множество пар (корабль, порт) отличается от результатов робота")
 
-        val task = MultiColumnTask("Task05", "SELECT 'ship', 1, 10, 500::DOUBLE PRECISION, 'prod'", null, matcherSpec)
-        val variant = Variant("cw3", listOf(task))
+        val task = MultiColumnTask("Task05", "SELECT 'ship', 1, 10, 500::DOUBLE PRECISION, 'prod'", matcherSpec)
+        val variant = Variant("cw3", listOf(task), emptyList())
         assertEquals(expectedStaticCode, variant.generateStaticCode("/workspace/hse/schema"))
         assertEquals(expectedPerSubmissionCode, task.generateDynamicCode("cw3"))
     }
@@ -387,10 +388,17 @@ class CodeGeneratorTest {
             """.trimMargin()
 
         val tasks = listOf(
-                ScalarValueTask("Task12", "SELECT 'Some text';", Schema("Task1", ""), SqlDataType.TEXT),
-                ScalarValueTask("Task33", "SELECT '33", Schema("Task2", ""), SqlDataType.TEXT)
+                ScalarValueTask("Task12", "SELECT 'Some text';", SqlDataType.TEXT),
+                ScalarValueTask("Task33", "SELECT '33", SqlDataType.TEXT)
         )
-        val variant = Variant("cw2", tasks)
+        val variant = Variant("cw2", tasks, listOf(mockSchema("Task1", ""), mockSchema("Task2", "")))
         assertEquals(expectedStaticCode, variant.generateStaticCode("/workspace/hse/schema"))
+    }
+
+    private fun mockSchema(description: String, body: String): Schema {
+        val mock = mock<Schema>()
+        whenever(mock.getDescription()).thenReturn(description)
+        whenever(mock.getBody()).thenReturn(body)
+        return mock
     }
 }

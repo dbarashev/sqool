@@ -1,9 +1,6 @@
 package com.bardsoftware.sqool.contest.admin
 
-import com.bardsoftware.sqool.codegen.ImageCheckResult
-import com.bardsoftware.sqool.codegen.Variant
-import com.bardsoftware.sqool.codegen.buildDockerImage
-import com.bardsoftware.sqool.codegen.checkImage
+import com.bardsoftware.sqool.codegen.*
 import com.bardsoftware.sqool.codegen.task.TaskDeserializationException
 import com.bardsoftware.sqool.codegen.task.resultRowToTask
 import com.bardsoftware.sqool.contest.*
@@ -95,26 +92,32 @@ class ContestBuildHandler(private val flags: Flags) : DbHandler<ContestBuildArgs
 
   override fun handle(http: HttpApi, argValues: ContestBuildArgs) = try {
     val selectResult = transaction {
-      Contests.select { Contests.code eq argValues.code }
-              .map { Contest(it[Contests.code], it[Contests.name], it[Contests.variants_id_json_array]) }
+      Contests.select {
+        Contests.code eq argValues.code
+      }.map {
+        Contest(it[Contests.code], it[Contests.name], it[Contests.variants_id_json_array])
+      }
     }
     if (selectResult.isEmpty()) {
-      http.error(400, "No such contest")
+      http.error(404, "No such contest")
     }
     val contest = selectResult.first()
 
     val variantsIdList = ObjectMapper().readValue(contest.variantsIdArray, IntArray::class.java)
     val variants = transaction {
-      Variants.select { Variants.id inList variantsIdList.toList() }
-              .map { resultRowToVariant(it) }
+      Variants.select {
+        Variants.id inList variantsIdList.toList()
+      }.map {
+        resultRowToVariant(it)
+      }
     }
     buildDockerImage(contest.code, contest.name, variants)
 
     val errorStream = ByteArrayOutputStream()
     when (checkImage(contest.code, contest.name, variants, flags, errorStream)) {
-      ImageCheckResult.PASSED -> http.json(hashMapOf("status" to "OK"))
+      ImageCheckResult.PASSED -> http.json(mapOf("status" to "OK"))
       ImageCheckResult.ERROR -> http.error(500, errorStream.toString())
-      ImageCheckResult.FAILED -> http.json(hashMapOf("status" to "ERROR", "message" to errorStream.toString()))
+      ImageCheckResult.FAILED -> http.json(mapOf("status" to "ERROR", "message" to errorStream.toString()))
     }.also { errorStream.close() }
   } catch (exception: TaskDeserializationException) {
     exception.printStackTrace()
@@ -122,11 +125,16 @@ class ContestBuildHandler(private val flags: Flags) : DbHandler<ContestBuildArgs
   }
 
   private fun resultRowToVariant(variant: ResultRow): Variant {
+    val schemas = ObjectMapper().readValue(variant[Variants.scripts_id_json_array], IntArray::class.java)
+            .map { Schema(it) }
     val tasksIdList = ObjectMapper().readValue(variant[Variants.tasks_id_json_array], IntArray::class.java)
     val tasks = transaction {
-      Tasks.select { Tasks.id inList tasksIdList.toList() }
-           .map { resultRowToTask(it) }
+      Tasks.select {
+        Tasks.id inList tasksIdList.toList()
+      }.map {
+        resultRowToTask(it)
+      }
     }
-    return Variant(variant[Variants.name], tasks)
+    return Variant(variant[Variants.name], tasks, schemas)
   }
 }

@@ -13,7 +13,7 @@ export default class ContestPropertiesModal extends Vue {
     public selectedVariants: VariantDto[] = [];
 
     @Inject() private readonly alertDialog!: () => AlertDialog;
-    private deferred: JQueryDeferred<ContestDto> | undefined;
+    private deferred: JQueryDeferred<ContestDto> = $.Deferred<ContestDto>();
 
     public show(contest: ContestDto): JQueryDeferred<ContestDto> {
         $('#contest-properties').modal();
@@ -37,11 +37,11 @@ export default class ContestPropertiesModal extends Vue {
             this.alertDialog().show('Недопустимый код конеста', message);
             return;
         }
-        if (this.deferred) {
-            const selectedVariants = this.selectedVariants.map(variant => variant.id);
-            this.deferred.resolve(new ContestDto(
-                this.contestCode, this.contestName, this.contestStart, this.contestEnd, selectedVariants));
-        }
+        const selectedVariants = this.selectedVariants.map(variant => variant.id);
+        this.deferred.resolve(
+            new ContestDto(this.contestCode, this.contestName, this.contestStart, this.contestEnd, selectedVariants)
+        );
+
     }
 
     private updateVariants(selectedVariantIdList: number[]) {
@@ -56,6 +56,9 @@ export default class ContestPropertiesModal extends Vue {
                     this.selectedVariants.push(variant)
                 }
             });
+        }).fail(xhr => {
+            const title = 'Не удалось получить список вариантов:';
+            this.alertDialog().show(title, xhr.statusText);
         });
     }
 

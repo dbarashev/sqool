@@ -64,14 +64,16 @@
                             </form>
                         </div>
                         <div class="tab-pane fade" id="variants" role="tabpanel" aria-labelledby="variants-tab">
-                            <div class="list-group">
-                                <a href="#" class="list-group-item list-group-item-action" v-for="variant in variants">
-                                    <label class="form-check-label">
-                                        <input class="form-check-input" type="checkbox" :value="variant" v-model="selectedVariants"/>
-                                        {{ variant.name }}
-                                    </label>
-                                </a>
-                            </div>
+                            <table class="table table-hover table-striped">
+                                <tbody>
+                                    <tr v-for="variant in variants">
+                                        <td style="width: 15%">
+                                            <input type="checkbox" :value="variant" v-model="selectedVariants">
+                                        </td>
+                                        <td class="text-left">{{ variant.name }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>

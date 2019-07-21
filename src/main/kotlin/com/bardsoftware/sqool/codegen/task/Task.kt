@@ -1,8 +1,6 @@
 package com.bardsoftware.sqool.codegen.task
 
-data class Schema(val name: String, val body: String)
-
-abstract class Task(val name: String, val solution: String, val schema: Schema?) {
+abstract class Task(val name: String, val solution: String) {
     protected val robotQueryFunName = "${name}_Robot"
     protected val userQueryFunName = "${name}_User"
     abstract val resultType: String

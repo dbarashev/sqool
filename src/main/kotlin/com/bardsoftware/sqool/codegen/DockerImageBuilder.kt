@@ -16,7 +16,7 @@ fun buildDockerImage(imageName: String, contest: String, variants: List<Variant>
     val schemas = variants.map { it.schemas }.flatten().toSet()
     val schemaDir = File(contestDir, "schema")
     schemaDir.mkdir()
-    schemas.forEach { File(schemaDir, "${it.name}.sql").writeText(it.body) }
+    schemas.forEach { File(schemaDir, "${it.getDescription()}.sql").writeText(it.getBody()) }
 
     for (variant in variants) {
         val variantDir = File(contestDir, variant.name)

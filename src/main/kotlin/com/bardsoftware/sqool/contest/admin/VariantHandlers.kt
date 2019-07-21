@@ -12,6 +12,7 @@ object Variants : Table("Contest.VariantDto") {
     val id = integer("id").primaryKey()
     val name = text("name")
     val tasks_id_json_array = text("tasks_id_json_array")
+    val scripts_id_json_array = text("scripts_id_json_array")
 
     fun asJson(row: ResultRow): JsonNode {
         return JSON_MAPPER.createObjectNode().also {
