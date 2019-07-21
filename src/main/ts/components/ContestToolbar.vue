@@ -54,7 +54,7 @@ export default class ContestToolbar extends Vue {
             this.contestProperties().hide();
             this.contestTable().refresh();
         }).fail(xhr => {
-            //Call it again to be able to make another request
+            // Call it again to be able to make another request
             this.showAndSubmitContest(contest, url);
             const title = `Что-то пошло не так: ${xhr.status}`;
             this.alertDialog().show(title, xhr.statusText);
