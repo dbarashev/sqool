@@ -20,19 +20,13 @@
                         </div>
                     </form>
                     <form>
-                        <div class="row">
-                            <div class="col-9">
-                                <div class="form-group">
-                                    <label for="file">Файл</label>
-                                    <input type="text" class="form-control"
-                                           id="file" aria-describedby="script-properties-name-help"
-                                           v-model="selectedFileName" readonly>
-                                </div>
-                            </div>
-                            <div class="col">
-                                <label class="input-group-btn file-chooser">
-                                    <span class="btn btn-secondary">
-                                        Загрузить&hellip; <input type="file" style="display: none;" @change="readScriptBody">
+                        <div class="form-group">
+                            <label for="file">Файл</label>
+                            <div class="input-group">
+                                <input id="file" type="text" class="form-control" placeholder="Выберите SQL файл" v-model="selectedFileName" readonly>
+                                <label class="input-group-append file-chooser mb-0">
+                                    <span class="btn btn-secondary mb-0">Выбрать...
+                                        <input type="file" style="display: none;" @change="readScriptBody">
                                     </span>
                                 </label>
                             </div>
@@ -49,11 +43,15 @@
 
 <script lang="ts" src="./ScriptPropertiesModal.ts">
 </script>
-
 <style>
-    .file-chooser {
-        position: absolute;
-        bottom: 2px;
-        left: 0;
+    #file {
+        background-color: transparent;
+        color: grey;
+        font-size: smaller;
+    }
+    #file::placeholder {
+        color: grey;
+        font-size: smaller;
+        padding: 0 1rem;
     }
 </style>
