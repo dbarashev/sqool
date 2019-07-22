@@ -38,11 +38,12 @@ export default class ScriptPropertiesModal extends Vue {
     }
 
     public readScriptBody(event: any) {
-        const file = event.target.files[0];
-        if (!file) {
+        const files = event.target.files;
+        if (files && files.length == 0) {
             this.alertDialog().show('Не удалось загрузить файл');
             return;
         }
+        const file = files[0];
         this.deferredScriptBody = $.Deferred<string>();
 
         const reader = new FileReader();
