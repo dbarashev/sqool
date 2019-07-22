@@ -6,10 +6,10 @@ import com.bardsoftware.sqool.contest.RequestArgs
 import com.bardsoftware.sqool.contest.RequestHandler
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
-import org.jetbrains.exposed.sql.ResultRow
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
+
+private val JSON_MAPPER = ObjectMapper()
 
 /**
  * @author dbarashev@bardsoftware.com
@@ -38,4 +38,29 @@ class ScriptAllHandler : RequestHandler<RequestArgs>() {
   }
 }
 
-private val JSON_MAPPER = ObjectMapper()
+data class ScriptEditArgs(var id: String, var description: String, var body: String) : RequestArgs()
+
+class ScriptEditHandler : RequestHandler<ScriptEditArgs>() {
+  override fun args(): ScriptEditArgs = ScriptEditArgs(id = "", description = "", body = "")
+
+  override fun handle(http: HttpApi, argValues: ScriptEditArgs): HttpResponse {
+    return transaction {
+      when (argValues.id) {
+        "" -> {
+          Scripts.insert {
+            it[description] = argValues.description
+            it[body] = argValues.body
+          }
+          http.ok()
+        }
+        else -> {
+          Scripts.update(where = {Scripts.id eq argValues.id.toInt()}) {
+            it[description] = argValues.description
+            it[body] = argValues.body
+          }
+          http.ok()
+        }
+      }
+    }
+  }
+}

@@ -52,7 +52,9 @@
             </VariantTable>
           </div>
           <div class="tab-pane fade" id="list-schemes" role="tabpanel">
-            <ScriptTable>
+            <ScriptToolbar>
+            </ScriptToolbar>
+            <ScriptTable ref="scriptTable">
             </ScriptTable>
           </div>
         </div>
@@ -61,6 +63,7 @@
     <ContestPropertiesModal ref="contestPropertiesModal"></ContestPropertiesModal>
     <AlertDialog ref="alertDialog"></AlertDialog>
     <TaskPropertiesModal ref="taskPropertiesModal"></TaskPropertiesModal>
+    <ScriptPropertiesModal ref="scriptPropertiesModal"></ScriptPropertiesModal>
     <VariantBuildingProgressBar ref="variantBuildingProgressBar"></VariantBuildingProgressBar>
     <VariantPropertiesModal ref="variantPropertiesModal"></VariantPropertiesModal>
   </div>
@@ -75,7 +78,9 @@ import ContestToolbar from './components/ContestToolbar.vue';
 import ContestPropertiesModal from './components/ContestPropertiesModal.vue';
 import VariantBuildingProgressBar from './components/VariantBuildingProgressBar.vue';
 import AlertDialog from './components/AlertDialog.vue';
-import ScriptTable from './components/ScriptTable.vue';
+import ScriptTable from './components/ScriptTable';
+import ScriptToolbar from './components/ScriptToolbar.vue'
+import ScriptPropertiesModal from './components/ScriptPropertiesModal.vue';
 import TaskMainWindow from './components/TaskMainWindow';
 import VariantToolbar from './components/VariantToolbar.vue';
 import VariantPropertiesModal from './components/VariantPropertiesModal.vue';
@@ -88,14 +93,19 @@ import VariantTable from './components/VariantTable'
     ContestTable, ContestPropertiesModal,
     TaskToolbar, TaskPropertiesModal,
     VariantBuildingProgressBar, AlertDialog,
-    TaskMainWindow, VariantToolbar, VariantPropertiesModal,
-    VariantTable
+    TaskMainWindow, ScriptToolbar, ScriptPropertiesModal,
+    VariantTable, VariantToolbar, VariantPropertiesModal
   },
 })
 export default class App extends Vue {
   @Provide()
   public taskProperties(): TaskPropertiesModal {
     return this.$refs.taskPropertiesModal as TaskPropertiesModal;
+  }
+
+  @Provide()
+  public scriptProperties(): ScriptPropertiesModal {
+    return this.$refs.scriptPropertiesModal as ScriptPropertiesModal;
   }
 
   @Provide()
@@ -131,6 +141,11 @@ export default class App extends Vue {
   @Provide()
   public taskMainWindow(): TaskMainWindow {
     return this.$refs.taskMainWindow as TaskMainWindow;
+  }
+
+  @Provide()
+  public scriptTable(): ScriptTable {
+    return this.$refs.scriptTable as ScriptTable;
   }
 }
 </script>
