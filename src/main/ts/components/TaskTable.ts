@@ -1,10 +1,12 @@
-import {Component, Vue} from 'vue-property-decorator';
+import {Component, Inject, Vue} from 'vue-property-decorator';
 import {getTaskResultSql, TaskDto} from '../Task';
+import AlertDialog from "./AlertDialog";
 
 @Component
 export default class TaskTable extends Vue {
     public tasks: TaskDto[] = [];
     private activeTask?: TaskDto;
+    @Inject() private readonly alertDialog!: () => AlertDialog;
 
     public mounted() {
         this.refresh();
@@ -33,6 +35,9 @@ export default class TaskTable extends Vue {
         }).done((tasks: TaskDto[]) => {
             this.tasks = [];
             tasks.forEach((t) => this.tasks.push(t));
+        }).fail(xhr => {
+            const title = 'Не удалось получить список задач:';
+            this.alertDialog().show(title, xhr.statusText);
         });
     }
 

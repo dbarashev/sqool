@@ -32,8 +32,9 @@ export default class ContestPropertiesModal extends Vue {
     }
 
     public submit() {
-        if (!/^[a-z0-9]+(\.?_{0,2}-*[a-z0-9]+)*$/.test(this.contestCode)) {
-            const message = 'Код должен соответствовать регулярному выржаению:\n[a-z0-9]+(\\.?_{0,2}-*[a-z0-9]+)*';
+        this.contestCode = this.contestCode.toLowerCase();
+        if (!/^[a-z0-9]+([-_][a-z0-9]+)*$/.test(this.contestCode)) {
+            const message = 'Код может содержать слова, состоящие из цифр и букв английского алфавита, разделённые подчеркиванием или дешем';
             this.alertDialog().show('Недопустимый код конеста', message);
             return;
         }
