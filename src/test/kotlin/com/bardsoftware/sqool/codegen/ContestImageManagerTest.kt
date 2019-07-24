@@ -151,7 +151,7 @@ class ContestImageManagerTest {
             |DROP SCHEMA
             |CREATE SCHEMA
             |SET
-            |psql:workspace/hse2019/schema/schema3.sql:1: ERROR:  type "tex" does not exist
+            |psql:/workspace/hse2019/schema/schema3.sql:1: ERROR:  type "tex" does not exist
             |LINE 1: CREATE TABLE Contest(code TEX NOT NULL PRIMARY KEY);
             |                                  ^
             |psql:/workspace/hse2019/cw2/static.sql:9: ERROR:  syntax error at or near "SELECTY"
