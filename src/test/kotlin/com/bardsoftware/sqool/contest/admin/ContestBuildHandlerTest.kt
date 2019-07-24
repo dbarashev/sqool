@@ -113,9 +113,6 @@ class ContestBuildHandlerTest {
         val args = ContestBuildArgs("2")
         handler.handle(httpMock, args)
 
-        val errorMessage = """
-f
-            """.trimIndent()
         verify(httpMock).error(eq(400), any(), anyOrNull())
         verify(httpMock, never()).ok()
         verify(httpMock, never()).json(any())
