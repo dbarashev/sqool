@@ -1,6 +1,5 @@
 package com.bardsoftware.sqool.codegen.docker
 
-import com.bardsoftware.sqool.codegen.ImageCheckResult
 import com.bardsoftware.sqool.codegen.Variant
 import com.bardsoftware.sqool.codegen.task.Task
 import com.bardsoftware.sqool.contest.Flags
@@ -15,96 +14,97 @@ import java.sql.SQLException
 import java.text.MessageFormat
 import java.util.*
 
-private const val CONTEST_DIRECTORY = "/workspace"
+class DynamicCodeTester(
+        private val image: String,
+        private val contest: String,
+        private val variants: List<Variant>,
+        private val flags: Flags
+) {
+    fun test(errorStream: PrintWriter): ImageCheckResult {
+        File(CONTEST_DIRECTORY).deleteRecursively()
+        copyDirectoryFromImage(CONTEST_DIRECTORY, "/")
 
-fun testDynamicCode(
-        imageName: String, contest: String, variants: List<Variant>,
-        flags: Flags, writer: PrintWriter
-): ImageCheckResult {
-    File(CONTEST_DIRECTORY).deleteRecursively()
-    copyDirectoryFromImage(imageName, CONTEST_DIRECTORY, "/")
+        val testResults = mutableListOf<ImageCheckResult>()
+        for (variant in variants) {
+            val tester = CodeTester(contest, variant.name, flags)
+            testResults.addAll(variant.tasks.map { testTask(tester, it, errorStream) })
+        }
 
-
-    val testResults = mutableListOf<ImageCheckResult>()
-    for (variant in variants) {
-        val tester = CodeTester(contest, variant.name, flags)
-        testResults.addAll(variant.tasks.map { testTask(tester, it, writer) })
+        return if (testResults.all { it == ImageCheckResult.PASSED }) {
+            errorStream.println("OK")
+            ImageCheckResult.PASSED
+        } else {
+            ImageCheckResult.FAILED
+        }.also { errorStream.flush() }
     }
 
-    return if (testResults.all { it == ImageCheckResult.PASSED }) {
-        writer.println("OK")
-        ImageCheckResult.PASSED
-    } else {
-        ImageCheckResult.FAILED
-    }.also { writer.flush() }
-}
+    private fun copyDirectoryFromImage(imagePath: String, destinationFolder: String) {
+        val docker = DefaultDockerClient.fromEnv().build()
+        val containerConfig = ContainerConfig.builder()
+                .image(image)
+                .build()
+        val container = docker.createContainer(containerConfig)
 
-private fun copyDirectoryFromImage(imageName: String, imagePath: String, destinationFolder: String) {
-    val docker = DefaultDockerClient.fromEnv().build()
-    val containerConfig = ContainerConfig.builder()
-            .image(imageName)
-            .build()
-    val container = docker.createContainer(containerConfig)
-
-    val tarStream = TarArchiveInputStream(docker.archiveContainer(container.id(), imagePath))
-    tarStream.use {
-        var entry = tarStream.nextTarEntry
-        while (entry != null) {
-            if (entry.isFile) {
-                val file = File(destinationFolder, entry.name)
-                file.parentFile.mkdirs()
-                try {
-                    file.createNewFile()
-                } catch (exception: Exception) {
-                    println("Unable to create ${file.absolutePath}:")
-                    exception.printStackTrace()
-                    throw exception
+        val tarStream = TarArchiveInputStream(docker.archiveContainer(container.id(), imagePath))
+        tarStream.use {
+            var entry = tarStream.nextTarEntry
+            while (entry != null) {
+                if (entry.isFile) {
+                    val file = File(destinationFolder, entry.name)
+                    file.parentFile.mkdirs()
+                    try {
+                        file.createNewFile()
+                    } catch (exception: Exception) {
+                        println("Unable to create ${file.absolutePath}:")
+                        exception.printStackTrace()
+                        throw exception
+                    }
+                    FileOutputStream(file).use { tarStream.copyTo(it) }
                 }
-                FileOutputStream(file).use { tarStream.copyTo(it) }
+                entry = tarStream.nextTarEntry
             }
-            entry = tarStream.nextTarEntry
         }
+
+        docker.removeContainer(container.id())
+        docker.close()
     }
 
-    docker.removeContainer(container.id())
-    docker.close()
-}
+    private fun testTask(tester: CodeTester, task: Task, errorStream: PrintWriter): ImageCheckResult {
+        val mockSubmissionOutput = tester.runTest(task.name, task.mockSolution)
+        val mockSubmissionResult = when {
+            mockSubmissionOutput.message.matches(task.mockSolutionError) -> ImageCheckResult.PASSED
 
-private fun testTask(tester: CodeTester, task: Task, writer: PrintWriter): ImageCheckResult {
-    val mockSubmissionOutput = tester.runTest(task.name, task.mockSolution)
-    val mockSubmissionResult = when {
-        mockSubmissionOutput.message.matches(task.mockSolutionError) -> ImageCheckResult.PASSED
+            mockSubmissionOutput.status == SubmissionResultStatus.ERROR -> {
+                errorStream.println("Invalid ${task.name} sql:")
+                errorStream.println(mockSubmissionOutput.message)
+                ImageCheckResult.FAILED
+            }
 
-        mockSubmissionOutput.status == SubmissionResultStatus.ERROR -> {
-            writer.println("Invalid ${task.name} sql:")
-            writer.println(mockSubmissionOutput.message)
+            else -> {
+                errorStream.println("Unexpected ${task.name}_Matcher result for mock solution:")
+                errorStream.println(mockSubmissionOutput.message)
+                ImageCheckResult.FAILED
+            }
+        }
+
+        val correctSubmissionOutput = tester.runTest(task.name, task.solution)
+        val correctSubmissionResult = if (correctSubmissionOutput.message.isEmpty()) {
+            ImageCheckResult.PASSED
+        } else {
+            if (correctSubmissionOutput.status != SubmissionResultStatus.ERROR) {
+                errorStream.println("Unexpected ${task.name}_Matcher result for teacher's solution:")
+                errorStream.println(correctSubmissionOutput.message)
+            }
             ImageCheckResult.FAILED
         }
 
-        else -> {
-            writer.println("Unexpected ${task.name}_Matcher result for mock solution:")
-            writer.println(mockSubmissionOutput.message)
-            ImageCheckResult.FAILED
-        }
+        return if (mockSubmissionResult == ImageCheckResult.PASSED && correctSubmissionResult == ImageCheckResult.PASSED)
+            ImageCheckResult.PASSED else ImageCheckResult.FAILED
     }
-
-    val correctSubmissionOutput = tester.runTest(task.name, task.solution)
-    val correctSubmissionResult = if (correctSubmissionOutput.message.isEmpty()) {
-        ImageCheckResult.PASSED
-    } else {
-        if (correctSubmissionOutput.status != SubmissionResultStatus.ERROR) {
-            writer.println("Unexpected ${task.name}_Matcher result for teacher's solution:")
-            writer.println(correctSubmissionOutput.message)
-        }
-        ImageCheckResult.FAILED
-    }
-
-    return if (mockSubmissionResult == ImageCheckResult.PASSED && correctSubmissionResult == ImageCheckResult.PASSED)
-        ImageCheckResult.PASSED else ImageCheckResult.FAILED
 }
 
 private enum class SubmissionResultStatus {
-    SUCCESSFUL, FAILED, ERROR, TIMEOUT
+    SUCCESSFUL, FAILED, ERROR
 }
 
 private data class SubmissionResult(val status: SubmissionResultStatus, val message: String = "") {

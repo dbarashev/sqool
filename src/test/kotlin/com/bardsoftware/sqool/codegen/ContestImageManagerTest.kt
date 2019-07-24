@@ -1,5 +1,7 @@
 package com.bardsoftware.sqool.codegen
 
+import com.bardsoftware.sqool.codegen.docker.ContestImageManager
+import com.bardsoftware.sqool.codegen.docker.ImageCheckResult
 import com.bardsoftware.sqool.codegen.task.MultiColumnTask
 import com.bardsoftware.sqool.codegen.task.ScalarValueTask
 import com.bardsoftware.sqool.codegen.task.SingleColumnTask
@@ -15,7 +17,7 @@ import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.assertEquals
 import java.io.ByteArrayOutputStream
 
-class DockerImageBuilderTest {
+class ContestImageManagerTest {
     private val outputStream = ByteArrayOutputStream()
     private val flags = mock<Flags> {
         on { postgresAddress } doReturn (System.getProperty("postgres.ip") ?: "localhost")
@@ -34,7 +36,9 @@ class DockerImageBuilderTest {
         val spec = TaskResultColumn("id", SqlDataType.INT)
         val task = SingleColumnTask("Task3", "SELECT 11;", spec)
         val variant = Variant("cw1", listOf(task), emptyList())
-        buildDockerImage("contest-image", "hse2019", listOf(variant))
+        val contest = Contest("contest-image", "hse2019", listOf(variant))
+        val imageManager = ContestImageManager(contest, flags)
+        imageManager.createImage()
 
         val expectedFolders = listOf(
                 "/workspace", "/workspace/hse2019", "/workspace/hse2019/cw1", "/workspace/hse2019/init.sql",
@@ -53,7 +57,9 @@ class DockerImageBuilderTest {
 
         val secondVariantTasks = listOf(ScalarValueTask("Task1", "", SqlDataType.INT))
         val secondVariant = Variant("cw2", secondVariantTasks, listOf(mockSchema("Second", "")))
-        buildDockerImage("contest-image", "hse2019", listOf(firstVariant, secondVariant))
+        val contest = Contest("contest-image", "hse2019", listOf(firstVariant, secondVariant))
+        val imageManager = ContestImageManager(contest, flags)
+        imageManager.createImage()
 
         val expectedFolders = listOf(
                 "/workspace", "/workspace/hse2019", "/workspace/hse2019/cw1", "/workspace/hse2019/cw2",
@@ -71,8 +77,10 @@ class DockerImageBuilderTest {
         val task = SingleColumnTask("Task3", "SELECT 11 LIMIT 0;", spec)
         val schema = mockSchema("schema3", "CREATE TABLE Contest(code TEXT NOT NULL PRIMARY KEY);")
         val variants = listOf(Variant("cw3", listOf(task), listOf(schema)))
-        buildDockerImage("contest-image", "hse2019", variants)
-        val result = checkImage("contest-image", "hse2019", variants, flags, outputStream)
+        val contest = Contest("contest-image", "hse2019", variants)
+        val imageManager = ContestImageManager(contest, flags)
+        imageManager.createImage()
+        val result = imageManager.checkImage(outputStream)
 
         val expectedOutput = """
             |Static code testing:
@@ -109,8 +117,10 @@ class DockerImageBuilderTest {
         val secondVariant = Variant("cw5", listOf(task), listOf(schema))
 
         val variants = listOf(firstVariant, secondVariant)
-        buildDockerImage("contest-image", "hse2019", variants)
-        val result = checkImage("contest-image", "hse2019", variants, flags, outputStream)
+        val contest = Contest("contest-image", "hse2019", variants)
+        val imageManager = ContestImageManager(contest, flags)
+        imageManager.createImage()
+        val result = imageManager.checkImage(outputStream)
 
         val expectedOutput = """
             |Static code testing:
@@ -129,8 +139,10 @@ class DockerImageBuilderTest {
         val task = SingleColumnTask("Task3", "SELECTY 11", spec)
         val schema = mockSchema("schema3", "CREATE TABLE Contest(code TEX NOT NULL PRIMARY KEY);")
         val variants = listOf(Variant("cw2", listOf(task), listOf(schema)))
-        buildDockerImage("contest-image", "hse2019", variants)
-        val result = checkImage("contest-image", "hse2019", variants, flags, outputStream)
+        val contest = Contest("contest-image", "hse2019", variants)
+        val imageManager = ContestImageManager(contest, flags)
+        imageManager.createImage()
+        val result = imageManager.checkImage(outputStream)
 
         val expectedOutput = """
             |Static code testing:
@@ -172,8 +184,10 @@ class DockerImageBuilderTest {
         val secondVariant = Variant("cw52", listOf(task), emptyList())
 
         val variants = listOf(firstVariant, secondVariant)
-        buildDockerImage("contest-image", "hse2019", variants)
-        val result = checkImage("contest-image", "hse2019", variants, flags, outputStream)
+        val contest = Contest("contest-image", "hse2019", variants)
+        val imageManager = ContestImageManager(contest, flags)
+        imageManager.createImage()
+        val result = imageManager.checkImage(outputStream)
 
         val expectedOutput = """
             |Static code testing:

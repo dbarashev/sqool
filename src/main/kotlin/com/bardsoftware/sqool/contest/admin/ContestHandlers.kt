@@ -1,8 +1,8 @@
 package com.bardsoftware.sqool.contest.admin
 
 import com.bardsoftware.sqool.codegen.*
-import com.bardsoftware.sqool.codegen.task.TaskDeserializationException
-import com.bardsoftware.sqool.codegen.task.resultRowToTask
+import com.bardsoftware.sqool.codegen.docker.ContestImageManager
+import com.bardsoftware.sqool.codegen.docker.ImageCheckResult
 import com.bardsoftware.sqool.contest.*
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -85,54 +85,29 @@ class ContestEditHandler(private val mode: ContestEditMode) : RequestHandler<Con
 
 data class ContestBuildArgs(var code: String) : RequestArgs()
 
-class Contest(val code: String, val name: String, val variantsIdArray: String)
+class ContestBuildHandler(
+        private val queryManager: DbQueryManager,
+        private val imageManager: (Contest) -> ContestImageManager
+) : RequestHandler<ContestBuildArgs>() {
 
-class ContestBuildHandler(private val flags: Flags) : DbHandler<ContestBuildArgs>(flags) {
   override fun args(): ContestBuildArgs = ContestBuildArgs("")
 
-  override fun handle(http: HttpApi, argValues: ContestBuildArgs): HttpResponse {
-    try {
-      val selectResult = transaction {
-        Contests.select {
-          Contests.code eq argValues.code
-        }.map {
-          Contest(it[Contests.code], it[Contests.name], it[Contests.variants_id_json_array])
-        }
-      }
-      if (selectResult.isEmpty()) {
-        return http.error(404, "No such contest")
-      }
-      val contest = selectResult.first()
-
-      val variantsIdList = JSON_MAPPER.readValue(contest.variantsIdArray, IntArray::class.java)
-      val variants = transaction {
-        Variants.select {
-          Variants.id inList variantsIdList.toList()
-        }.map(::resultRowToVariant)
-      }
-      buildDockerImage(contest.code, contest.name, variants)
+  override fun handle(http: HttpApi, argValues: ContestBuildArgs) = try {
+      val contest = queryManager.findContest(argValues.code)
+      val imageManager = imageManager(contest)
+      imageManager.createImage()
 
       val errorStream = ByteArrayOutputStream()
-      return when (checkImage(contest.code, contest.name, variants, flags, errorStream)) {
+      when (imageManager.checkImage(errorStream)) {
         ImageCheckResult.PASSED -> http.json(mapOf("status" to "OK"))
         ImageCheckResult.ERROR -> http.error(500, errorStream.toString())
         ImageCheckResult.FAILED -> http.json(mapOf("status" to "ERROR", "message" to errorStream.toString()))
       }.also { errorStream.close() }
-    } catch (exception: TaskDeserializationException) {
+    } catch (exception: MalformedDataException) {
       exception.printStackTrace()
-      return http.error(400, exception.message, exception)
+      http.error(400, exception.message, exception)
+    } catch (exception: NoSuchContestException) {
+      exception.printStackTrace()
+      http.error(404, "No such contest")
     }
-  }
-
-  private fun resultRowToVariant(variant: ResultRow): Variant {
-    val schemas = JSON_MAPPER.readValue(variant[Variants.scripts_id_json_array], IntArray::class.java)
-            .map(::Schema)
-    val tasksIdList = JSON_MAPPER.readValue(variant[Variants.tasks_id_json_array], IntArray::class.java)
-    val tasks = transaction {
-      Tasks.select {
-        Tasks.id inList tasksIdList.toList()
-      }.map(::resultRowToTask)
-    }
-    return Variant(variant[Variants.name], tasks, schemas)
-  }
 }

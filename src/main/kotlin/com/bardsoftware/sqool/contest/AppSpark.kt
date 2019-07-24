@@ -1,5 +1,7 @@
 package com.bardsoftware.sqool.contest
 
+import com.bardsoftware.sqool.codegen.Contest
+import com.bardsoftware.sqool.codegen.docker.ContestImageManager
 import com.bardsoftware.sqool.contest.admin.*
 import com.google.common.io.ByteStreams
 import com.google.common.net.HttpHeaders
@@ -189,7 +191,7 @@ fun main(args: Array<String>) {
   val adminContestAllHandler = ContestAllHandler()
   val adminContestNewHandler = ContestEditHandler(ContestEditMode.INSERT)
   val adminContestUpdateHandler = ContestEditHandler(ContestEditMode.UPDATE)
-  val adminContestBuildHandler = ContestBuildHandler(flags)
+  val adminContestBuildHandler = ContestBuildHandler(DbQueryManager(), { ContestImageManager(it, flags) })
 
   val adminScriptAllHandler = ScriptAllHandler()
   val adminTaskAllHandler = TaskAllHandler(flags)
