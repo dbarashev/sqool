@@ -19,7 +19,7 @@ class ContestImageManager(private val contest: Contest, flags: Flags) {
 
     fun createImage() {
         val root = createTempDir()
-        val contestDir = File(root, "$CONTEST_DIRECTORY/$contest")
+        val contestDir = File(root, "$CONTEST_DIRECTORY/${contest.name}")
         contestDir.mkdirs()
 
         val schemas = contest.variants.map { it.schemas }.flatten().toSet()
@@ -30,14 +30,16 @@ class ContestImageManager(private val contest: Contest, flags: Flags) {
         for (variant in contest.variants) {
             val variantDir = File(contestDir, variant.name)
             variantDir.mkdir()
-            File(variantDir, "static.sql").writeText(variant.generateStaticCode("$CONTEST_DIRECTORY/$contest/schema"))
+            File(variantDir, "static.sql").writeText(
+                    variant.generateStaticCode("$CONTEST_DIRECTORY/${contest.name}/schema")
+            )
             variant.tasks.forEach {
                 val dynamicCode = it.generateDynamicCode(variant.name)
                 File(variantDir, "${it.name}-dynamic.sql").writeText(dynamicCode)
             }
         }
 
-        val initCode = contest.variants.joinToString("\n") { "\\i '$CONTEST_DIRECTORY/$contest/${it.name}/static.sql'" }
+        val initCode = contest.variants.joinToString("\n") { "\\i '$CONTEST_DIRECTORY/${contest.name}/${it.name}/static.sql'" }
         File(contestDir, "init.sql").writeText(initCode)
 
         createDockerfile(root, ".", "/")
