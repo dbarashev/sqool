@@ -397,8 +397,8 @@ class CodeGeneratorTest {
 
     private fun mockSchema(description: String, body: String): Schema {
         val mock = mock<Schema>()
-        whenever(mock.getDescription()).thenReturn(description)
-        whenever(mock.getBody()).thenReturn(body)
+        whenever(mock.description).thenReturn(description)
+        whenever(mock.body).thenReturn(body)
         return mock
     }
 }

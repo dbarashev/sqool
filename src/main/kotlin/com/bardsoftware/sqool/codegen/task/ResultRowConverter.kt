@@ -20,7 +20,7 @@ fun resultRowToTask(row: ResultRow): Task {
         val keyAttributes = ObjectMapper().readValue(
                 attributesJson, object : TypeReference<List<AttributeDto>>() {}
         )
-        TaskDto(row[Tasks.name], row[Tasks.solution], row[Tasks.script_id], keyAttributes).toTask()
+        TaskDto(row[Tasks.name], row[Tasks.solution], keyAttributes).toTask()
     } catch (exception: Exception) {
         when (exception) {
             is UnrecognizedPropertyException, is InvalidDefinitionException, is JsonMappingException,
@@ -39,7 +39,6 @@ class TaskDeserializationException : Exception {
 class TaskDto(
         private val name: String,
         private val solution: String,
-        private val schemaId: Int?,
         private val keyAttributes: List<AttributeDto>,
         private val nonKeyAttributes: List<AttributeDto> = emptyList()
 ) {

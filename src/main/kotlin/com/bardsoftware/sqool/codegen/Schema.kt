@@ -5,33 +5,20 @@ import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
 
 class Schema(private val id: Int) {
-    private lateinit var description: String
-    private lateinit var body: String
+    private data class Data(val description: String, val body: String)
 
-    fun getDescription(): String {
-        if (!this::description.isInitialized) {
-            init()
-        }
-        return description
-    }
-
-    fun getBody(): String {
-        if (!this::body.isInitialized) {
-            init()
-        }
-        return body
-    }
-
-    private fun init() = transaction {
-        Scripts.select {
-            Scripts.id eq id
-        }.forEach {
-            description = it[Scripts.description]
-            body = it[Scripts.body]
+    private val data by lazy {
+        transaction {
+            val script = Scripts.select { Scripts.id eq id }.first()
+            Data(script[Scripts.description], script[Scripts.body])
         }
     }
+    val description
+        get() = data.description
+    val body
+        get() = data.body
 
-    override fun equals(other: Any?) = other is Schema && other.id == id
+    override fun equals(other: Any?) = other is Schema && other.id == this.id
 
     override fun hashCode() = id
 }

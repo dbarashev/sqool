@@ -8,7 +8,7 @@ class Variant(val name: String, val tasks: List<Task>, val schemas: List<Schema>
         |DROP SCHEMA IF EXISTS $name CASCADE;
         |CREATE SCHEMA $name;
         |SET search_path=$name;
-        |${schemas.joinToString(separator = "\n") { "\\i '$schemasDir/${it.getDescription()}.sql';" }}
+        |${schemas.joinToString(separator = "\n") { "\\i '$schemasDir/${it.description}.sql';" }}
         |
         |${tasks.joinToString("\n\n") { it.generateStaticCode() }}
         """.trimMargin()

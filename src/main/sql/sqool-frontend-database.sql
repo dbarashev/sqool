@@ -181,7 +181,6 @@ BEGIN
     INSERT INTO Contest.Contest(name, code, dates)
     VALUES (NEW.name, NEW.code, tstzrange(NEW.start_ts, NEW.end_ts, '[]'));
 
-    DELETE FROM Contest.VariantContest WHERE contest_code = NEW.code;
     WITH T AS (
         SELECT NEW.code AS contest_code, value::INT AS variant_id
         FROM json_array_elements_text(NEW.variants_id_json_array::JSON)

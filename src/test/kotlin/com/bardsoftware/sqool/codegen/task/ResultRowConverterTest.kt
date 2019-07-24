@@ -5,8 +5,8 @@ import com.bardsoftware.sqool.codegen.task.spec.RelationSpec
 import com.bardsoftware.sqool.codegen.task.spec.SqlDataType
 import com.bardsoftware.sqool.codegen.task.spec.TaskResultColumn
 import com.bardsoftware.sqool.contest.admin.Tasks
+import com.nhaarman.mockito_kotlin.doReturn
 import com.nhaarman.mockito_kotlin.mock
-import com.nhaarman.mockito_kotlin.whenever
 import org.jetbrains.exposed.sql.ResultRow
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
@@ -88,12 +88,10 @@ class ResultRowConverterTest {
         val resultJson = attributes.joinToString(separator = "},{", prefix = "[{", postfix = "}]") {
             """"name" : "${it.name}", "type" : "${it.type.name}""""
         }
-        val mock = mock<ResultRow>()
-
-        whenever(mock[Tasks.name]).thenReturn(name)
-        whenever(mock[Tasks.solution]).thenReturn(solution)
-        whenever(mock[Tasks.result_json]).thenReturn(resultJson)
-
-        return mock
+        return mock {
+            on { get(Tasks.name) } doReturn name
+            on { get(Tasks.solution) } doReturn solution
+            on { get(Tasks.result_json) } doReturn resultJson
+        }
     }
 }
