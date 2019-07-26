@@ -1,7 +1,5 @@
 package com.bardsoftware.sqool.contest
 
-import com.bardsoftware.sqool.codegen.Contest
-import com.bardsoftware.sqool.codegen.docker.ContestImageManager
 import com.bardsoftware.sqool.contest.admin.*
 import com.google.common.io.ByteStreams
 import com.google.common.net.HttpHeaders
@@ -191,7 +189,6 @@ fun main(args: Array<String>) {
   val adminContestAllHandler = ContestAllHandler()
   val adminContestNewHandler = ContestEditHandler(ContestEditMode.INSERT)
   val adminContestUpdateHandler = ContestEditHandler(ContestEditMode.UPDATE)
-  val adminContestBuildHandler = ContestBuildHandler(DbQueryManager(), { ContestImageManager(it, flags) })
 
   val adminScriptAllHandler = ScriptAllHandler()
   val adminTaskAllHandler = TaskAllHandler(flags)
@@ -215,18 +212,13 @@ fun main(args: Array<String>) {
           "code" to ContestEditArgs::code,
           "name" to ContestEditArgs::name,
           "start_ts" to ContestEditArgs::start_ts,
-          "end_ts" to ContestEditArgs::end_ts,
-          "variants" to ContestEditArgs::variants
+          "end_ts" to ContestEditArgs::end_ts
       ))
       POST("/admin/contest/update" BY adminContestUpdateHandler ARGS mapOf(
           "code" to ContestEditArgs::code,
           "name" to ContestEditArgs::name,
           "start_ts" to ContestEditArgs::start_ts,
-          "end_ts" to ContestEditArgs::end_ts,
-          "variants" to ContestEditArgs::variants
-      ))
-      POST("/admin/contest/build" BY adminContestBuildHandler ARGS mapOf(
-          "code" to ContestBuildArgs::code
+          "end_ts" to ContestEditArgs::end_ts
       ))
 
       GET("/admin/script/all" BY adminScriptAllHandler)
@@ -295,6 +287,10 @@ fun main(args: Array<String>) {
 
     get("/me") {
       UserDashboardHandler().handle(Http(request, response, { session() }, freemarker))()
+    }
+
+    get("/me2") {
+      DashboardHandler().handle(Http(request, response, { session() }, freemarker))()
     }
 
     get("/getAcceptedChallenges") {

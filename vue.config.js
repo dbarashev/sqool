@@ -3,8 +3,7 @@ module.exports = {
   outputDir: 'build/resources/main',
   assetsDir: 'public',
     pages: {
-      app: {
-        entry: './src/main/ts/main.ts'
-      }
+      admin: './src/main/ts/admin/main.ts',
+      user: './src/main/ts/user/main.ts'
     }
-}
+};

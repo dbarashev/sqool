@@ -1,7 +1,7 @@
 import {Component, Inject, Vue} from 'vue-property-decorator';
 import {ContestDto} from '../Contest';
-import {VariantDto} from "../Variant";
-import AlertDialog from "./AlertDialog";
+import {VariantDto} from '../Variant';
+import AlertDialog from './AlertDialog';
 
 @Component
 export default class ContestPropertiesModal extends Vue {
@@ -38,9 +38,9 @@ export default class ContestPropertiesModal extends Vue {
             this.alertDialog().show('Недопустимый код конеста', message);
             return;
         }
-        const selectedVariants = this.selectedVariants.map(variant => variant.id);
+        const selectedVariants = this.selectedVariants.map((variant) => variant.id);
         this.deferred.resolve(
-            new ContestDto(this.contestCode, this.contestName, this.contestStart, this.contestEnd, selectedVariants)
+            new ContestDto(this.contestCode, this.contestName, this.contestStart, this.contestEnd, selectedVariants),
         );
 
     }
@@ -51,13 +51,13 @@ export default class ContestPropertiesModal extends Vue {
         $.ajax({
             url: '/admin/variant/all',
         }).done((variants: VariantDto[]) => {
-            variants.forEach(variant => {
+            variants.forEach((variant) => {
                 this.variants.push(variant);
                 if (selectedVariantIdList.includes(variant.id)) {
-                    this.selectedVariants.push(variant)
+                    this.selectedVariants.push(variant);
                 }
             });
-        }).fail(xhr => {
+        }).fail((xhr) => {
             const title = 'Не удалось получить список вариантов:';
             this.alertDialog().show(title, xhr.statusText);
         });

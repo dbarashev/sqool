@@ -80,7 +80,7 @@ import ScriptTable from './components/ScriptTable.vue';
 import TaskMainWindow from './components/TaskMainWindow';
 import VariantToolbar from './components/VariantToolbar.vue';
 import VariantPropertiesModal from './components/VariantPropertiesModal.vue';
-import VariantTable from './components/VariantTable'
+import VariantTable from './components/VariantTable';
 
 @Component({
   components: {
@@ -90,7 +90,7 @@ import VariantTable from './components/VariantTable'
     TaskToolbar, TaskPropertiesModal,
     ContestBuildingProgressBar, AlertDialog,
     TaskMainWindow, VariantToolbar, VariantPropertiesModal,
-    VariantTable
+    VariantTable,
   },
 })
 export default class App extends Vue {

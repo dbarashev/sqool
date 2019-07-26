@@ -1,8 +1,8 @@
 import {Component, Inject, Vue} from 'vue-property-decorator';
 import {VariantDto} from '../Variant';
 import VariantPropertiesModal from './VariantPropertiesModal';
-import VariantTable from './VariantTable'
-import AlertDialog from "./AlertDialog";
+import VariantTable from './VariantTable';
+import AlertDialog from './AlertDialog';
 
 @Component
 export default class VariantToolbar extends Vue {
@@ -12,7 +12,7 @@ export default class VariantToolbar extends Vue {
             data: {
                 id: variant.id,
                 name: variant.name,
-                tasks: JSON.stringify(variant.tasks)
+                tasks: JSON.stringify(variant.tasks),
             },
         };
     }
@@ -39,7 +39,7 @@ export default class VariantToolbar extends Vue {
         }).done(() => {
             this.variantProperties().hide();
             this.variantTable().refresh();
-        }).fail(xhr => {
+        }).fail((xhr) => {
             // Call it again to be able to make another request
             this.showAndSubmitVariant(variant, url);
             const title = `Что-то пошло не так: ${xhr.status}`;

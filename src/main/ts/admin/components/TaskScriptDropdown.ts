@@ -1,14 +1,14 @@
-import {Component, Inject, Vue} from "vue-property-decorator";
-import {ScriptDto} from "../Script";
-import Dropdown from "./Dropdown";
-import AlertDialog from "./AlertDialog";
+import {Component, Inject, Vue} from 'vue-property-decorator';
+import {ScriptDto} from '../Script';
+import Dropdown from '../../components/Dropdown';
+import AlertDialog from './AlertDialog';
 
 @Component({
-    components: { Dropdown }
+    components: { Dropdown },
 })
 export default class TaskScriptDropdown extends Vue {
-    private readonly defaultOption = {value: null, text: 'Без схемы'};
     public selectedScript: Option = this.defaultOption;
+    private readonly defaultOption = {value: null, text: 'Без схемы'};
     private scripts: Option[] = [];
     @Inject() private readonly alertDialog!: () => AlertDialog;
 
@@ -20,21 +20,21 @@ export default class TaskScriptDropdown extends Vue {
         $.ajax({
             url: '/admin/script/all',
         }).done((scripts: ScriptDto[]) => {
-            scripts.forEach(script => {
+            scripts.forEach((script) => {
                 const option = {
                     value: script.id,
-                    text: script.description
+                    text: script.description,
                 };
                 this.scripts.push(option);
                 if (option.value === id) {
                     this.selectedScript = option;
                 }
             });
-        }).fail(xhr => {
+        }).fail((xhr) => {
             const title = 'Не удалось получить список схем:';
             this.alertDialog().show(title, xhr.statusText);
         });
     }
 }
 
-type Option = { value: number | null, text: string };
+interface Option { value: number | null; text: string; }

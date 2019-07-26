@@ -1,7 +1,7 @@
 import {Component, Inject, Vue} from 'vue-property-decorator';
 import {VariantDto} from '../Variant';
-import {getTaskResultSql, TaskDto} from "../Task";
-import AlertDialog from "./AlertDialog";
+import {getTaskResultSql, TaskDto} from '../Task';
+import AlertDialog from './AlertDialog';
 
 @Component
 export default class VariantPropertiesModal extends Vue {
@@ -30,7 +30,7 @@ export default class VariantPropertiesModal extends Vue {
     }
 
     public submit() {
-        const selectedTasks = this.selectedTasks.map(task => task.id);
+        const selectedTasks = this.selectedTasks.map((task) => task.id);
         this.deferred.resolve(new VariantDto(this.variantId, this.variantName, selectedTasks));
     }
 
@@ -40,13 +40,13 @@ export default class VariantPropertiesModal extends Vue {
         $.ajax({
             url: '/admin/task/all',
         }).done((tasks: TaskDto[]) => {
-            tasks.forEach(t => {
+            tasks.forEach((t) => {
                 this.tasks.push(t);
                 if (selectedTaskIdList.includes(t.id)) {
-                    this.selectedTasks.push(t)
+                    this.selectedTasks.push(t);
                 }
             });
-        }).fail(xhr => {
+        }).fail((xhr) => {
             const title = 'Не удалось получить список заданий:';
             this.alertDialog().show(title, xhr.statusText);
         });

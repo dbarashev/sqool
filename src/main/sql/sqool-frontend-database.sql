@@ -280,6 +280,24 @@ CREATE TRIGGER VariantDto_Update_Trigger
   FOR EACH ROW
 EXECUTE PROCEDURE VariantDto_InsertUpdate();
 
+
+CREATE TABLE UserAvailableContest(
+  user_id INT NOT NULL REFERENCES Contest.ContestUser ON DELETE CASCADE ON UPDATE CASCADE,
+  contest_code TEXT NOT NULL REFERENCES Contest.Contest ON DELETE CASCADE ON UPDATE CASCADE,
+  PRIMARY KEY (user_id, contest_code)
+);
+
+CREATE OR REPLACE VIEW AvailableContestDto AS
+SELECT id as user_id, array_to_json(array_agg(contest_code))::TEXT AS contests_code_json_array
+  FROM Contest.ContestUser U JOIN Contest.UserAvailableContest C ON C.user_id = U.id
+  GROUP BY U.id
+UNION ALL
+-- Contests that have no variants will have empty array in the variants_id_json_array:
+SELECT id, '[]' AS contests_code_json_array
+  FROM Contest.ContestUser U LEFT JOIN Contest.UserAvailableContest C ON C.user_id = U.id
+  WHERE C.user_id IS NULL
+  GROUP BY U.id;
+
 ------------------------------------------------------------------------------------------------
 
 -- This function generates a nickname from a random combination of first name (adjective)

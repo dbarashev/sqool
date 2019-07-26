@@ -11,8 +11,8 @@ import {Component, Inject, Vue} from 'vue-property-decorator';
 import {ContestDto} from '../Contest';
 import ContestPropertiesModal from './ContestPropertiesModal';
 import ContestTable from './ContestTable';
-import ContestBuildingProgressBar from "./ContestBuildingProgressBar";
-import AlertDialog from "./AlertDialog";
+import ContestBuildingProgressBar from './ContestBuildingProgressBar';
+import AlertDialog from './AlertDialog';
 
 function buildContestPayload(contest: ContestDto): object {
     return {
@@ -22,7 +22,7 @@ function buildContestPayload(contest: ContestDto): object {
             name: contest.name,
             start_ts: contest.start_ts,
             end_ts: contest.end_ts,
-            variants: JSON.stringify(contest.variants)
+            variants: JSON.stringify(contest.variants),
         },
     };
 }
@@ -33,7 +33,7 @@ export default class ContestToolbar extends Vue {
     @Inject() public readonly contestTable!: () => ContestTable;
     @Inject() private readonly contestBuildingProgressBar!: () => ContestBuildingProgressBar;
     @Inject() private readonly alertDialog!: () => AlertDialog;
-    
+
     public createNewContest() {
         const newContest = new ContestDto('', '', '', '', []);
         this.showAndSubmitContest(newContest, '/admin/contest/new');
@@ -46,30 +46,15 @@ export default class ContestToolbar extends Vue {
         }
     }
 
-    private showAndSubmitContest(contest: ContestDto, url: string) {
-        this.contestProperties().show(contest).then((updatedContest) => {
-            contest = updatedContest;
-            return $.ajax(url, buildContestPayload(updatedContest));
-        }).done(() => {
-            this.contestProperties().hide();
-            this.contestTable().refresh();
-        }).fail(xhr => {
-            // Call it again to be able to make another request
-            this.showAndSubmitContest(contest, url);
-            const title = `Что-то пошло не так: ${xhr.status}`;
-            this.alertDialog().show(title, xhr.statusText);
-        });
-    }
-
     public buildContest() {
         const contest = this.contestTable().getActiveContest();
         if (!contest) {
-            return
+            return;
         }
 
         this.contestBuildingProgressBar().show();
         $.post('/admin/contest/build', {
-            code: contest.code
+            code: contest.code,
         }).done((result: ImageBuildingResult) => {
             let title = '';
             if (result.status === 'OK') {
@@ -88,6 +73,21 @@ export default class ContestToolbar extends Vue {
             this.alertDialog().show(title);
         }).always(() => {
             this.contestBuildingProgressBar().hide();
+        });
+    }
+
+    private showAndSubmitContest(contest: ContestDto, url: string) {
+        this.contestProperties().show(contest).then((updatedContest) => {
+            contest = updatedContest;
+            return $.ajax(url, buildContestPayload(updatedContest));
+        }).done(() => {
+            this.contestProperties().hide();
+            this.contestTable().refresh();
+        }).fail((xhr) => {
+            // Call it again to be able to make another request
+            this.showAndSubmitContest(contest, url);
+            const title = `Что-то пошло не так: ${xhr.status}`;
+            this.alertDialog().show(title, xhr.statusText);
         });
     }
 }
