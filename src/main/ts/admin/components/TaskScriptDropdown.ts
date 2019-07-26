@@ -37,4 +37,4 @@ export default class TaskScriptDropdown extends Vue {
     }
 }
 
-type Option = { value: number | null; text: string };
+type Option = { value: number | null, text: string };

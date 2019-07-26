@@ -212,74 +212,74 @@ fun main(args: Array<String>) {
     Routes(this, freemarker).apply {
       GET("/admin/contest/all" BY adminContestAllHandler)
       POST("/admin/contest/new" BY adminContestNewHandler ARGS mapOf(
-          "code" to ContestEditArgs::code,
-          "name" to ContestEditArgs::name,
-          "start_ts" to ContestEditArgs::start_ts,
-          "end_ts" to ContestEditArgs::end_ts,
-          "variants" to ContestEditArgs::variants
+              "code" to ContestEditArgs::code,
+              "name" to ContestEditArgs::name,
+              "start_ts" to ContestEditArgs::start_ts,
+              "end_ts" to ContestEditArgs::end_ts,
+              "variants" to ContestEditArgs::variants
       ))
       POST("/admin/contest/update" BY adminContestUpdateHandler ARGS mapOf(
-          "code" to ContestEditArgs::code,
-          "name" to ContestEditArgs::name,
-          "start_ts" to ContestEditArgs::start_ts,
-          "end_ts" to ContestEditArgs::end_ts,
-          "variants" to ContestEditArgs::variants
+              "code" to ContestEditArgs::code,
+              "name" to ContestEditArgs::name,
+              "start_ts" to ContestEditArgs::start_ts,
+              "end_ts" to ContestEditArgs::end_ts,
+              "variants" to ContestEditArgs::variants
       ))
       POST("/admin/contest/build" BY adminContestBuildHandler ARGS mapOf(
-          "code" to ContestBuildArgs::code
+              "code" to ContestBuildArgs::code
       ))
 
       GET("/admin/script/all" BY adminScriptAllHandler)
 
       GET("/admin/task/all" BY adminTaskAllHandler)
       POST("/admin/task/new" BY adminTaskEditHandler ARGS mapOf(
-          "result"      to TaskEditArgs::result,
-          "name"        to TaskEditArgs::name,
-          "description" to TaskEditArgs::description,
-          "solution"    to TaskEditArgs::solution,
-          "script_id"   to TaskEditArgs::script_id
+              "result"      to TaskEditArgs::result,
+              "name"        to TaskEditArgs::name,
+              "description" to TaskEditArgs::description,
+              "solution"    to TaskEditArgs::solution,
+              "script_id"   to TaskEditArgs::script_id
       ))
       POST("/admin/task/update" BY adminTaskEditHandler ARGS mapOf(
-          "id"          to TaskEditArgs::id,
-          "result"      to TaskEditArgs::result,
-          "name"        to TaskEditArgs::name,
-          "description" to TaskEditArgs::description,
-          "solution"    to TaskEditArgs::solution,
-          "script_id"   to TaskEditArgs::script_id
+              "id"          to TaskEditArgs::id,
+              "result"      to TaskEditArgs::result,
+              "name"        to TaskEditArgs::name,
+              "description" to TaskEditArgs::description,
+              "solution"    to TaskEditArgs::solution,
+              "script_id"   to TaskEditArgs::script_id
       ))
 
       GET("/admin/variant/all" BY adminVariantAllHandler)
       POST("/admin/variant/new" BY adminVariantEditHandler ARGS mapOf(
-          "name"  to VariantEditArgs::name,
-          "tasks" to VariantEditArgs::tasksJson
+              "name"  to VariantEditArgs::name,
+              "tasks" to VariantEditArgs::tasksJson
       ))
       POST("/admin/variant/update" BY adminVariantEditHandler ARGS mapOf(
-          "id"    to VariantEditArgs::id,
-          "name"  to VariantEditArgs::name,
-          "tasks" to VariantEditArgs::tasksJson
+              "id"    to VariantEditArgs::id,
+              "name"  to VariantEditArgs::name,
+              "tasks" to VariantEditArgs::tasksJson
       ))
 
       GET("/"          TEMPLATE "index.ftl")
       GET("/dashboard" TEMPLATE "dashboard.ftl")
       GET("/admin/submission/get" BY adminSubmissionGetHandler ARGS mapOf(
-          "task_id" to SubmissionGetArgs::task_id,
-          "user_id" to SubmissionGetArgs::user_id,
-          "reviewer_id" to SubmissionGetArgs::reviewer_id
+              "task_id" to SubmissionGetArgs::task_id,
+              "user_id" to SubmissionGetArgs::user_id,
+              "reviewer_id" to SubmissionGetArgs::reviewer_id
       ))
       GET("/admin/submission/list" BY adminSubmissionListHandler ARGS mapOf(
-          "task_id" to SubmissionListArgs::task_id
+              "task_id" to SubmissionListArgs::task_id
       ))
       GET("/admin/review/get" BY adminReviewGetHandler ARGS mapOf(
-          "task_id" to ReviewGetArgs::task_id,
-          "user_id" to ReviewGetArgs::user_id
+              "task_id" to ReviewGetArgs::task_id,
+              "user_id" to ReviewGetArgs::user_id
       ))
       POST("/admin/review/save" BY adminReviewSaveHandler ARGS mapOf(
-          "task_id" to ReviewSaveArgs::task_id,
-          "user_id" to ReviewSaveArgs::user_id,
-          "solution_review" to ReviewSaveArgs::solution_review
+              "task_id" to ReviewSaveArgs::task_id,
+              "user_id" to ReviewSaveArgs::user_id,
+              "solution_review" to ReviewSaveArgs::solution_review
       ))
       GET("/auth/dev" BY authDevHandler ARGS mapOf(
-          "user_id" to AuthDevArgs::user_id
+              "user_id" to AuthDevArgs::user_id
       ))
     }
     get("/login") {
