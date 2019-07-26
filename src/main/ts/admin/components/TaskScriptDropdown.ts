@@ -20,7 +20,7 @@ export default class TaskScriptDropdown extends Vue {
         $.ajax({
             url: '/admin/script/all',
         }).done((scripts: ScriptDto[]) => {
-            scripts.forEach((script) => {
+            scripts.forEach(script => {
                 const option = {
                     value: script.id,
                     text: script.description
@@ -37,4 +37,4 @@ export default class TaskScriptDropdown extends Vue {
     }
 }
 
-type Option = { value: number | null; text: string; }
+type Option = { value: number | null; text: string };

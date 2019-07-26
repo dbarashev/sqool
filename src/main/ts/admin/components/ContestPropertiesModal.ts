@@ -51,7 +51,7 @@ export default class ContestPropertiesModal extends Vue {
         $.ajax({
             url: '/admin/variant/all'
         }).done((variants: VariantDto[]) => {
-            variants.forEach((variant) => {
+            variants.forEach(variant => {
                 this.variants.push(variant);
                 if (selectedVariantIdList.includes(variant.id)) {
                     this.selectedVariants.push(variant);

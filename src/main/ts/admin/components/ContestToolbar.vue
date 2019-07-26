@@ -54,7 +54,7 @@ export default class ContestToolbar extends Vue {
 
         this.contestBuildingProgressBar().show();
         $.post('/admin/contest/build', {
-            code: contest.code,
+            code: contest.code
         }).done((result: ImageBuildingResult) => {
             let title = '';
             if (result.status === 'OK') {
