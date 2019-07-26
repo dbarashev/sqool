@@ -1,6 +1,7 @@
 package com.bardsoftware.sqool.contest
 
 import com.bardsoftware.sqool.contest.storage.UserStorage
+import com.fasterxml.jackson.databind.ObjectMapper
 
 class DashboardHandler {
     fun handle(http: HttpApi): HttpResponse {
@@ -13,9 +14,11 @@ class DashboardHandler {
                     redirect("/login")
                 }
             } else {
+                //for testing purposes only
+                user.addAvailableContests()
                 http.render("me2.ftl", mapOf(
                         "name" to user.name,
-                        "contests" to user.availableContests()
+                        "contests" to ObjectMapper().writeValueAsString(user.availableContests())
                 ))
             }
         }

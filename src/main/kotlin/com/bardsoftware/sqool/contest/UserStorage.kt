@@ -140,6 +140,7 @@ class Task(val entity: TaskEntity)
 class Contest(val code: String, val name: String)
 
 class User(val entity: UserEntity, val txn: Transaction, val storage: UserStorage) {
+  private val jsonMapper = ObjectMapper()
   val password: String
     get() = entity.passwd
   val name: String
@@ -168,13 +169,26 @@ class User(val entity: UserEntity, val txn: Transaction, val storage: UserStorag
       }
     }
 
+  //For testing purposes only
+  fun addAvailableContests() {
+    val contests = transaction {
+      Contests.selectAll().map { it[Contests.code] }.toList()
+    }
+    transaction {
+      AvailableContests.insert {
+        it[user_id] = entity.id
+        it[contests_code_json_array] = jsonMapper.writeValueAsString(contests)
+      }
+    }
+  }
+
   fun availableContests(): List<Contest> {
     val contestsJson = transaction {
       AvailableContests.select {
         AvailableContests.user_id eq entity.id
       }.map { it[AvailableContests.contests_code_json_array] }.first()
     }
-    val contestsCodeList = ObjectMapper().readValue(contestsJson, object : TypeReference<List<String>>() {})
+    val contestsCodeList = jsonMapper.readValue(contestsJson, object : TypeReference<List<String>>() {})
     return transaction {
       Contests.select {
         Contests.code inList contestsCodeList

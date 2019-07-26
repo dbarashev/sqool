@@ -62,7 +62,6 @@
     <AlertDialog ref="alertDialog"></AlertDialog>
     <TaskPropertiesModal ref="taskPropertiesModal"></TaskPropertiesModal>
     <ContestBuildingProgressBar ref="contestBuildingProgressBar"></ContestBuildingProgressBar>
-    <VariantBuildingProgressBar ref="variantBuildingProgressBar"></VariantBuildingProgressBar>
     <VariantPropertiesModal ref="variantPropertiesModal"></VariantPropertiesModal>
   </div>
 </template>

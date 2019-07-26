@@ -11,6 +11,10 @@
 </head>
 <body>
 <div id="app"></div>
+
+<input type="hidden" id="contests" value='${contests}'>
+<input type="hidden" id="name" value="${name}">
+
 <script
 				src="http://code.jquery.com/jquery-3.3.1.min.js"
 				integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="

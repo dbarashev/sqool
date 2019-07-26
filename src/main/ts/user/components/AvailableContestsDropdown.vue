@@ -1,5 +1,5 @@
 <template>
-    <Dropdown id="scripts-dropdown" :options="contests" v-model="selectedContest"></Dropdown>
+    <Dropdown :options="contests" v-model="selectedContest"></Dropdown>
 </template>
 
 <script lang="ts">
@@ -10,11 +10,26 @@ import Dropdown from '../../components/Dropdown';
     components: { Dropdown },
 })
 export default class AvailableContestsDropdown extends Vue {
-    public selectedContest: Option = this.defaultOption;
     private readonly defaultOption = {value: null, text: 'Выбрать контест'};
-    // TODO: how to get freemarker list of objects?
-    private contests: Option[] = [];
+    public selectedContest: Option = this.defaultOption;
+    public contests: Option[];
+
+    constructor() {
+        super();
+        const contestsJson = $("#contests").val() || "";
+        const contests: Contest[] = <Contest[]>JSON.parse(contestsJson.toString());
+        this.contests = contests.map(contest => ({
+            value: contest.code,
+            text: contest.name
+        }));
+        console.log(contests);
+        console.log(this.contests);
+    }
 }
 
-interface Option { value: string | null; text: string; }
+type Option = { value: string | null, text: string };
+
+class Contest {
+    constructor(readonly code: string, readonly name: string) {}
+}
 </script>

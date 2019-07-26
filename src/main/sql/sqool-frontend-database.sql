@@ -15,7 +15,6 @@ CREATE OR REPLACE VIEW ScriptDto AS
 SELECT id, description, body
 FROM Script;
 
-
 -----------------------------------------------------------------------------------------------------------------------
 -- Tables for storing contest tasks, users and their submission attempts.
 CREATE TABLE Contest.ContestUser(
@@ -298,8 +297,32 @@ SELECT id, '[]' AS contests_code_json_array
   WHERE C.user_id IS NULL
   GROUP BY U.id;
 
-------------------------------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION AvailableContestDto_InsertUpdate()
+    RETURNS TRIGGER AS $$
+BEGIN
+    DELETE FROM Contest.UserAvailableContest WHERE user_id = NEW.user_id;
+    WITH T AS (
+        SELECT NEW.user_id AS user_id, value AS contest_code
+        FROM json_array_elements_text(NEW.contests_code_json_array::JSON)
+    )
+    INSERT INTO Contest.UserAvailableContest(user_id, contest_code)
+    SELECT user_id, contest_code FROM T;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
 
+CREATE TRIGGER AvailableContestDto_Insert_Trigger
+    INSTEAD OF INSERT ON Contest.AvailableContestDto
+    FOR EACH ROW
+EXECUTE PROCEDURE AvailableContestDto_InsertUpdate();
+
+CREATE TRIGGER AvailableContestDto_Update_Trigger
+    INSTEAD OF UPDATE ON Contest.AvailableContestDto
+    FOR EACH ROW
+EXECUTE PROCEDURE AvailableContestDto_InsertUpdate();
+
+
+------------------------------------------------------------------------------------------------
 -- This function generates a nickname from a random combination of first name (adjective)
 -- and last name (real scientist last name)
 CREATE OR REPLACE FUNCTION GenNickname() RETURNS TEXT AS $$

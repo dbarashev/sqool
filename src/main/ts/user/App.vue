@@ -5,7 +5,7 @@
 </template>
 
 <script lang="ts">
-import {Component, Provide, Vue} from 'vue-property-decorator';
+import {Component, Vue} from 'vue-property-decorator';
 import AvailableContestsDropdown from './components/AvailableContestsDropdown.vue';
 
 @Component({
@@ -21,6 +21,7 @@ export default class App extends Vue {}
     -moz-osx-font-smoothing: grayscale;
     text-align: center;
     color: #2c3e50;
+    min-height: 100vh;
   }
   .bmd-layout-canvas {
     position: absolute;
