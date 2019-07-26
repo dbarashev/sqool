@@ -22,7 +22,7 @@ function buildContestPayload(contest: ContestDto): object {
             name: contest.name,
             start_ts: contest.start_ts,
             end_ts: contest.end_ts,
-            variants: JSON.stringify(contest.variants),
+            variants: JSON.stringify(contest.variants)
         },
     };
 }
@@ -63,7 +63,7 @@ export default class ContestToolbar extends Vue {
                 title = 'В имени/решении/спецификации задач найдены синтаксические ошибки:';
             }
             this.alertDialog().show(title, result.message);
-        }).fail((xhr) => {
+        }).fail(xhr => {
             let title = '';
             if (xhr.status >= 500 && xhr.status < 600) {
                 title = 'При создании варианта произошла внутренняя ошибка сервера';
@@ -83,7 +83,7 @@ export default class ContestToolbar extends Vue {
         }).done(() => {
             this.contestProperties().hide();
             this.contestTable().refresh();
-        }).fail((xhr) => {
+        }).fail(xhr => {
             // Call it again to be able to make another request
             this.showAndSubmitContest(contest, url);
             const title = `Что-то пошло не так: ${xhr.status}`;

@@ -1,5 +1,7 @@
 package com.bardsoftware.sqool.contest
 
+import com.bardsoftware.sqool.codegen.Contest
+import com.bardsoftware.sqool.codegen.docker.ContestImageManager
 import com.bardsoftware.sqool.contest.admin.*
 import com.google.common.io.ByteStreams
 import com.google.common.net.HttpHeaders
@@ -189,6 +191,7 @@ fun main(args: Array<String>) {
   val adminContestAllHandler = ContestAllHandler()
   val adminContestNewHandler = ContestEditHandler(ContestEditMode.INSERT)
   val adminContestUpdateHandler = ContestEditHandler(ContestEditMode.UPDATE)
+  val adminContestBuildHandler = ContestBuildHandler(DbQueryManager(), { ContestImageManager(it, flags) })
 
   val adminScriptAllHandler = ScriptAllHandler()
   val adminTaskAllHandler = TaskAllHandler(flags)
@@ -209,46 +212,51 @@ fun main(args: Array<String>) {
     Routes(this, freemarker).apply {
       GET("/admin/contest/all" BY adminContestAllHandler)
       POST("/admin/contest/new" BY adminContestNewHandler ARGS mapOf(
-          "code" to ContestEditArgs::code,
-          "name" to ContestEditArgs::name,
-          "start_ts" to ContestEditArgs::start_ts,
-          "end_ts" to ContestEditArgs::end_ts
+              "code" to ContestEditArgs::code,
+              "name" to ContestEditArgs::name,
+              "start_ts" to ContestEditArgs::start_ts,
+              "end_ts" to ContestEditArgs::end_ts,
+              "variants" to ContestEditArgs::variants
       ))
       POST("/admin/contest/update" BY adminContestUpdateHandler ARGS mapOf(
-          "code" to ContestEditArgs::code,
-          "name" to ContestEditArgs::name,
-          "start_ts" to ContestEditArgs::start_ts,
-          "end_ts" to ContestEditArgs::end_ts
+              "code" to ContestEditArgs::code,
+              "name" to ContestEditArgs::name,
+              "start_ts" to ContestEditArgs::start_ts,
+              "end_ts" to ContestEditArgs::end_ts,
+              "variants" to ContestEditArgs::variants
+      ))
+      POST("/admin/contest/build" BY adminContestBuildHandler ARGS mapOf(
+              "code" to ContestBuildArgs::code
       ))
 
       GET("/admin/script/all" BY adminScriptAllHandler)
 
       GET("/admin/task/all" BY adminTaskAllHandler)
       POST("/admin/task/new" BY adminTaskEditHandler ARGS mapOf(
-          "result"      to TaskEditArgs::result,
-          "name"        to TaskEditArgs::name,
-          "description" to TaskEditArgs::description,
-          "solution"    to TaskEditArgs::solution,
-          "script_id"   to TaskEditArgs::script_id
+              "result"      to TaskEditArgs::result,
+              "name"        to TaskEditArgs::name,
+              "description" to TaskEditArgs::description,
+              "solution"    to TaskEditArgs::solution,
+              "script_id"   to TaskEditArgs::script_id
       ))
       POST("/admin/task/update" BY adminTaskEditHandler ARGS mapOf(
-          "id"          to TaskEditArgs::id,
-          "result"      to TaskEditArgs::result,
-          "name"        to TaskEditArgs::name,
-          "description" to TaskEditArgs::description,
-          "solution"    to TaskEditArgs::solution,
-          "script_id"   to TaskEditArgs::script_id
+              "id"          to TaskEditArgs::id,
+              "result"      to TaskEditArgs::result,
+              "name"        to TaskEditArgs::name,
+              "description" to TaskEditArgs::description,
+              "solution"    to TaskEditArgs::solution,
+              "script_id"   to TaskEditArgs::script_id
       ))
 
       GET("/admin/variant/all" BY adminVariantAllHandler)
       POST("/admin/variant/new" BY adminVariantEditHandler ARGS mapOf(
-          "name"  to VariantEditArgs::name,
-          "tasks" to VariantEditArgs::tasksJson
+              "name"  to VariantEditArgs::name,
+              "tasks" to VariantEditArgs::tasksJson
       ))
       POST("/admin/variant/update" BY adminVariantEditHandler ARGS mapOf(
-          "id"    to VariantEditArgs::id,
-          "name"  to VariantEditArgs::name,
-          "tasks" to VariantEditArgs::tasksJson
+              "id"    to VariantEditArgs::id,
+              "name"  to VariantEditArgs::name,
+              "tasks" to VariantEditArgs::tasksJson
       ))
 
       GET("/"          TEMPLATE "index.ftl")
@@ -259,7 +267,7 @@ fun main(args: Array<String>) {
               "reviewer_id" to SubmissionGetArgs::reviewer_id
       ))
       GET("/admin/submission/list" BY adminSubmissionListHandler ARGS mapOf(
-             "task_id" to SubmissionListArgs::task_id
+              "task_id" to SubmissionListArgs::task_id
       ))
       GET("/admin/review/get" BY adminReviewGetHandler ARGS mapOf(
               "task_id" to ReviewGetArgs::task_id,
@@ -280,8 +288,8 @@ fun main(args: Array<String>) {
     post("/login.do") {
       val handler = LoginHandler()
       val loginResp = handler.handle(
-          Http(request, response, { session() }, freemarker),
-          parseDto(request.body()))
+              Http(request, response, { session() }, freemarker),
+              parseDto(request.body()))
       loginResp()
     }
 
@@ -318,3 +326,4 @@ fun main(args: Array<String>) {
     }
   }
 }
+

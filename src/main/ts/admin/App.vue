@@ -90,7 +90,7 @@ import VariantTable from './components/VariantTable';
     TaskToolbar, TaskPropertiesModal,
     ContestBuildingProgressBar, AlertDialog,
     TaskMainWindow, VariantToolbar, VariantPropertiesModal,
-    VariantTable,
+    VariantTable
   },
 })
 export default class App extends Vue {

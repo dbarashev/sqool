@@ -1,7 +1,7 @@
 import {Component, Inject, Vue} from 'vue-property-decorator';
 import {TaskDto} from '../Task';
-import TaskPropertiesModal from './TaskPropertiesModal.vue';
-import TaskMainWindow from './TaskMainWindow.vue';
+import TaskPropertiesModal from './TaskPropertiesModal';
+import TaskMainWindow from './TaskMainWindow';
 import AlertDialog from './AlertDialog';
 
 @Component
@@ -53,7 +53,7 @@ export default class TaskToolbar extends Vue {
         }).done(() => {
             this.taskProperties().hide();
             this.taskMainWindow().taskTable().refresh();
-        }).fail((xhr) => {
+        }).fail(xhr => {
             // Call it again to be able to make another request
             this.showAndSubmitTask(task, url);
             const title = `Что-то пошло не так: ${xhr.status}`;
