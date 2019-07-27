@@ -14,8 +14,6 @@ class DashboardHandler {
                     redirect("/login")
                 }
             } else {
-                //for testing purposes only
-                user.addAvailableContests()
                 http.render("me2.ftl", mapOf(
                         "name" to user.name,
                         "contests" to ObjectMapper().writeValueAsString(user.availableContests())

@@ -2,7 +2,6 @@ package com.bardsoftware.sqool.contest.storage
 
 import com.bardsoftware.sqool.contest.admin.Contests
 import com.bardsoftware.sqool.grader.AssessmentPubSubResp
-import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -84,7 +83,7 @@ object AttemptView : Table("Contest.MyAttempts") {
 
 object AvailableContests : Table("Contest.AvailableContestDto") {
   val user_id = integer("user_id")
-  val contests_code_json_array = text("contests_code_json_array")
+  val contest_code = text("contest_code")
 }
 
 class TaskAttempt(val entity: TaskAttemptEntity) {
@@ -169,29 +168,17 @@ class User(val entity: UserEntity, val txn: Transaction, val storage: UserStorag
       }
     }
 
-  //For testing purposes only
-  fun addAvailableContests() {
-    val contests = transaction {
-      Contests.selectAll().map { it[Contests.code] }.toList()
-    }
-    transaction {
-      AvailableContests.insert {
-        it[user_id] = entity.id
-        it[contests_code_json_array] = jsonMapper.writeValueAsString(contests)
-      }
-    }
-  }
-
   fun availableContests(): List<Contest> {
-    val contestsJson = transaction {
+    // for testing purposes only
+    storage.addAllAvailableContests()
+    val contests = transaction {
       AvailableContests.select {
         AvailableContests.user_id eq entity.id
-      }.map { it[AvailableContests.contests_code_json_array] }.first()
+      }.map { it[AvailableContests.contest_code] }.toList()
     }
-    val contestsCodeList = jsonMapper.readValue(contestsJson, object : TypeReference<List<String>>() {})
     return transaction {
       Contests.select {
-        Contests.code inList contestsCodeList
+        Contests.code inList contests
       }.map { Contest(it[Contests.code], it[Contests.name]) }.toList()
     }
   }
@@ -319,6 +306,16 @@ class UserStorage(val txn: Transaction) {
     conn.prepareCall("SET search_path=contest").execute()
     val stmt = conn.prepareStatement(sqlCall)
     return stmt.closure()
+  }
+
+  // for testing purposes only
+  fun addAllAvailableContests() {
+    val statement = """
+      CREATE OR REPLACE VIEW AvailableContestDto AS
+      SELECT id AS user_id, code AS contest_code
+      FROM Contest.ContestUser CROSS JOIN Contest.Contest
+      """.trimIndent()
+    txn.exec(statement)
   }
 
   companion object {

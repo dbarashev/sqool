@@ -279,48 +279,9 @@ CREATE TRIGGER VariantDto_Update_Trigger
   FOR EACH ROW
 EXECUTE PROCEDURE VariantDto_InsertUpdate();
 
-
-CREATE TABLE UserAvailableContest(
-  user_id INT NOT NULL REFERENCES Contest.ContestUser ON DELETE CASCADE ON UPDATE CASCADE,
-  contest_code TEXT NOT NULL REFERENCES Contest.Contest ON DELETE CASCADE ON UPDATE CASCADE,
-  PRIMARY KEY (user_id, contest_code)
-);
-
 CREATE OR REPLACE VIEW AvailableContestDto AS
-SELECT id as user_id, array_to_json(array_agg(contest_code))::TEXT AS contests_code_json_array
-  FROM Contest.ContestUser U JOIN Contest.UserAvailableContest C ON C.user_id = U.id
-  GROUP BY U.id
-UNION ALL
--- Contests that have no variants will have empty array in the variants_id_json_array:
-SELECT id, '[]' AS contests_code_json_array
-  FROM Contest.ContestUser U LEFT JOIN Contest.UserAvailableContest C ON C.user_id = U.id
-  WHERE C.user_id IS NULL
-  GROUP BY U.id;
-
-CREATE OR REPLACE FUNCTION AvailableContestDto_InsertUpdate()
-    RETURNS TRIGGER AS $$
-BEGIN
-    DELETE FROM Contest.UserAvailableContest WHERE user_id = NEW.user_id;
-    WITH T AS (
-        SELECT NEW.user_id AS user_id, value AS contest_code
-        FROM json_array_elements_text(NEW.contests_code_json_array::JSON)
-    )
-    INSERT INTO Contest.UserAvailableContest(user_id, contest_code)
-    SELECT user_id, contest_code FROM T;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER AvailableContestDto_Insert_Trigger
-    INSTEAD OF INSERT ON Contest.AvailableContestDto
-    FOR EACH ROW
-EXECUTE PROCEDURE AvailableContestDto_InsertUpdate();
-
-CREATE TRIGGER AvailableContestDto_Update_Trigger
-    INSTEAD OF UPDATE ON Contest.AvailableContestDto
-    FOR EACH ROW
-EXECUTE PROCEDURE AvailableContestDto_InsertUpdate();
-
+SELECT id AS user_id, code AS contest_code
+FROM Contest.ContestUser CROSS JOIN Contest.Contest;
 
 ------------------------------------------------------------------------------------------------
 -- This function generates a nickname from a random combination of first name (adjective)
