@@ -1,6 +1,6 @@
 import {Component, Inject, Vue} from 'vue-property-decorator';
 import {ScriptDto} from '../Script';
-import AlertDialog from './AlertDialog';
+import AlertDialog from '../../components/AlertDialog';
 
 @Component
 export default class ScriptPropertiesModal extends Vue {

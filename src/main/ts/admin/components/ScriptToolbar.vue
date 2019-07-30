@@ -9,7 +9,7 @@
 import {Component, Inject, Vue} from 'vue-property-decorator';
 import {ScriptDto} from '../Script';
 import ScriptTable from './ScriptTable';
-import AlertDialog from './AlertDialog';
+import AlertDialog from '../../components/AlertDialog';
 import ScriptPropertiesModal from './ScriptPropertiesModal';
 
 @Component
