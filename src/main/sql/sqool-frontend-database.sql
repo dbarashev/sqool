@@ -540,5 +540,5 @@ where status = 'success' group by u.id;
 -----------------------------------------------------------------------------------------------
 -- Add some test data
 INSERT INTO Contest.Script(description, body) VALUES
-    ('Марсофлот', 'CREATE TABLE Planet(id INT, name TEXT)'),
-    ('Пироги', 'CREATE TABLE Pie(id INT, name TEXT)');
+('Марсофлот', 'CREATE TABLE Planet(id INT, name TEXT)'),
+('Пироги', 'CREATE TABLE Pie(id INT, name TEXT)');
