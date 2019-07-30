@@ -5,6 +5,8 @@ import com.bardsoftware.sqool.codegen.task.spec.MatcherSpec
 import com.bardsoftware.sqool.codegen.task.spec.RelationSpec
 import com.bardsoftware.sqool.codegen.task.spec.SqlDataType
 import com.bardsoftware.sqool.codegen.task.spec.TaskResultColumn
+import com.nhaarman.mockito_kotlin.mock
+import com.nhaarman.mockito_kotlin.whenever
 import org.junit.jupiter.api.Test
 
 import org.junit.jupiter.api.Assertions.*
@@ -16,7 +18,7 @@ class CodeGeneratorTest {
             |DROP SCHEMA IF EXISTS cw1 CASCADE;
             |CREATE SCHEMA cw1;
             |SET search_path=cw1;
-            |\i /hse/cw1/schema.sql;
+            |
             |
             |CREATE OR REPLACE FUNCTION Task3_Robot()
             |RETURNS TABLE(id INT) AS $$
@@ -97,9 +99,9 @@ class CodeGeneratorTest {
 
         val spec = TaskResultColumn("id", SqlDataType.INT)
         val task = SingleColumnTask("Task3", "SELECT 11;", spec)
-        val variant = Variant("cw1", "/hse/cw1/schema.sql", listOf(task))
+        val variant = Variant("cw1", listOf(task), emptyList())
 
-        assertEquals(expectedStaticCode, variant.generateStaticCode())
+        assertEquals(expectedStaticCode, variant.generateStaticCode("/workspace/cw1/schema"))
         assertEquals(expectedPerSubmissionCode, task.generateDynamicCode("cw1"))
     }
 
@@ -109,7 +111,7 @@ class CodeGeneratorTest {
             |DROP SCHEMA IF EXISTS cw2 CASCADE;
             |CREATE SCHEMA cw2;
             |SET search_path=cw2;
-            |\i /hse/cw2/schema.sql;
+            |\i '/hse/cw2/schema/schema.sql';
             |
             |CREATE OR REPLACE FUNCTION Task12_Robot()
             |RETURNS TEXT AS $$
@@ -168,8 +170,8 @@ class CodeGeneratorTest {
             """.trimMargin()
 
         val task = ScalarValueTask("Task12", "SELECT 'Some text';", SqlDataType.TEXT)
-        val variant = Variant("cw2", "/hse/cw2/schema.sql", listOf(task))
-        assertEquals(expectedStaticCode, variant.generateStaticCode())
+        val variant = Variant("cw2", listOf(task), listOf(mockSchema("schema", "")))
+        assertEquals(expectedStaticCode, variant.generateStaticCode("/hse/cw2/schema"))
         assertEquals(expectedPerSubmissionCode, task.generateDynamicCode("cw2"))
     }
 
@@ -179,7 +181,7 @@ class CodeGeneratorTest {
             |DROP SCHEMA IF EXISTS cw3 CASCADE;
             |CREATE SCHEMA cw3;
             |SET search_path=cw3;
-            |\i /cw3/schema.sql;
+            |
             |
             |CREATE OR REPLACE FUNCTION Task05_Robot()
             |RETURNS TABLE(ship TEXT, port INT, transfers_num INT, transfer_size DOUBLE PRECISION, product TEXT) AS $$
@@ -284,8 +286,8 @@ class CodeGeneratorTest {
         val matcherSpec = MatcherSpec(relationSpec, "Множество пар (корабль, порт) отличается от результатов робота")
 
         val task = MultiColumnTask("Task05", "SELECT 'ship', 1, 10, 500::DOUBLE PRECISION, 'prod'", matcherSpec)
-        val variant = Variant("cw3", "/cw3/schema.sql", listOf(task))
-        assertEquals(expectedStaticCode, variant.generateStaticCode())
+        val variant = Variant("cw3", listOf(task), emptyList())
+        assertEquals(expectedStaticCode, variant.generateStaticCode("/workspace/hse/schema"))
         assertEquals(expectedPerSubmissionCode, task.generateDynamicCode("cw3"))
     }
 
@@ -295,7 +297,8 @@ class CodeGeneratorTest {
             |DROP SCHEMA IF EXISTS cw2 CASCADE;
             |CREATE SCHEMA cw2;
             |SET search_path=cw2;
-            |\i /hse/cw2/schema.sql;
+            |\i '/workspace/hse/schema/Task1.sql';
+            |\i '/workspace/hse/schema/Task2.sql';
             |
             |CREATE OR REPLACE FUNCTION Task12_Robot()
             |RETURNS TEXT AS $$
@@ -388,7 +391,14 @@ class CodeGeneratorTest {
                 ScalarValueTask("Task12", "SELECT 'Some text';", SqlDataType.TEXT),
                 ScalarValueTask("Task33", "SELECT '33", SqlDataType.TEXT)
         )
-        val variant = Variant("cw2", "/hse/cw2/schema.sql", tasks)
-        assertEquals(expectedStaticCode, variant.generateStaticCode())
+        val variant = Variant("cw2", tasks, listOf(mockSchema("Task1", ""), mockSchema("Task2", "")))
+        assertEquals(expectedStaticCode, variant.generateStaticCode("/workspace/hse/schema"))
+    }
+
+    private fun mockSchema(description: String, body: String): Schema {
+        val mock = mock<Schema>()
+        whenever(mock.description).thenReturn(description)
+        whenever(mock.body).thenReturn(body)
+        return mock
     }
 }

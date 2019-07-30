@@ -1,6 +1,7 @@
-import { Component, Vue } from 'vue-property-decorator';
+import {Component, Inject, Vue} from 'vue-property-decorator';
 import {VariantDto} from '../Variant';
 import {getTaskResultSql, TaskDto} from "../Task";
+import AlertDialog from "./AlertDialog";
 
 @Component
 export default class VariantPropertiesModal extends Vue {
@@ -8,7 +9,8 @@ export default class VariantPropertiesModal extends Vue {
     public tasks: TaskDto[] = [];
     public selectedTasks: TaskDto[] = [];
     private variantId: number = -1;
-    private deferred: JQueryDeferred<VariantDto> | undefined;
+    private deferred: JQueryDeferred<VariantDto> = $.Deferred<VariantDto>();
+    @Inject() private readonly alertDialog!: () => AlertDialog;
 
     public show(variant: VariantDto): JQueryDeferred<VariantDto> {
         $('#variant-properties').modal();
@@ -28,10 +30,8 @@ export default class VariantPropertiesModal extends Vue {
     }
 
     public submit() {
-        if (this.deferred) {
-            const selectedTasks = this.selectedTasks.map(task => task.id);
-            this.deferred.resolve(new VariantDto(this.variantId, this.variantName, selectedTasks));
-        }
+        const selectedTasks = this.selectedTasks.map(task => task.id);
+        this.deferred.resolve(new VariantDto(this.variantId, this.variantName, selectedTasks));
     }
 
     private loadTasks(selectedTaskIdList: number[]) {
@@ -46,6 +46,9 @@ export default class VariantPropertiesModal extends Vue {
                     this.selectedTasks.push(t)
                 }
             });
+        }).fail(xhr => {
+            const title = 'Не удалось получить список заданий:';
+            this.alertDialog().show(title, xhr.statusText);
         });
     }
 }

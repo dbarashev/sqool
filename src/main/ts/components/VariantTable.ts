@@ -1,10 +1,12 @@
-import {Component, Vue} from 'vue-property-decorator';
+import {Component, Inject, Vue} from 'vue-property-decorator';
 import {VariantDto} from "../Variant";
+import AlertDialog from "./AlertDialog";
 
 @Component
 export default class VariantTable extends Vue {
     public variants: VariantDto[] = [];
     private activeVariant?: VariantDto;
+    @Inject() private readonly alertDialog!: () => AlertDialog;
 
     public mounted() {
         this.refresh();
@@ -16,6 +18,9 @@ export default class VariantTable extends Vue {
         }).done((variants: VariantDto[]) => {
             this.variants = [];
             variants.forEach(variant => this.variants.push(variant));
+        }).fail(xhr => {
+            const title = 'Не удалось получить список вариантов:';
+            this.alertDialog().show(title, xhr.statusText);
         });
     }
 

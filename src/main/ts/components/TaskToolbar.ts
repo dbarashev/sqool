@@ -43,7 +43,7 @@ export default class TaskToolbar extends Vue {
             this.taskProperties().hide();
             this.taskMainWindow().taskTable().refresh();
         }).fail(xhr => {
-            //Call it again to be able to make another request
+            // Call it again to be able to make another request
             this.showAndSubmitTask(task, url);
             const title = `Что-то пошло не так: ${xhr.status}`;
             this.alertDialog().show(title, xhr.statusText);

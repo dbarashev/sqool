@@ -4,9 +4,7 @@ import com.bardsoftware.sqool.codegen.task.spec.MatcherSpec
 import com.bardsoftware.sqool.codegen.task.spec.SqlDataType
 import java.util.regex.Pattern
 
-class MultiColumnTask(name: String, robotQuery: String,
-                      private val matcherSpec: MatcherSpec
-) : ColumnTask(name, robotQuery) {
+class MultiColumnTask(name: String, robotQuery: String, private val matcherSpec: MatcherSpec) : ColumnTask(name, robotQuery) {
     override val resultType: String
         get() = matcherSpec.relationSpec.getAllColsList().joinToString(", ", "TABLE(", ")")
     override val mockSolution: String

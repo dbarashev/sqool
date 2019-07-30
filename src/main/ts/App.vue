@@ -63,8 +63,8 @@
     <ContestPropertiesModal ref="contestPropertiesModal"></ContestPropertiesModal>
     <AlertDialog ref="alertDialog"></AlertDialog>
     <TaskPropertiesModal ref="taskPropertiesModal"></TaskPropertiesModal>
+    <ContestBuildingProgressBar ref="contestBuildingProgressBar"></ContestBuildingProgressBar>
     <ScriptPropertiesModal ref="scriptPropertiesModal"></ScriptPropertiesModal>
-    <VariantBuildingProgressBar ref="variantBuildingProgressBar"></VariantBuildingProgressBar>
     <VariantPropertiesModal ref="variantPropertiesModal"></VariantPropertiesModal>
   </div>
 </template>
@@ -76,7 +76,7 @@ import TaskPropertiesModal from './components/TaskPropertiesModal.vue';
 import ContestTable from './components/ContestTable';
 import ContestToolbar from './components/ContestToolbar.vue';
 import ContestPropertiesModal from './components/ContestPropertiesModal.vue';
-import VariantBuildingProgressBar from './components/VariantBuildingProgressBar.vue';
+import ContestBuildingProgressBar from './components/ContestBuildingProgressBar.vue';
 import AlertDialog from './components/AlertDialog.vue';
 import ScriptTable from './components/ScriptTable';
 import ScriptToolbar from './components/ScriptToolbar.vue'
@@ -92,7 +92,7 @@ import VariantTable from './components/VariantTable'
     ContestToolbar,
     ContestTable, ContestPropertiesModal,
     TaskToolbar, TaskPropertiesModal,
-    VariantBuildingProgressBar, AlertDialog,
+    ContestBuildingProgressBar, AlertDialog,
     TaskMainWindow, ScriptToolbar, ScriptPropertiesModal,
     VariantTable, VariantToolbar, VariantPropertiesModal
   },
@@ -129,8 +129,8 @@ export default class App extends Vue {
   }
 
   @Provide()
-  public variantBuildingProgressBar(): VariantBuildingProgressBar {
-    return this.$refs.variantBuildingProgressBar as VariantBuildingProgressBar;
+  public contestBuildingProgressBar(): ContestBuildingProgressBar {
+    return this.$refs.contestBuildingProgressBar as ContestBuildingProgressBar;
   }
 
   @Provide()

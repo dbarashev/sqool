@@ -1,5 +1,7 @@
 package com.bardsoftware.sqool.codegen
 
+import com.bardsoftware.sqool.codegen.docker.ContestImageManager
+import com.bardsoftware.sqool.codegen.docker.ImageCheckResult
 import com.bardsoftware.sqool.codegen.task.MultiColumnTask
 import com.bardsoftware.sqool.codegen.task.ScalarValueTask
 import com.bardsoftware.sqool.codegen.task.SingleColumnTask
@@ -10,11 +12,12 @@ import com.bardsoftware.sqool.codegen.task.spec.TaskResultColumn
 import com.bardsoftware.sqool.contest.Flags
 import com.nhaarman.mockito_kotlin.doReturn
 import com.nhaarman.mockito_kotlin.mock
+import com.nhaarman.mockito_kotlin.whenever
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.assertEquals
 import java.io.ByteArrayOutputStream
 
-class DockerImageBuilderTest {
+class ContestImageManagerTest {
     private val outputStream = ByteArrayOutputStream()
     private val flags = mock<Flags> {
         on { postgresAddress } doReturn (System.getProperty("postgres.ip") ?: "localhost")
@@ -32,12 +35,14 @@ class DockerImageBuilderTest {
     fun testFileStructure() {
         val spec = TaskResultColumn("id", SqlDataType.INT)
         val task = SingleColumnTask("Task3", "SELECT 11;", spec)
-        val variant = Variant("cw1", "/workspace/hse2019/cw1/schema3.sql", listOf(task))
-        buildDockerImage("contest-image", "hse2019", listOf(variant))
+        val variant = Variant("cw1", listOf(task), emptyList())
+        val contest = Contest("contest-image", "hse2019", listOf(variant))
+        val imageManager = ContestImageManager(contest, flags)
+        imageManager.createImage()
 
         val expectedFolders = listOf(
                 "/workspace", "/workspace/hse2019", "/workspace/hse2019/cw1", "/workspace/hse2019/init.sql",
-                "/workspace/hse2019/cw1/Task3-dynamic.sql", "/workspace/hse2019/cw1/static.sql"
+                "/workspace/hse2019/schema", "/workspace/hse2019/cw1/Task3-dynamic.sql", "/workspace/hse2019/cw1/static.sql"
         )
         checkFileStructure(expectedFolders)
     }
@@ -45,15 +50,20 @@ class DockerImageBuilderTest {
     @Test
     fun testMultipleVariantsFileStructure() {
         val firstVariantTasks = listOf(
-                ScalarValueTask("Task1", "", SqlDataType.INT), ScalarValueTask("Task2", "", SqlDataType.INT)
+                ScalarValueTask("Task1", "", SqlDataType.INT),
+                ScalarValueTask("Task2", "", SqlDataType.INT)
         )
-        val firstVariant = Variant("cw1", "/workspace/hse2019/cw1/schema3.sql", firstVariantTasks)
+        val firstVariant = Variant("cw1", firstVariantTasks, listOf(mockSchema("First", "")))
+
         val secondVariantTasks = listOf(ScalarValueTask("Task1", "", SqlDataType.INT))
-        val secondVariant = Variant("cw2", "/workspace/hse2019/cw2/schema3.sql", secondVariantTasks)
-        buildDockerImage("contest-image", "hse2019", listOf(firstVariant, secondVariant))
+        val secondVariant = Variant("cw2", secondVariantTasks, listOf(mockSchema("Second", "")))
+        val contest = Contest("contest-image", "hse2019", listOf(firstVariant, secondVariant))
+        val imageManager = ContestImageManager(contest, flags)
+        imageManager.createImage()
 
         val expectedFolders = listOf(
                 "/workspace", "/workspace/hse2019", "/workspace/hse2019/cw1", "/workspace/hse2019/cw2",
+                "/workspace/hse2019/schema", "/workspace/hse2019/schema/First.sql", "/workspace/hse2019/schema/Second.sql",
                 "/workspace/hse2019/init.sql", "/workspace/hse2019/cw1/static.sql", "/workspace/hse2019/cw2/static.sql",
                 "/workspace/hse2019/cw1/Task1-dynamic.sql", "/workspace/hse2019/cw1/Task2-dynamic.sql",
                 "/workspace/hse2019/cw2/Task1-dynamic.sql"
@@ -65,9 +75,12 @@ class DockerImageBuilderTest {
     fun testValidStaticSql() {
         val spec = TaskResultColumn("id", SqlDataType.INT)
         val task = SingleColumnTask("Task3", "SELECT 11 LIMIT 0;", spec)
-        val variants = listOf(Variant("cw3", "/workspace/hse2019/cw3/schema3.sql", listOf(task)))
-        buildDockerImage("contest-image", "hse2019", variants)
-        val result = checkImage("contest-image", "hse2019", variants, flags, outputStream)
+        val schema = mockSchema("schema3", "CREATE TABLE Contest(code TEXT NOT NULL PRIMARY KEY);")
+        val variants = listOf(Variant("cw3", listOf(task), listOf(schema)))
+        val contest = Contest("contest-image", "hse2019", variants)
+        val imageManager = ContestImageManager(contest, flags)
+        imageManager.createImage()
+        val result = imageManager.checkImage(outputStream)
 
         val expectedOutput = """
             |Static code testing:
@@ -86,7 +99,8 @@ class DockerImageBuilderTest {
                 ScalarValueTask("Task12", "SELECT 'Some text'", SqlDataType.TEXT),
                 ScalarValueTask("Task33", "SELECT 33", SqlDataType.INT)
         )
-        val firstVariant = Variant("cw4", "/workspace/hse2019/cw4/schema3.sql", firstVariantTasks)
+        val schema = mockSchema("schema3", "CREATE TABLE Contest(code TEXT NOT NULL PRIMARY KEY);")
+        val firstVariant = Variant("cw4", firstVariantTasks, listOf(schema))
 
         val keyAttribute = listOf(
                 TaskResultColumn("ship", SqlDataType.TEXT),
@@ -100,11 +114,13 @@ class DockerImageBuilderTest {
         val relationSpec = RelationSpec(keyAttribute, nonKeyAttributes)
         val matcherSpec = MatcherSpec(relationSpec, "Множество пар (корабль, порт) отличается от результатов робота")
         val task = MultiColumnTask("Task05", "SELECT 'ship', 1, 10, 500::DOUBLE PRECISION, 'prod'", matcherSpec)
-        val secondVariant = Variant("cw5", "/workspace/hse2019/cw5/schema3.sql", listOf(task))
+        val secondVariant = Variant("cw5", listOf(task), listOf(schema))
 
         val variants = listOf(firstVariant, secondVariant)
-        buildDockerImage("contest-image", "hse2019", variants)
-        val result = checkImage("contest-image", "hse2019", variants, flags, outputStream)
+        val contest = Contest("contest-image", "hse2019", variants)
+        val imageManager = ContestImageManager(contest, flags)
+        imageManager.createImage()
+        val result = imageManager.checkImage(outputStream)
 
         val expectedOutput = """
             |Static code testing:
@@ -121,9 +137,12 @@ class DockerImageBuilderTest {
     fun testInvalidStaticSql() {
         val spec = TaskResultColumn("id", SqlDataType.INT)
         val task = SingleColumnTask("Task3", "SELECTY 11", spec)
-        val variants = listOf(Variant("cw2", "/workspace/hse2019/cw2/schema3.sql", listOf(task)))
-        buildDockerImage("contest-image", "hse2019", variants)
-        val result = checkImage("contest-image", "hse2019", variants, flags, outputStream)
+        val schema = mockSchema("schema3", "CREATE TABLE Contest(code TEX NOT NULL PRIMARY KEY);")
+        val variants = listOf(Variant("cw2", listOf(task), listOf(schema)))
+        val contest = Contest("contest-image", "hse2019", variants)
+        val imageManager = ContestImageManager(contest, flags)
+        imageManager.createImage()
+        val result = imageManager.checkImage(outputStream)
 
         val expectedOutput = """
             |Static code testing:
@@ -132,7 +151,9 @@ class DockerImageBuilderTest {
             |DROP SCHEMA
             |CREATE SCHEMA
             |SET
-            |psql:/workspace/hse2019/cw2/static.sql:4: /workspace/hse2019/cw2/schema3.sql: No such file or directory
+            |psql:/workspace/hse2019/schema/schema3.sql:1: ERROR:  type "tex" does not exist
+            |LINE 1: CREATE TABLE Contest(code TEX NOT NULL PRIMARY KEY);
+            |                                  ^
             |psql:/workspace/hse2019/cw2/static.sql:9: ERROR:  syntax error at or near "SELECTY"
             |LINE 3: SELECTY 11
             |        ^
@@ -156,15 +177,17 @@ class DockerImageBuilderTest {
                 ScalarValueTask("Task12", "SELECT 'Some text", SqlDataType.TEXT),
                 ScalarValueTask("Task33", "SELECT 3!", SqlDataType.INT)
         )
-        val firstVariant = Variant("cw14", "/workspace/hse2019/cw14/schema3.sql", firstVariantTasks)
+        val firstVariant = Variant("cw14", firstVariantTasks, emptyList())
 
         val spec = TaskResultColumn("id", SqlDataType.INT)
         val task = SingleColumnTask("Task3", "SELECT 11 LIMITY 0;", spec)
-        val secondVariant = Variant("cw52", "/workspace/hse2019/cw52/schema3.sql", listOf(task))
+        val secondVariant = Variant("cw52", listOf(task), emptyList())
 
         val variants = listOf(firstVariant, secondVariant)
-        buildDockerImage("contest-image", "hse2019", variants)
-        val result = checkImage("contest-image", "hse2019", variants, flags, outputStream)
+        val contest = Contest("contest-image", "hse2019", variants)
+        val imageManager = ContestImageManager(contest, flags)
+        imageManager.createImage()
+        val result = imageManager.checkImage(outputStream)
 
         val expectedOutput = """
             |Static code testing:
@@ -173,7 +196,6 @@ class DockerImageBuilderTest {
             |DROP SCHEMA
             |CREATE SCHEMA
             |SET
-            |psql:/workspace/hse2019/cw14/static.sql:4: /workspace/hse2019/cw14/schema3.sql: No such file or directory
             |psql:/workspace/hse2019/cw14/static.sql:9: ERROR:  unterminated quoted string at or near "'Some text
             |"
             |LINE 3: SELECT 'Some text
@@ -191,7 +213,6 @@ class DockerImageBuilderTest {
             |DROP SCHEMA
             |CREATE SCHEMA
             |SET
-            |psql:/workspace/hse2019/cw52/static.sql:4: /workspace/hse2019/cw52/schema3.sql: No such file or directory
             |psql:/workspace/hse2019/cw52/static.sql:9: ERROR:  syntax error at or near "0"
             |LINE 3: SELECT 11 LIMITY 0;
             |                         ^
@@ -216,5 +237,12 @@ class DockerImageBuilderTest {
                 .lines()
                 .dropLastWhile { it.isEmpty() }
         assertEquals(expectedFolders.sorted(), folders.sorted())
+    }
+
+    private fun mockSchema(description: String, body: String): Schema {
+        val mock = mock<Schema>()
+        whenever(mock.description).thenReturn(description)
+        whenever(mock.body).thenReturn(body)
+        return mock
     }
 }

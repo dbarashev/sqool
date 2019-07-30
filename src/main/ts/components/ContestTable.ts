@@ -1,10 +1,12 @@
 import {ContestDto} from '../Contest';
-import { Component, Vue } from 'vue-property-decorator';
+import {Component, Inject, Vue} from 'vue-property-decorator';
+import AlertDialog from "./AlertDialog";
 
 @Component
 export default class ContestTable extends Vue {
     public contests: ContestDto[] = [];
     private activeContest?: ContestDto;
+    @Inject() private readonly alertDialog!: () => AlertDialog;
 
     public mounted() {
         this.refresh();
@@ -16,6 +18,9 @@ export default class ContestTable extends Vue {
         }).done((contests: ContestDto[]) => {
             this.contests = [];
             contests.forEach((c) => this.contests.push(c));
+        }).fail(xhr => {
+            const title = 'Не удалось получить список контестов:';
+            this.alertDialog().show(title, xhr.statusText);
         });
 
     }

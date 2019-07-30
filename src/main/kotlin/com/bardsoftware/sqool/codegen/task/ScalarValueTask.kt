@@ -2,9 +2,7 @@ package com.bardsoftware.sqool.codegen.task
 
 import com.bardsoftware.sqool.codegen.task.spec.SqlDataType
 
-class ScalarValueTask(name: String, robotQuery: String,
-                      private val resultTypeEnum: SqlDataType
-) : Task(name, robotQuery) {
+class ScalarValueTask(name: String, robotQuery: String, private val resultTypeEnum: SqlDataType) : Task(name, robotQuery) {
     override val resultType: String
         get() = resultTypeEnum.toString()
     override val mockSolution: String
