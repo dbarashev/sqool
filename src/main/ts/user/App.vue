@@ -5,7 +5,7 @@
 </template>
 
 <script lang="ts">
-  import {Component, Provide, Vue} from 'vue-property-decorator';
+import {Component, Provide, Vue} from 'vue-property-decorator';
 import AvailableContestsDropdown from './components/AvailableContestsDropdown.vue';
 import AlertDialog from '../components/AlertDialog.vue';
 
