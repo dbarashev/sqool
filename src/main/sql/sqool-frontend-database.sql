@@ -15,7 +15,6 @@ CREATE OR REPLACE VIEW ScriptDto AS
 SELECT id, description, body
 FROM Script;
 
-
 -----------------------------------------------------------------------------------------------------------------------
 -- Tables for storing contest tasks, users and their submission attempts.
 CREATE TABLE Contest.ContestUser(
@@ -538,5 +537,5 @@ where status = 'success' group by u.id;
 -----------------------------------------------------------------------------------------------
 -- Add some test data
 INSERT INTO Contest.Script(description, body) VALUES
-    ('Марсофлот', 'CREATE TABLE Planet(id INT, name TEXT)'),
-    ('Пироги', 'CREATE TABLE Pie(id INT, name TEXT)');
+('Марсофлот', 'CREATE TABLE Planet(id INT, name TEXT)'),
+('Пироги', 'CREATE TABLE Pie(id INT, name TEXT)');
