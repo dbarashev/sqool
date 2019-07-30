@@ -2,7 +2,7 @@ import {Component, Inject, Vue} from 'vue-property-decorator';
 import {VariantDto} from '../Variant';
 import VariantPropertiesModal from './VariantPropertiesModal';
 import VariantTable from './VariantTable';
-import AlertDialog from './AlertDialog';
+import AlertDialog from '../../components/AlertDialog';
 
 @Component
 export default class VariantToolbar extends Vue {

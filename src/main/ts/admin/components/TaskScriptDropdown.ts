@@ -1,7 +1,7 @@
 import {Component, Inject, Vue} from 'vue-property-decorator';
 import {ScriptDto} from '../Script';
 import Dropdown from '../../components/Dropdown';
-import AlertDialog from './AlertDialog';
+import AlertDialog from '../../components/AlertDialog';
 
 @Component({
     components: { Dropdown }

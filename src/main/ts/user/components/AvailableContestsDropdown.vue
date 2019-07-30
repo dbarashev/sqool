@@ -3,8 +3,9 @@
 </template>
 
 <script lang="ts">
-import {Component, Vue} from 'vue-property-decorator';
+import {Component, Inject, Vue} from 'vue-property-decorator';
 import Dropdown from '../../components/Dropdown';
+import AlertDialog from '../../components/AlertDialog';
 
 @Component({
     components: { Dropdown },
@@ -12,18 +13,29 @@ import Dropdown from '../../components/Dropdown';
 export default class AvailableContestsDropdown extends Vue {
     private readonly defaultOption = {value: null, text: 'Выбрать контест'};
     public selectedContest: Option = this.defaultOption;
-    public contests: Option[];
+    public contests: Option[] = [];
+    @Inject() private readonly alertDialog!: () => AlertDialog;
 
-    constructor() {
-        super();
-        const contestsJson = $("#contests").val() || "";
-        const contests: Contest[] = <Contest[]>JSON.parse(contestsJson.toString());
-        this.contests = contests.map(contest => ({
-            value: contest.code,
-            text: contest.name
-        }));
-        console.log(contests);
-        console.log(this.contests);
+    public refresh() {
+        $.ajax({
+            url: '/contest/available/all',
+            data: {
+                user_id: (<any>window).userId
+            }
+        }).done((contests: Contest[]) => {
+            this.contests = [];
+            contests.forEach(contest => this.contests.push({
+                value: contest.code,
+                text: contest.name
+            }));
+        }).fail(xhr => {
+            const title = 'Не удалось получить список контестов:';
+            this.alertDialog().show(title, xhr.statusText);
+        });
+    }
+
+    public mounted() {
+        this.refresh();
     }
 }
 

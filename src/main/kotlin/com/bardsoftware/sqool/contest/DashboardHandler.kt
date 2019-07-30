@@ -1,7 +1,6 @@
 package com.bardsoftware.sqool.contest
 
 import com.bardsoftware.sqool.contest.storage.UserStorage
-import com.fasterxml.jackson.databind.ObjectMapper
 
 class DashboardHandler {
     fun handle(http: HttpApi): HttpResponse {
@@ -14,11 +13,20 @@ class DashboardHandler {
                     redirect("/login")
                 }
             } else {
-                http.render("me2.ftl", mapOf(
-                        "name" to user.name,
-                        "contests" to ObjectMapper().writeValueAsString(user.availableContests())
-                ))
+                http.render("me2.ftl", mapOf("userId" to user.id))
             }
         }
+    }
+}
+
+data class AvailableContestAllArgs(var userId: String) : RequestArgs()
+
+class AvailableContestAllHandler : RequestHandler<AvailableContestAllArgs>() {
+    override fun args() = AvailableContestAllArgs("")
+
+    override fun handle(http: HttpApi, argValues: AvailableContestAllArgs): HttpResponse {
+        val user = UserStorage.exec { findUserById(argValues.userId.toInt()) } ?: return http.error(404, "No such user")
+        val contests = user.availableContests()
+        return http.json(contests)
     }
 }

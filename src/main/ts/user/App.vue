@@ -5,13 +5,21 @@
 </template>
 
 <script lang="ts">
-import {Component, Vue} from 'vue-property-decorator';
+  import {Component, Provide, Vue} from 'vue-property-decorator';
 import AvailableContestsDropdown from './components/AvailableContestsDropdown.vue';
+import AlertDialog from '../components/AlertDialog.vue';
 
 @Component({
-  components: {AvailableContestsDropdown},
+  components: {
+    AvailableContestsDropdown, AlertDialog
+  },
 })
-export default class App extends Vue {}
+export default class App extends Vue {
+  @Provide()
+  public alertDialog(): AlertDialog {
+    return this.$refs.alertDialog as AlertDialog;
+  }
+}
 </script>
 
 <style lang="scss">

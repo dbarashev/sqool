@@ -12,7 +12,7 @@ import {ContestDto} from '../Contest';
 import ContestPropertiesModal from './ContestPropertiesModal';
 import ContestTable from './ContestTable';
 import ContestBuildingProgressBar from './ContestBuildingProgressBar';
-import AlertDialog from './AlertDialog';
+import AlertDialog from '../../components/AlertDialog';
 
 function buildContestPayload(contest: ContestDto): object {
     return {

@@ -2,7 +2,7 @@ import {Component, Inject, Vue} from 'vue-property-decorator';
 import {TaskDto} from '../Task';
 import TaskPropertiesModal from './TaskPropertiesModal';
 import TaskMainWindow from './TaskMainWindow';
-import AlertDialog from './AlertDialog';
+import AlertDialog from '../../components/AlertDialog';
 
 @Component
 export default class TaskToolbar extends Vue {

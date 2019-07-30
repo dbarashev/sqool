@@ -74,7 +74,7 @@ import ContestTable from './components/ContestTable';
 import ContestToolbar from './components/ContestToolbar.vue';
 import ContestPropertiesModal from './components/ContestPropertiesModal.vue';
 import ContestBuildingProgressBar from './components/ContestBuildingProgressBar.vue';
-import AlertDialog from './components/AlertDialog.vue';
+import AlertDialog from '../components/AlertDialog.vue';
 import ScriptTable from './components/ScriptTable.vue';
 import TaskMainWindow from './components/TaskMainWindow';
 import VariantToolbar from './components/VariantToolbar.vue';

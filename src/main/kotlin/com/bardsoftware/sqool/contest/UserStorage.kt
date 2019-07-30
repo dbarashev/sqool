@@ -169,8 +169,6 @@ class User(val entity: UserEntity, val txn: Transaction, val storage: UserStorag
     }
 
   fun availableContests(): List<Contest> {
-    // for testing purposes only
-    storage.addAllAvailableContests()
     val contests = transaction {
       AvailableContests.select {
         AvailableContests.user_id eq entity.id
@@ -306,16 +304,6 @@ class UserStorage(val txn: Transaction) {
     conn.prepareCall("SET search_path=contest").execute()
     val stmt = conn.prepareStatement(sqlCall)
     return stmt.closure()
-  }
-
-  // for testing purposes only
-  fun addAllAvailableContests() {
-    val statement = """
-      CREATE OR REPLACE VIEW AvailableContestDto AS
-      SELECT id AS user_id, code AS contest_code
-      FROM Contest.ContestUser CROSS JOIN Contest.Contest
-      """.trimIndent()
-    txn.exec(statement)
   }
 
   companion object {

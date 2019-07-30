@@ -1,6 +1,5 @@
 package com.bardsoftware.sqool.contest
 
-import com.bardsoftware.sqool.codegen.Contest
 import com.bardsoftware.sqool.codegen.docker.ContestImageManager
 import com.bardsoftware.sqool.contest.admin.*
 import com.google.common.io.ByteStreams
@@ -204,6 +203,7 @@ fun main(args: Array<String>) {
   val adminReviewSaveHandler = ReviewSaveHandler()
   val challengeHandler = ChallengeHandler()
   val authDevHandler = AuthDevHandler()
+  val availableContestAllHandler = AvailableContestAllHandler()
 
   ignite().apply {
     port(8080)
@@ -280,6 +280,9 @@ fun main(args: Array<String>) {
       ))
       GET("/auth/dev" BY authDevHandler ARGS mapOf(
           "user_id" to AuthDevArgs::user_id
+      ))
+      GET("/contest/available/all" BY availableContestAllHandler ARGS mapOf(
+              "user_id" to AvailableContestAllArgs::userId
       ))
     }
     get("/login") {
