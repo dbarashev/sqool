@@ -20,7 +20,7 @@ export default class AvailableContestsDropdown extends Vue {
         $.ajax({
             url: '/contest/available/all',
             data: {
-                user_id: (<any>window).userId
+                user_id: window.userId
             }
         }).done((contests: Contest[]) => {
             this.contests = [];

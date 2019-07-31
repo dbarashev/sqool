@@ -25,7 +25,7 @@ class AvailableContestAllHandler : RequestHandler<AvailableContestAllArgs>() {
     override fun args() = AvailableContestAllArgs("")
 
     override fun handle(http: HttpApi, argValues: AvailableContestAllArgs): HttpResponse {
-        val user = UserStorage.exec { findUserById(argValues.userId.toInt()) } ?: return http.error(404, "No such user")
+        val user = UserStorage.exec { findUserById(argValues.userId.toInt()) } ?: return http.redirect("/login")
         val contests = user.availableContests()
         return http.json(contests)
     }
