@@ -1,4 +1,4 @@
-package com.bardsoftware.sqool.contest
+package com.bardsoftware.sqool.contest.storage
 
 import com.bardsoftware.sqool.contest.admin.Contests
 import com.bardsoftware.sqool.grader.AssessmentPubSubResp
