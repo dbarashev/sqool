@@ -11,7 +11,7 @@ class SingleColumnTask(name: String, robotQuery: String, private val spec: TaskR
     get() = """Ваши результаты отличаются от результатов робота
         |Размер пересечения результатов робота и ваших: \d+ строк
         |Размер объединения результатов робота и ваших: \d+ строк
-        |""".trimMargin().toRegex()
+        """.trimMargin().toRegex()
 
   override fun generateStaticCode(): String {
     val matcherFunName = "${name}_Matcher"
