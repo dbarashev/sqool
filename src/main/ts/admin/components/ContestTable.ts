@@ -1,6 +1,6 @@
 import {ContestDto} from '../Contest';
 import {Component, Inject, Vue} from 'vue-property-decorator';
-import AlertDialog from "./AlertDialog";
+import AlertDialog from '../../components/AlertDialog';
 
 @Component
 export default class ContestTable extends Vue {

@@ -12,11 +12,11 @@ export default class Dropdown extends Vue {
     }
 
     set selected(value: Option) {
-        this.$emit("input", value)
+        this.$emit("input", value);
     }
 
     public mounted() {
-        $(this.$refs.dropdown).dropdown()
+        $(this.$refs.dropdown).dropdown();
     }
 }
 

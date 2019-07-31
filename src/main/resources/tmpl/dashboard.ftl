@@ -7,7 +7,7 @@
     <title>Vue App</title>
     <link rel="stylesheet" href="https://unpkg.com/bootstrap-material-design@4.1.1/dist/css/bootstrap-material-design.min.css" integrity="sha384-wXznGJNEXNG1NFsbm0ugrLFMQPWswR3lds2VeinahP8N0zJw9VWSopbjv2x7WCvX" crossorigin="anonymous">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Material+Icons">
-    <link href="/js/app.js" rel="preload" as="script"></head>
+    <link href="/js/admin.js" rel="preload" as="script"></head>
 <body>
 <div id="app"></div>
 
@@ -24,5 +24,5 @@
         integrity="sha384-CauSuKpEqAFajSpkdjv3z9t8E7RlpJ1UP0lKM/+NdtSarroVKu069AlsRPKkFBz9"
         crossorigin="anonymous"></script>
 <script>$(document).ready(function() { $('body').bootstrapMaterialDesign(); });</script>
-<script type="text/javascript" src="/js/app.js"></script></body>
+<script type="text/javascript" src="/js/admin.js"></script></body>
 </html>

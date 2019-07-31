@@ -1,6 +1,6 @@
 import {Component, Inject, Vue} from 'vue-property-decorator';
 import {ScriptDto} from '../Script';
-import AlertDialog from "./AlertDialog";
+import AlertDialog from '../../components/AlertDialog';
 
 @Component
 export default class ScriptPropertiesModal extends Vue {
@@ -31,7 +31,7 @@ export default class ScriptPropertiesModal extends Vue {
 
     public submit() {
         if (this.deferredScriptBody) {
-            this.deferredScriptBody.then(scriptBody => this.resolveScript(scriptBody));
+            this.deferredScriptBody.then((scriptBody) => this.resolveScript(scriptBody));
         } else {
             this.resolveScript(this.scriptBody);
         }
@@ -39,7 +39,7 @@ export default class ScriptPropertiesModal extends Vue {
 
     public readScriptBody(event: any) {
         const files = event.target.files;
-        if (files && files.length == 0) {
+        if (files && files.length === 0) {
             this.alertDialog().show('Не удалось загрузить файл');
             return;
         }

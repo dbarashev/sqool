@@ -2,7 +2,7 @@ import {Component, Inject, Vue} from 'vue-property-decorator';
 import {TaskDto} from '../Task';
 import TaskPropertiesModal from './TaskPropertiesModal';
 import TaskMainWindow from './TaskMainWindow';
-import AlertDialog from './AlertDialog';
+import AlertDialog from '../../components/AlertDialog';
 
 @Component
 export default class TaskToolbar extends Vue {
@@ -35,6 +35,17 @@ export default class TaskToolbar extends Vue {
         }
     }
 
+    public showAvailableSolutions() {
+        const activeTask = this.taskMainWindow().taskTable().getActiveTask();
+        if (activeTask) {
+            this.taskMainWindow().showAvailableSolutions();
+        }
+    }
+
+    public showTasks() {
+        this.taskMainWindow().showTaskTable();
+    }
+
     private showAndSubmitTask(task: TaskDto, url: string) {
         this.taskProperties().show(task).then((updatedTask) => {
             task = updatedTask;
@@ -48,16 +59,5 @@ export default class TaskToolbar extends Vue {
             const title = `Что-то пошло не так: ${xhr.status}`;
             this.alertDialog().show(title, xhr.statusText);
         });
-    }
-
-    public showAvailableSolutions() {
-        const activeTask = this.taskMainWindow().taskTable().getActiveTask();
-        if (activeTask) {
-            this.taskMainWindow().showAvailableSolutions();
-        }
-    }
-
-    public showTasks() {
-        this.taskMainWindow().showTaskTable();
     }
 }

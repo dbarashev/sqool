@@ -1,7 +1,7 @@
 import { Component, Vue } from 'vue-property-decorator';
 import {getTaskResultSql, TaskDto} from '../Task';
 import TaskMarkdown from './TaskMarkdown';
-import TaskScriptDropdown from "./TaskScriptDropdown";
+import TaskScriptDropdown from './TaskScriptDropdown';
 
 @Component({
     components: {

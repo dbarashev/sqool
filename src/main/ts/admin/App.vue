@@ -77,14 +77,14 @@ import ContestTable from './components/ContestTable';
 import ContestToolbar from './components/ContestToolbar.vue';
 import ContestPropertiesModal from './components/ContestPropertiesModal.vue';
 import ContestBuildingProgressBar from './components/ContestBuildingProgressBar.vue';
-import AlertDialog from './components/AlertDialog.vue';
-import ScriptTable from './components/ScriptTable';
-import ScriptToolbar from './components/ScriptToolbar.vue'
+import AlertDialog from '../components/AlertDialog.vue';
+import ScriptTable from './components/ScriptTable.vue';
+import ScriptToolbar from './components/ScriptToolbar.vue';
 import ScriptPropertiesModal from './components/ScriptPropertiesModal.vue';
 import TaskMainWindow from './components/TaskMainWindow';
 import VariantToolbar from './components/VariantToolbar.vue';
 import VariantPropertiesModal from './components/VariantPropertiesModal.vue';
-import VariantTable from './components/VariantTable'
+import VariantTable from './components/VariantTable';
 
 @Component({
   components: {
@@ -94,7 +94,7 @@ import VariantTable from './components/VariantTable'
     TaskToolbar, TaskPropertiesModal,
     ContestBuildingProgressBar, AlertDialog,
     TaskMainWindow, ScriptToolbar, ScriptPropertiesModal,
-    VariantTable, VariantToolbar, VariantPropertiesModal
+    VariantTable, VariantToolbar, VariantPropertiesModal,
   },
 })
 export default class App extends Vue {

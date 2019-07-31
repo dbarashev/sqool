@@ -7,10 +7,10 @@
 
 <script lang="ts">
 import {Component, Inject, Vue} from 'vue-property-decorator';
-import {ScriptDto} from "../Script";
-import ScriptTable from "./ScriptTable";
-import AlertDialog from "./AlertDialog";
-import ScriptPropertiesModal from "./ScriptPropertiesModal";
+import {ScriptDto} from '../Script';
+import ScriptTable from './ScriptTable';
+import AlertDialog from '../../components/AlertDialog';
+import ScriptPropertiesModal from './ScriptPropertiesModal';
 
 @Component
 export default class ScriptToolbar extends Vue {
@@ -31,13 +31,13 @@ export default class ScriptToolbar extends Vue {
     }
 
     private showAndSubmitScript(script: ScriptDto, url: string) {
-        this.scriptProperties().show(script).then(updatedScript => {
+        this.scriptProperties().show(script).then((updatedScript) => {
             script = updatedScript;
-            return $.ajax(url, this.buildScriptPayload(updatedScript))
+            return $.ajax(url, this.buildScriptPayload(updatedScript));
         }).done(() => {
             this.scriptProperties().hide();
             this.scriptTable().refresh();
-        }).fail(xhr => {
+        }).fail((xhr) => {
             // Call it again to be able to make another request
             this.showAndSubmitScript(script, url);
             const title = `Что-то пошло не так: ${xhr.status}`;

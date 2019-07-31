@@ -1,6 +1,6 @@
 import {Component, Inject, Vue} from 'vue-property-decorator';
 import {ScriptDto} from '../Script';
-import AlertDialog from "./AlertDialog";
+import AlertDialog from '../../components/AlertDialog';
 
 @Component
 export default class ScriptTable extends Vue {
@@ -18,7 +18,7 @@ export default class ScriptTable extends Vue {
         }).done((scripts: ScriptDto[]) => {
             this.scripts = [];
             scripts.forEach((s) => this.scripts.push(s));
-        }).fail(xhr => {
+        }).fail((xhr) => {
             const title = 'Не удалось получить список схем:';
             this.alertDialog().show(title, xhr.statusText);
         });

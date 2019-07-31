@@ -1,5 +1,6 @@
 package com.bardsoftware.sqool.contest.storage
 
+import com.bardsoftware.sqool.contest.admin.Contests
 import com.bardsoftware.sqool.grader.AssessmentPubSubResp
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.jetbrains.exposed.sql.*
@@ -29,7 +30,8 @@ data class TaskEntity(
     var description: String?,
     var score: Int,
     var difficulty: Int,
-    var authorName: String)
+    var authorName: String
+)
 
 data class AuthorChallengeEntity(var authorId : Int, var authorName : String, var easyCount: Int, var mediumCount: Int, var difficultCount: Int, var gainTotal: BigDecimal)
 
@@ -77,6 +79,11 @@ object AttemptView : Table("Contest.MyAttempts") {
   var count = integer("count")
   var errorMsg = text("error_msg").nullable()
   var resultSet = text("result_set").nullable()
+}
+
+object AvailableContests : Table("Contest.AvailableContestDto") {
+  val user_id = integer("user_id")
+  val contest_code = text("contest_code")
 }
 
 class TaskAttempt(val entity: TaskAttemptEntity) {
@@ -127,11 +134,12 @@ class TaskAttempt(val entity: TaskAttemptEntity) {
 
 }
 
-class Task(val entity: TaskEntity) {
-}
+class Task(val entity: TaskEntity)
 
+class Contest(val code: String, val name: String)
 
 class User(val entity: UserEntity, val txn: Transaction, val storage: UserStorage) {
+  private val jsonMapper = ObjectMapper()
   val password: String
     get() = entity.passwd
   val name: String
@@ -159,6 +167,19 @@ class User(val entity: UserEntity, val txn: Transaction, val storage: UserStorag
         }
       }
     }
+
+  fun availableContests(): List<Contest> {
+    val contests = transaction {
+      AvailableContests.select {
+        AvailableContests.user_id eq entity.id
+      }.map { it[AvailableContests.contest_code] }.toList()
+    }
+    return transaction {
+      Contests.select {
+        Contests.code inList contests
+      }.map { Contest(it[Contests.code], it[Contests.name]) }.toList()
+    }
+  }
 
   fun acceptRandomChalenges() {
     return storage.procedure("SELECT Contest.AcceptRandomAuthor(?)") {
@@ -222,7 +243,6 @@ class User(val entity: UserEntity, val txn: Transaction, val storage: UserStorag
     }
   }
 }
-
 
 class UserStorage(val txn: Transaction) {
   fun createUser(newName: String, newPassword: String): User? {

@@ -1,7 +1,7 @@
 import {Component, Inject, Vue} from 'vue-property-decorator';
 import {ContestDto} from '../Contest';
-import {VariantDto} from "../Variant";
-import AlertDialog from "./AlertDialog";
+import {VariantDto} from '../Variant';
+import AlertDialog from '../../components/AlertDialog';
 
 @Component
 export default class ContestPropertiesModal extends Vue {
@@ -49,12 +49,12 @@ export default class ContestPropertiesModal extends Vue {
         this.variants = [];
         this.selectedVariants = [];
         $.ajax({
-            url: '/admin/variant/all',
+            url: '/admin/variant/all'
         }).done((variants: VariantDto[]) => {
             variants.forEach(variant => {
                 this.variants.push(variant);
                 if (selectedVariantIdList.includes(variant.id)) {
-                    this.selectedVariants.push(variant)
+                    this.selectedVariants.push(variant);
                 }
             });
         }).fail(xhr => {

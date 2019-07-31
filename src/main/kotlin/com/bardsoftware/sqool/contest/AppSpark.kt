@@ -1,6 +1,5 @@
 package com.bardsoftware.sqool.contest
 
-import com.bardsoftware.sqool.codegen.Contest
 import com.bardsoftware.sqool.codegen.docker.ContestImageManager
 import com.bardsoftware.sqool.contest.admin.*
 import com.google.common.io.ByteStreams
@@ -205,6 +204,7 @@ fun main(args: Array<String>) {
   val adminReviewSaveHandler = ReviewSaveHandler()
   val challengeHandler = ChallengeHandler()
   val authDevHandler = AuthDevHandler()
+  val availableContestAllHandler = AvailableContestAllHandler()
 
   ignite().apply {
     port(8080)
@@ -272,24 +272,27 @@ fun main(args: Array<String>) {
       GET("/"          TEMPLATE "index.ftl")
       GET("/dashboard" TEMPLATE "dashboard.ftl")
       GET("/admin/submission/get" BY adminSubmissionGetHandler ARGS mapOf(
-              "task_id" to SubmissionGetArgs::task_id,
-              "user_id" to SubmissionGetArgs::user_id,
-              "reviewer_id" to SubmissionGetArgs::reviewer_id
+          "task_id" to SubmissionGetArgs::task_id,
+          "user_id" to SubmissionGetArgs::user_id,
+          "reviewer_id" to SubmissionGetArgs::reviewer_id
       ))
       GET("/admin/submission/list" BY adminSubmissionListHandler ARGS mapOf(
-             "task_id" to SubmissionListArgs::task_id
+          "task_id" to SubmissionListArgs::task_id
       ))
       GET("/admin/review/get" BY adminReviewGetHandler ARGS mapOf(
-              "task_id" to ReviewGetArgs::task_id,
-              "user_id" to ReviewGetArgs::user_id
+          "task_id" to ReviewGetArgs::task_id,
+          "user_id" to ReviewGetArgs::user_id
       ))
       POST("/admin/review/save" BY adminReviewSaveHandler ARGS mapOf(
-              "task_id" to ReviewSaveArgs::task_id,
-              "user_id" to ReviewSaveArgs::user_id,
-              "solution_review" to ReviewSaveArgs::solution_review
+          "task_id" to ReviewSaveArgs::task_id,
+          "user_id" to ReviewSaveArgs::user_id,
+          "solution_review" to ReviewSaveArgs::solution_review
       ))
       GET("/auth/dev" BY authDevHandler ARGS mapOf(
-              "user_id" to AuthDevArgs::user_id
+          "user_id" to AuthDevArgs::user_id
+      ))
+      GET("/contest/available/all" BY availableContestAllHandler ARGS mapOf(
+              "user_id" to AvailableContestAllArgs::userId
       ))
     }
     get("/login") {
@@ -305,6 +308,10 @@ fun main(args: Array<String>) {
 
     get("/me") {
       UserDashboardHandler().handle(Http(request, response, { session() }, freemarker))()
+    }
+
+    get("/me2") {
+      DashboardHandler().handle(Http(request, response, { session() }, freemarker))()
     }
 
     get("/getAcceptedChallenges") {
@@ -332,3 +339,4 @@ fun main(args: Array<String>) {
     }
   }
 }
+

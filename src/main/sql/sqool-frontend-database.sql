@@ -279,8 +279,11 @@ CREATE TRIGGER VariantDto_Update_Trigger
   FOR EACH ROW
 EXECUTE PROCEDURE VariantDto_InsertUpdate();
 
-------------------------------------------------------------------------------------------------
+CREATE OR REPLACE VIEW AvailableContestDto AS
+SELECT id AS user_id, code AS contest_code
+FROM Contest.ContestUser CROSS JOIN Contest.Contest;
 
+------------------------------------------------------------------------------------------------
 -- This function generates a nickname from a random combination of first name (adjective)
 -- and last name (real scientist last name)
 CREATE OR REPLACE FUNCTION GenNickname() RETURNS TEXT AS $$
