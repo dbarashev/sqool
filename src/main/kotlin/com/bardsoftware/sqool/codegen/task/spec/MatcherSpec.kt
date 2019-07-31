@@ -1,10 +1,11 @@
 package com.bardsoftware.sqool.codegen.task.spec
 
-data class MatcherSpec(val relationSpec: RelationSpec,
-                       val wrongKeyColsProjMessage: String = "Множество кортежей ${relationSpec.keyCols
-                           .joinToString(", ", "(", ")") { it.name }} отличается от результатов робота",
-                       val rightKeyColsProjMessage: String = "Кортежи ${relationSpec.keyCols
-                           .joinToString(", ", "(", ")") { it.name }} найдены верно"
+data class MatcherSpec(
+    val relationSpec: RelationSpec,
+    val wrongKeyColsProjMessage: String = "Множество кортежей ${relationSpec.keyCols
+        .joinToString(", ", "(", ")") { it.name }} отличается от результатов робота",
+    val rightKeyColsProjMessage: String = "Кортежи ${relationSpec.keyCols
+        .joinToString(", ", "(", ")") { it.name }} найдены верно"
 ) {
   private val diffErrorMessage = mutableMapOf<String, String>()
 

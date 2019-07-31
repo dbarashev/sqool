@@ -135,8 +135,8 @@ private class CodeTester(
 
     try {
       val postgresDbms = connection.createStatement()
-      postgresDbms.execute("create schema $schemaName;")
-      postgresDbms.execute("set search_path = $schemaName,$variant;")
+      postgresDbms.execute("CREATE SCHEMA $schemaName;")
+      postgresDbms.execute("SET search_path = $schemaName,$variant;")
       postgresDbms.queryTimeout = 120
 
       val scriptTemplate = File("/workspace/$contest/$variant/$task-dynamic.sql").readText()

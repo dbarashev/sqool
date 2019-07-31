@@ -5,13 +5,8 @@ import com.google.api.core.ApiService
 import com.google.cloud.ServiceOptions
 import com.google.cloud.pubsub.v1.MessageReceiver
 import com.google.cloud.pubsub.v1.Subscriber
-import com.google.common.io.Files
 import com.google.common.util.concurrent.MoreExecutors
-import com.google.gson.Gson
-import com.google.gson.JsonArray
-import com.google.gson.JsonObject
 import com.google.pubsub.v1.SubscriptionName
-import java.io.File
 import java.util.concurrent.CompletableFuture
 
 data class TaskId(

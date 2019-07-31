@@ -50,13 +50,13 @@ object MyAttempts : Table("Contest.MyAttempts") {
 
   fun asJson(row: ResultRow): JsonNode {
     return JSON_MAPPER.createObjectNode().also {
-      it.put("user_id", row[MyAttempts.user_id])
-      it.put("user_name", row[MyAttempts.user_name])
-      it.put("user_nick", row[MyAttempts.user_nick])
-      it.put("status", row[MyAttempts.status])
-      it.put("count", row[MyAttempts.count])
-      it.put("error_msg", row[MyAttempts.error_msg])
-      it.put("result_set", row[MyAttempts.result_set])
+      it.put("user_id", row[user_id])
+      it.put("user_name", row[user_name])
+      it.put("user_nick", row[user_nick])
+      it.put("status", row[status])
+      it.put("count", row[count])
+      it.put("error_msg", row[error_msg])
+      it.put("result_set", row[result_set])
     }
   }
 }

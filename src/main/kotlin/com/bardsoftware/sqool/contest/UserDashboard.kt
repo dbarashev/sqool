@@ -1,6 +1,5 @@
 package com.bardsoftware.sqool.contest
 
-import com.bardsoftware.sqool.contest.storage.UserStorage
 import javax.servlet.http.HttpServletResponse
 
 class UserDashboardHandler {

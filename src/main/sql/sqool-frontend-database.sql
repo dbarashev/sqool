@@ -525,16 +525,16 @@ SELECT
 FROM Contest.ContestUser U LEFT JOIN SumGain G ON U.id = G.user_id
 GROUP BY U.id;
 
-create or replace view DisclosedLeaderboard AS
-select u.name,
-       max(l.total_gain) as total_gain,
-       max(solver_gain) as solver_gain,
-       max(author_gain) as author_gain,
+CREATE OR REPLACE VIEW DisclosedLeaderboard AS
+SELECT u.name,
+       max(l.total_gain) AS total_gain,
+       max(solver_gain) AS solver_gain,
+       max(author_gain) AS author_gain,
        array_agg(T.name)
-from attempt a join task t on a.task_id=t.id
-join contestuser u on u.id=a.user_id
-join leaderboardview l on l.nick=u.nick
-where status = 'success' group by u.id;
+FROM attempt a JOIN task t on a.task_id=t.id
+JOIN contestuser u ON u.id=a.user_id
+JOIN leaderboardview l ON l.nick=u.nick
+WHERE status = 'success' GROUP BY u.id;
 
 -----------------------------------------------------------------------------------------------
 -- Add some test data

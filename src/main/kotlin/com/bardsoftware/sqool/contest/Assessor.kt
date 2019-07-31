@@ -69,13 +69,13 @@ class AssessorPubSub(val topicId: String, private val responseConsumer: (Assessm
 
   override fun submit(contestId: String, taskId: Int, solution: String, consumer: (String) -> Unit) {
     try {
-      val taskId = TaskId(course = contestId, module = "cw2", task = "task$taskId")
-      val pubsubTask = AssessmentPubSubTask(id = taskId, submission = solution)
+      val id = TaskId(course = contestId, module = "cw2", task = "task$taskId")
+      val pubsubTask = AssessmentPubSubTask(id = id, submission = solution)
       val data = MAPPER.writeValueAsBytes(pubsubTask)
       val message = PubsubMessage.newBuilder().setData(ByteString.copyFrom(data)).build()
       println("============ Publishing message")
       val topicName = TopicName.create(ServiceOptions.getDefaultProjectId(), topicId)
-      val publisher = Publisher.defaultBuilder(topicName).build();
+      val publisher = Publisher.defaultBuilder(topicName).build()
       val future = publisher.publish(message)
       future.addListener(Runnable {
         val msgId = future.get()
@@ -90,7 +90,7 @@ class AssessorPubSub(val topicId: String, private val responseConsumer: (Assessm
   private fun createTimeoutCommand(msgId: String): Runnable {
     return Runnable {
       if (!this.receiver.hasResponse(msgId)) {
-        this.responseConsumer(AssessmentPubSubResp("$msgId", 0, "Кажется, что-то отвалилось"))
+        this.responseConsumer(AssessmentPubSubResp(msgId, 0, "Кажется, что-то отвалилось"))
       }
     }
   }

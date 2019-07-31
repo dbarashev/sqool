@@ -53,7 +53,7 @@ abstract class RequestHandler<T : RequestArgs> {
     }
 
   private fun verify(value: Route?) {
-    println("Route ${value} is handled by ${this.javaClass}")
+    println("Route $value is handled by ${this.javaClass}")
   }
 
   fun url(closure: UrlClosure<T>?): Route {

@@ -1,4 +1,4 @@
-package com.bardsoftware.sqool.contest.storage
+package com.bardsoftware.sqool.contest
 
 import com.bardsoftware.sqool.contest.admin.Contests
 import com.bardsoftware.sqool.grader.AssessmentPubSubResp
@@ -34,7 +34,14 @@ data class TaskEntity(
     var authorName: String
 )
 
-data class AuthorChallengeEntity(var authorId: Int, var authorName: String, var easyCount: Int, var mediumCount: Int, var difficultCount: Int, var gainTotal: BigDecimal)
+data class AuthorChallengeEntity(
+    var authorId: Int,
+    var authorName: String,
+    var easyCount: Int,
+    var mediumCount: Int,
+    var difficultCount: Int,
+    var gainTotal: BigDecimal
+)
 
 object UserTable : Table("Contest.ContestUser") {
   var id = integer("id")
@@ -156,16 +163,18 @@ class User(val entity: UserEntity, val txn: Transaction, val storage: UserStorag
   val availableTasks: List<AuthorChallengeEntity>
     get() {
       return transaction {
-        TaskByAuthorView.select { TaskByAuthorView.authorId.neq(entity.id) }.orderBy(TaskByAuthorView.gainTotal, isAsc = false).map { taskRow ->
-          AuthorChallengeEntity(
-              authorId = taskRow[TaskByAuthorView.authorId],
-              authorName = taskRow[TaskByAuthorView.authorName],
-              easyCount = taskRow[TaskByAuthorView.count1],
-              mediumCount = taskRow[TaskByAuthorView.count2],
-              difficultCount = taskRow[TaskByAuthorView.count3],
-              gainTotal = taskRow[TaskByAuthorView.gainTotal]
-          )
-        }
+        TaskByAuthorView.select { TaskByAuthorView.authorId.neq(entity.id) }
+            .orderBy(TaskByAuthorView.gainTotal, SortOrder.DESC)
+            .map { taskRow ->
+              AuthorChallengeEntity(
+                  authorId = taskRow[TaskByAuthorView.authorId],
+                  authorName = taskRow[TaskByAuthorView.authorName],
+                  easyCount = taskRow[TaskByAuthorView.count1],
+                  mediumCount = taskRow[TaskByAuthorView.count2],
+                  difficultCount = taskRow[TaskByAuthorView.count3],
+                  gainTotal = taskRow[TaskByAuthorView.gainTotal]
+              )
+            }
       }
     }
 
@@ -199,7 +208,7 @@ class User(val entity: UserEntity, val txn: Transaction, val storage: UserStorag
     val resultSet = selectedQuery.join(attemptedQuery, JoinType.LEFT,
         onColumn = selectedQuery[TaskTable.id],
         otherColumn = attemptedQuery[AttemptView.taskId]
-    ).select { attemptedQuery[AttemptView.taskId].isNull() }.map { it -> it }
+    ).select { attemptedQuery[AttemptView.taskId].isNull() }.map { it }
     return if (resultSet.isEmpty()) {
       ChallengeOffer(taskId = -1, description = "Кажется, вы уже решаете эту задачу")
     } else {
@@ -235,7 +244,7 @@ class User(val entity: UserEntity, val txn: Transaction, val storage: UserStorag
         setNull(3, Types.LONGVARCHAR)
       }
       if (resultSet != null) {
-        println("Записываем result set=${resultSet}")
+        println("Записываем result set=$resultSet")
         setString(4, resultSet)
       } else {
         setNull(4, Types.LONGVARCHAR)

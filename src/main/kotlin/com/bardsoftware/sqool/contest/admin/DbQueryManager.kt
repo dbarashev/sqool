@@ -18,7 +18,6 @@ import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.lang.IllegalArgumentException
 
-
 class NoSuchContestException : Exception()
 
 class MalformedDataException : Exception {
