@@ -5,41 +5,41 @@ import TaskMainWindow from './TaskMainWindow';
 
 @Component
 export default class AvailableSolutions extends Vue {
-    private solutions = [];
-    private taskId = -1;
+  private solutions = [];
+  private taskId = -1;
 
-    @Inject()
-    private readonly taskMainWindow!: () => TaskMainWindow;
+  @Inject()
+  private readonly taskMainWindow!: () => TaskMainWindow;
 
-    public refresh() {
-        if (this.taskMainWindow().taskTable().getActiveTask() == null) {
-           return;
-        }
-        this.taskId  = (this.taskMainWindow().taskTable().getActiveTask() as TaskDto).id;
-        $.ajax({
-            url: '/admin/submission/list',
-            method: 'GET',
-            data: {
-                task_id: this.taskId,
-            },
-        }).done((solutions: []) => {
-            this.solutions = [];
-            solutions.forEach((solution) => this.solutions.push(solution));
-        });
+  public refresh() {
+    if (this.taskMainWindow().taskTable().getActiveTask() == null) {
+      return;
     }
+    this.taskId = (this.taskMainWindow().taskTable().getActiveTask() as TaskDto).id;
+    $.ajax({
+      url: '/admin/submission/list',
+      method: 'GET',
+      data: {
+        task_id: this.taskId,
+      },
+    }).done((solutions: []) => {
+      this.solutions = [];
+      solutions.forEach((solution) => this.solutions.push(solution));
+    });
+  }
 
-    public showReviewPage(userId: number) {
-       this.taskMainWindow().showReviewPage(userId, this.taskId);
-    }
+  public showReviewPage(userId: number) {
+    this.taskMainWindow().showReviewPage(userId, this.taskId);
+  }
 
-    public hide() {
-        this.$el.setAttribute('hidden', 'true');
-    }
+  public hide() {
+    this.$el.setAttribute('hidden', 'true');
+  }
 
-    public show() {
-        this.refresh();
-        this.$el.removeAttribute('hidden');
-    }
+  public show() {
+    this.refresh();
+    this.$el.removeAttribute('hidden');
+  }
 }
 
 

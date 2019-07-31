@@ -22,10 +22,10 @@ class ReviewGetHandler : RequestHandler<ReviewGetArgs>() {
     return transaction {
       val solutionReview = SolutionReview.select {
         ((SolutionReview.user_id eq argValues.user_id.toInt())
-                and
-                (SolutionReview.task_id eq argValues.task_id.toInt())
-                and
-                (SolutionReview.reviewer_id eq reviewerId.toInt()))
+            and
+            (SolutionReview.task_id eq argValues.task_id.toInt())
+            and
+            (SolutionReview.reviewer_id eq reviewerId.toInt()))
       }.toList()
       when {
         solutionReview.size > 1 -> http.error(500, "get more than one solution by user_id, task_id and reviewer_id")
@@ -46,10 +46,10 @@ class ReviewSaveHandler : RequestHandler<ReviewSaveArgs>() {
     return transaction {
       val solutionReview = SolutionReview.select {
         ((SolutionReview.user_id eq argValues.user_id.toInt())
-        and
-        (SolutionReview.task_id eq argValues.task_id.toInt())
-        and
-        (SolutionReview.reviewer_id eq reviewerId.toInt()))
+            and
+            (SolutionReview.task_id eq argValues.task_id.toInt())
+            and
+            (SolutionReview.reviewer_id eq reviewerId.toInt()))
       }.toList()
       if (solutionReview.isEmpty()) {
         SolutionReview.insert {
@@ -61,10 +61,10 @@ class ReviewSaveHandler : RequestHandler<ReviewSaveArgs>() {
       } else {
         SolutionReview.update({
           ((SolutionReview.user_id eq argValues.user_id.toInt())
-                  and
-                  (SolutionReview.task_id eq argValues.task_id.toInt())
-                  and
-                  (SolutionReview.reviewer_id eq reviewerId.toInt()))
+              and
+              (SolutionReview.task_id eq argValues.task_id.toInt())
+              and
+              (SolutionReview.reviewer_id eq reviewerId.toInt()))
         }) {
           it[solution_review] = argValues.solution_review
         }

@@ -24,13 +24,13 @@ class SubmissionGetHandler : RequestHandler<SubmissionGetArgs>() {
     return transaction {
       val attempts = Attempts.select {
         ((Attempts.user_id eq argValues.user_id.toInt())
-        and
-        (Attempts.task_id eq argValues.task_id.toInt()))
+            and
+            (Attempts.task_id eq argValues.task_id.toInt()))
       }.toList()
       when {
-          attempts.size > 1 -> http.error(500, "get more than one attempt by user_id and task_id")
-          attempts.isNotEmpty() -> http.json(hashMapOf("attempt_text" to attempts.last()[Attempts.attempt_text]))
-          else -> http.json(hashMapOf("attempt_text" to "[comment]: # (there was no attempt)"))
+        attempts.size > 1 -> http.error(500, "get more than one attempt by user_id and task_id")
+        attempts.isNotEmpty() -> http.json(hashMapOf("attempt_text" to attempts.last()[Attempts.attempt_text]))
+        else -> http.json(hashMapOf("attempt_text" to "[comment]: # (there was no attempt)"))
       }
     }
   }

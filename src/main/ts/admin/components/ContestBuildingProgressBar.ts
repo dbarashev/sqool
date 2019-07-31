@@ -1,12 +1,12 @@
-import { Component, Vue } from 'vue-property-decorator';
+import {Component, Vue} from 'vue-property-decorator';
 
 @Component
 export default class ContestBuildingProgressBar extends Vue {
-    public show() {
-        $('#progress-bar').modal();
-    }
+  public show() {
+    $('#progress-bar').modal();
+  }
 
-    public hide() {
-        $('#progress-bar').modal('hide');
-    }
+  public hide() {
+    $('#progress-bar').modal('hide');
+  }
 }

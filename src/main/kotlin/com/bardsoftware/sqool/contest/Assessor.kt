@@ -32,8 +32,8 @@ class AssessorApiVoid : AssessorApi {
       This is an assessor stub. It will not do anything""".trimIndent())
     consumer("${taskId}_${System.currentTimeMillis().toString(16)}")
   }
-
 }
+
 class ResultMessageReceiver(val responseConsumer: (AssessmentPubSubResp) -> Unit) : MessageReceiver {
   private val responseIds = mutableSetOf<String>()
   override fun receiveMessage(message: PubsubMessage, consumer: AckReplyConsumer) {
@@ -53,7 +53,7 @@ class ResultMessageReceiver(val responseConsumer: (AssessmentPubSubResp) -> Unit
   }
 }
 
-class AssessorPubSub(val topicId: String, private val responseConsumer : (AssessmentPubSubResp) -> Unit) : AssessorApi {
+class AssessorPubSub(val topicId: String, private val responseConsumer: (AssessmentPubSubResp) -> Unit) : AssessorApi {
   private val executor = Executors.newSingleThreadExecutor()
   private val timeoutScheduler = Executors.newScheduledThreadPool(1)
   private val receiver = ResultMessageReceiver(responseConsumer)

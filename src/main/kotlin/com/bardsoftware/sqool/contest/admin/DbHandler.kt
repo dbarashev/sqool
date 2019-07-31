@@ -7,5 +7,5 @@ import com.bardsoftware.sqool.contest.RequestHandler
 /**
  * @author dbarashev@bardsoftware.com
  */
-abstract class DbHandler<T: RequestArgs>(private val flags: Flags) : RequestHandler<T>(){
+abstract class DbHandler<T : RequestArgs>(private val flags: Flags) : RequestHandler<T>() {
 }

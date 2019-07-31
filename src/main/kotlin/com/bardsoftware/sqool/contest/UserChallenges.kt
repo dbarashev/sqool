@@ -13,7 +13,8 @@ class ChallengeHandler {
     val userName = http.session("name") ?: return http.redirect("/login")
     return UserStorage.exec {
       val user = findUser(userName) ?: return@exec http.error(HttpServletResponse.SC_FORBIDDEN)
-      val difficulty = http.formValue("difficulty")?.toInt() ?: return@exec http.error(HttpServletResponse.SC_BAD_REQUEST)
+      val difficulty = http.formValue("difficulty")?.toInt()
+          ?: return@exec http.error(HttpServletResponse.SC_BAD_REQUEST)
       val authorId = http.formValue("author")?.toInt()
       http.json(user.createChallengeOffer(difficulty, authorId))
     }

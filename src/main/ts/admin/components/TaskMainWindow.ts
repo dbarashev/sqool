@@ -5,51 +5,51 @@ import TaskTable from './TaskTable';
 
 
 @Component({
-    components: {
-        ReviewPage,
-        TaskTable,
-        AvailableSolutions,
-    },
+  components: {
+    ReviewPage,
+    TaskTable,
+    AvailableSolutions,
+  },
 })
 export default class TaskMainWindow extends Vue {
 
-    public mounted() {
-        this.showTaskTable();
-    }
+  public mounted() {
+    this.showTaskTable();
+  }
 
-    @Provide()
-    public availableSolutions(): AvailableSolutions {
-        return this.$refs.availableSolutions as AvailableSolutions;
-    }
+  @Provide()
+  public availableSolutions(): AvailableSolutions {
+    return this.$refs.availableSolutions as AvailableSolutions;
+  }
 
-    @Provide()
-    public reviewPage(): ReviewPage {
-        return this.$refs.reviewPage as ReviewPage;
-    }
+  @Provide()
+  public reviewPage(): ReviewPage {
+    return this.$refs.reviewPage as ReviewPage;
+  }
 
-    @Provide()
-    public taskTable(): TaskTable {
-        return this.$refs.taskTable as TaskTable;
-    }
+  @Provide()
+  public taskTable(): TaskTable {
+    return this.$refs.taskTable as TaskTable;
+  }
 
-    public hideChildren() {
-        this.taskTable().hide();
-        this.availableSolutions().hide();
-        this.reviewPage().hide();
-    }
+  public hideChildren() {
+    this.taskTable().hide();
+    this.availableSolutions().hide();
+    this.reviewPage().hide();
+  }
 
-    public showAvailableSolutions() {
-        this.hideChildren();
-        this.availableSolutions().show();
-    }
+  public showAvailableSolutions() {
+    this.hideChildren();
+    this.availableSolutions().show();
+  }
 
-    public showTaskTable() {
-        this.hideChildren();
-        this.taskTable().show();
-    }
+  public showTaskTable() {
+    this.hideChildren();
+    this.taskTable().show();
+  }
 
-    public showReviewPage(userId: number, taskId: number) {
-        this.hideChildren();
-        this.reviewPage().show(userId, taskId);
-    }
+  public showReviewPage(userId: number, taskId: number) {
+    this.hideChildren();
+    this.reviewPage().show(userId, taskId);
+  }
 }

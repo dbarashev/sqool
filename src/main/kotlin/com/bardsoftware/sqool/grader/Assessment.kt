@@ -17,26 +17,26 @@ import java.util.concurrent.CompletableFuture
 data class TaskId(
     @JsonProperty("course") val course: String,
     @JsonProperty("module") val module: String,
-    @JsonProperty("task")   val task: String,
-    @JsonProperty("dbms")   val dbms: String = "postgres")
+    @JsonProperty("task") val task: String,
+    @JsonProperty("dbms") val dbms: String = "postgres")
 
 data class AssessmentPubSubTask(
-    @JsonProperty("id")         val id: TaskId,
+    @JsonProperty("id") val id: TaskId,
     @JsonProperty("submission") val submission: String)
 
 data class AssessmentPubSubResp(
-    @JsonProperty("requestId")   val requestId: String,
-    @JsonProperty("score")       val score: Int,
-    @JsonProperty("errors")      val errors: String = "",
+    @JsonProperty("requestId") val requestId: String,
+    @JsonProperty("score") val score: Int,
+    @JsonProperty("errors") val errors: String = "",
     @JsonProperty("resultLines") val resultLines: List<Map<String, Any>> = emptyList())
 
 open class PubSubSubscriber(subscription: String, val receiver: MessageReceiver) {
   val subscriptionFullName = SubscriptionName.create(ServiceOptions.getDefaultProjectId(), subscription)
   fun listen(onShutdown: CompletableFuture<Any>) {
-    var subscriber : Subscriber? = null
+    var subscriber: Subscriber? = null
     try {
       subscriber = Subscriber.defaultBuilder(subscriptionFullName, receiver).build()
-      subscriber.addListener( object : ApiService.Listener() {
+      subscriber.addListener(object : ApiService.Listener() {
         override fun failed(from: ApiService.State?, failure: Throwable?) {
           println("FAILED!")
         }

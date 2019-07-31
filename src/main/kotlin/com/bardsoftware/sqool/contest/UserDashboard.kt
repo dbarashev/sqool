@@ -4,7 +4,7 @@ import com.bardsoftware.sqool.contest.storage.UserStorage
 import javax.servlet.http.HttpServletResponse
 
 class UserDashboardHandler {
-  fun handle(http: HttpApi) : HttpResponse {
+  fun handle(http: HttpApi): HttpResponse {
     val userName = http.session("name") ?: return http.redirect("/login")
     return UserStorage.exec {
       val user = findUser(userName)
@@ -22,7 +22,7 @@ class UserDashboardHandler {
     }
   }
 
-  fun handleAttempts(http: HttpApi) : HttpResponse {
+  fun handleAttempts(http: HttpApi): HttpResponse {
     val userName = http.session("name") ?: return http.error(HttpServletResponse.SC_FORBIDDEN)
     return UserStorage.exec {
       val user = findUser(userName)
