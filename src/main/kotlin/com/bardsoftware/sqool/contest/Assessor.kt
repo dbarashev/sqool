@@ -32,8 +32,8 @@ class AssessorApiVoid : AssessorApi {
       This is an assessor stub. It will not do anything""".trimIndent())
     consumer("${taskId}_${System.currentTimeMillis().toString(16)}")
   }
-
 }
+
 class ResultMessageReceiver(val responseConsumer: (AssessmentPubSubResp) -> Unit) : MessageReceiver {
   private val responseIds = mutableSetOf<String>()
   override fun receiveMessage(message: PubsubMessage, consumer: AckReplyConsumer) {
@@ -53,7 +53,7 @@ class ResultMessageReceiver(val responseConsumer: (AssessmentPubSubResp) -> Unit
   }
 }
 
-class AssessorPubSub(val topicId: String, private val responseConsumer : (AssessmentPubSubResp) -> Unit) : AssessorApi {
+class AssessorPubSub(val topicId: String, private val responseConsumer: (AssessmentPubSubResp) -> Unit) : AssessorApi {
   private val executor = Executors.newSingleThreadExecutor()
   private val timeoutScheduler = Executors.newScheduledThreadPool(1)
   private val receiver = ResultMessageReceiver(responseConsumer)
@@ -69,13 +69,13 @@ class AssessorPubSub(val topicId: String, private val responseConsumer : (Assess
 
   override fun submit(contestId: String, taskId: Int, solution: String, consumer: (String) -> Unit) {
     try {
-      val taskId = TaskId(course = contestId, module = "cw2", task = "task$taskId")
-      val pubsubTask = AssessmentPubSubTask(id = taskId, submission = solution)
+      val id = TaskId(course = contestId, module = "cw2", task = "task$taskId")
+      val pubsubTask = AssessmentPubSubTask(id = id, submission = solution)
       val data = MAPPER.writeValueAsBytes(pubsubTask)
       val message = PubsubMessage.newBuilder().setData(ByteString.copyFrom(data)).build()
       println("============ Publishing message")
       val topicName = TopicName.create(ServiceOptions.getDefaultProjectId(), topicId)
-      val publisher = Publisher.defaultBuilder(topicName).build();
+      val publisher = Publisher.defaultBuilder(topicName).build()
       val future = publisher.publish(message)
       future.addListener(Runnable {
         val msgId = future.get()
@@ -90,7 +90,7 @@ class AssessorPubSub(val topicId: String, private val responseConsumer : (Assess
   private fun createTimeoutCommand(msgId: String): Runnable {
     return Runnable {
       if (!this.receiver.hasResponse(msgId)) {
-        this.responseConsumer(AssessmentPubSubResp("$msgId", 0, "Кажется, что-то отвалилось"))
+        this.responseConsumer(AssessmentPubSubResp(msgId, 0, "Кажется, что-то отвалилось"))
       }
     }
   }

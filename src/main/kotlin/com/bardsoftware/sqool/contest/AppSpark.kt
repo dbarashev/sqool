@@ -26,10 +26,12 @@ typealias SessionProvider = (create: Boolean) -> Session?
 /**
  * @author dbarashev@bardsoftware.com
  */
-class Http(val request : Request,
-           val response: Response,
-           val session: SessionProvider,
-           private val templateEngine: FreeMarkerEngine) : HttpApi {
+class Http(
+    val request: Request,
+    val response: Response,
+    val session: SessionProvider,
+    private val templateEngine: FreeMarkerEngine
+) : HttpApi {
   override fun url(): String {
     return URIBuilder(request.url()).apply { scheme = "https" }.build().toASCIIString()
   }
@@ -94,10 +96,10 @@ class Http(val request : Request,
   }
 
   override fun json(model: Any): HttpResponse {
-    return { response.type(MediaType.JSON_UTF_8.toString()); toJson<Any>(model, null)}
+    return { response.type(MediaType.JSON_UTF_8.toString()); toJson<Any>(model, null) }
   }
 
-  override fun <T: Any> json(model: Any, view: KClass<T>): HttpResponse {
+  override fun <T : Any> json(model: Any, view: KClass<T>): HttpResponse {
     return { response.type(MediaType.JSON_UTF_8.toString()); toJson(model, view) }
   }
 
@@ -233,43 +235,43 @@ fun main(args: Array<String>) {
       GET("/admin/script/all" BY adminScriptAllHandler)
       POST("/admin/script/new" BY adminScriptEditHandler ARGS mapOf(
           "description" to ScriptEditArgs::description,
-          "body"        to ScriptEditArgs::body
+          "body" to ScriptEditArgs::body
       ))
       POST("/admin/script/update" BY adminScriptEditHandler ARGS mapOf(
-          "id"          to ScriptEditArgs::id,
+          "id" to ScriptEditArgs::id,
           "description" to ScriptEditArgs::description,
-          "body"        to ScriptEditArgs::body
+          "body" to ScriptEditArgs::body
       ))
 
       GET("/admin/task/all" BY adminTaskAllHandler)
       POST("/admin/task/new" BY adminTaskEditHandler ARGS mapOf(
-          "result"      to TaskEditArgs::result,
-          "name"        to TaskEditArgs::name,
+          "result" to TaskEditArgs::result,
+          "name" to TaskEditArgs::name,
           "description" to TaskEditArgs::description,
-          "solution"    to TaskEditArgs::solution,
-          "script_id"   to TaskEditArgs::script_id
+          "solution" to TaskEditArgs::solution,
+          "script_id" to TaskEditArgs::script_id
       ))
       POST("/admin/task/update" BY adminTaskEditHandler ARGS mapOf(
-          "id"          to TaskEditArgs::id,
-          "result"      to TaskEditArgs::result,
-          "name"        to TaskEditArgs::name,
+          "id" to TaskEditArgs::id,
+          "result" to TaskEditArgs::result,
+          "name" to TaskEditArgs::name,
           "description" to TaskEditArgs::description,
-          "solution"    to TaskEditArgs::solution,
-          "script_id"   to TaskEditArgs::script_id
+          "solution" to TaskEditArgs::solution,
+          "script_id" to TaskEditArgs::script_id
       ))
 
       GET("/admin/variant/all" BY adminVariantAllHandler)
       POST("/admin/variant/new" BY adminVariantEditHandler ARGS mapOf(
-          "name"  to VariantEditArgs::name,
+          "name" to VariantEditArgs::name,
           "tasks" to VariantEditArgs::tasksJson
       ))
       POST("/admin/variant/update" BY adminVariantEditHandler ARGS mapOf(
-          "id"    to VariantEditArgs::id,
-          "name"  to VariantEditArgs::name,
+          "id" to VariantEditArgs::id,
+          "name" to VariantEditArgs::name,
           "tasks" to VariantEditArgs::tasksJson
       ))
 
-      GET("/"          TEMPLATE "index.ftl")
+      GET("/" TEMPLATE "index.ftl")
       GET("/dashboard" TEMPLATE "dashboard.ftl")
       GET("/admin/submission/get" BY adminSubmissionGetHandler ARGS mapOf(
           "task_id" to SubmissionGetArgs::task_id,
@@ -292,7 +294,7 @@ fun main(args: Array<String>) {
           "user_id" to AuthDevArgs::user_id
       ))
       GET("/contest/available/all" BY availableContestAllHandler ARGS mapOf(
-              "user_id" to AvailableContestAllArgs::userId
+          "user_id" to AvailableContestAllArgs::userId
       ))
     }
     get("/login") {

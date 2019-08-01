@@ -7,17 +7,19 @@ import kotlin.reflect.KMutableProperty1
 import spark.kotlin.Http as SparkHttp
 
 typealias Route = String
+
 open class RequestArgs
 typealias UrlClosure<T> = T.() -> Unit
 
 const val CSP_SELF = """'self'"""
 const val CSP_UNSAFE_INLINE = """'unsafe-inline'"""
 
-abstract class RequestHandler<T: RequestArgs> {
+abstract class RequestHandler<T : RequestArgs> {
   private val scriptOrigins = mutableListOf(
       CSP_SELF,
       "https://www.google-analytics.com"
   )
+
   fun getScriptOrigins(): String = scriptOrigins.joinToString(" ")
 
   private val styleOrigins = mutableListOf(
@@ -25,17 +27,20 @@ abstract class RequestHandler<T: RequestArgs> {
       CSP_UNSAFE_INLINE,
       "https://use.fontawesome.com"
   )
+
   fun getStyleOrigins(): String = styleOrigins.joinToString(" ")
 
   private val imgOrigins = mutableListOf(
       CSP_SELF,
       "https://www.google-analytics.com"
   )
+
   fun getImgOrigins(): String = imgOrigins.joinToString(" ")
 
   private val fontOrigins = mutableListOf(
       "https://use.fontawesome.com"
   )
+
   fun getFontOrigins(): String = fontOrigins.joinToString(" ")
 
   var route: RouteHandler<T>? = null
@@ -48,11 +53,11 @@ abstract class RequestHandler<T: RequestArgs> {
     }
 
   private fun verify(value: Route?) {
-    println("Route ${value} is handled by ${this.javaClass}")
+    println("Route $value is handled by ${this.javaClass}")
   }
 
   fun url(closure: UrlClosure<T>?): Route {
-    var args : T?
+    var args: T?
     if (closure != null) {
       args = args()
       args.closure()
@@ -79,7 +84,7 @@ abstract class RequestHandler<T: RequestArgs> {
   protected fun addFontOrigin(origin: String) = this.fontOrigins.add(origin)
   protected fun addStyleOrigin(origin: String) = this.styleOrigins.add(origin)
 
-//  protected fun securityHeaders(http: HttpApi, body: HttpApi.() -> Unit): HttpResponse {
+  //  protected fun securityHeaders(http: HttpApi, body: HttpApi.() -> Unit): HttpResponse {
 //    return http.chain {
 //      header(HttpHeaders.CONTENT_SECURITY_POLICY, createMarkupCspHeader(this@RequestHandler))
 //      header(HttpHeaders.X_FRAME_OPTIONS, "DENY")
@@ -90,12 +95,13 @@ abstract class RequestHandler<T: RequestArgs> {
 //    }
 //  }
   abstract fun handle(http: HttpApi, argValues: T): HttpResponse
+
   abstract fun args(): T
 }
 
 data class BaseContext(
     val http: HttpApi,
-    val templateName: String){}
+    val templateName: String) {}
 
 open class TemplateRequestHandler(val templateName: String) : RequestHandler<RequestArgs>() {
   override fun args(): RequestArgs = RequestArgs()
@@ -111,7 +117,8 @@ open class TemplateRequestHandler(val templateName: String) : RequestHandler<Req
 
 
 typealias ArgsResult<T> = Map<String, KMutableProperty1<T, String>>
-data class RouteHandler<T: RequestArgs>(val route: Route, val handler: RequestHandler<T>) {
+
+data class RouteHandler<T : RequestArgs>(val route: Route, val handler: RequestHandler<T>) {
   var argsMap: ArgsResult<T> = mapOf()
 }
 
@@ -135,25 +142,27 @@ inline fun httpWrapExceptions(http: HttpApi, work: () -> HttpResponse): HttpResp
 
 open class Routes(private val sparkHttp: SparkHttp,
                   private val templateEngine: FreeMarkerEngine) {
-  fun <T: RequestArgs> GET(routeHandler: RouteHandler<T>) {
+  fun <T : RequestArgs> GET(routeHandler: RouteHandler<T>) {
     sparkHttp.get(routeHandler.route) {
       return@get serve(routeHandler, this)
     }
   }
-  fun <T: RequestArgs> POST(routeHandler: RouteHandler<T>) {
+
+  fun <T : RequestArgs> POST(routeHandler: RouteHandler<T>) {
     sparkHttp.post(routeHandler.route) {
       return@post serve(routeHandler, this)
     }
   }
-  fun <T: RequestArgs> NOT_FOUND(routeHandler: RouteHandler<T>) {
+
+  fun <T : RequestArgs> NOT_FOUND(routeHandler: RouteHandler<T>) {
     sparkHttp.notFound {
       return@notFound serve(routeHandler, this)
     }
   }
 
-  fun <T: RequestArgs> serve(routeHandler: RouteHandler<T>, sparkRouteHandler: spark.kotlin.RouteHandler): Any {
+  fun <T : RequestArgs> serve(routeHandler: RouteHandler<T>, sparkRouteHandler: spark.kotlin.RouteHandler): Any {
     val http = Http(sparkRouteHandler.request, sparkRouteHandler.response,
-        { create: Boolean -> sparkRouteHandler.session(create)},
+        { create: Boolean -> sparkRouteHandler.session(create) },
         templateEngine)
     val argValues = routeHandler.handler.args()
     routeHandler.argsMap.forEach { arg, property ->
@@ -166,7 +175,11 @@ open class Routes(private val sparkHttp: SparkHttp,
     val result = httpWrapExceptions(http) {
       routeHandler.handler.handle(http, argValues)
     }()
-    return if (result is Unit) { "" } else { result }
+    return if (result is Unit) {
+      ""
+    } else {
+      result
+    }
   }
 }
 
@@ -181,6 +194,7 @@ infix fun Route.TEMPLATE(template: String): RouteHandler<RequestArgs> {
   return RouteHandler(this, handler).also { handler.route = it }
 
 }
+
 infix fun <T : RequestArgs> RouteHandler<T>.ARGS(mapping: ArgsResult<T>): RouteHandler<T> {
   this.argsMap = mapping
   return this

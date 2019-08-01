@@ -12,7 +12,7 @@ import java.sql.Types
 import java.util.Random
 
 data class ChallengeOffer(val taskId: Int, val description: String)
-data class UserEntity(var id: Int, var nick: String, var  name: String, var passwd: String)
+data class UserEntity(var id: Int, var nick: String, var name: String, var passwd: String)
 data class TaskAttemptEntity(
     var taskEntity: TaskEntity,
     var userId: Int,
@@ -23,6 +23,7 @@ data class TaskAttemptEntity(
     var errorMsg: String?,
     var resultSet: String?
 )
+
 data class TaskEntity(
     var id: Int,
     var name: String,
@@ -33,7 +34,14 @@ data class TaskEntity(
     var authorName: String
 )
 
-data class AuthorChallengeEntity(var authorId : Int, var authorName : String, var easyCount: Int, var mediumCount: Int, var difficultCount: Int, var gainTotal: BigDecimal)
+data class AuthorChallengeEntity(
+    var authorId: Int,
+    var authorName: String,
+    var easyCount: Int,
+    var mediumCount: Int,
+    var difficultCount: Int,
+    var gainTotal: BigDecimal
+)
 
 object UserTable : Table("Contest.ContestUser") {
   var id = integer("id")
@@ -155,16 +163,18 @@ class User(val entity: UserEntity, val txn: Transaction, val storage: UserStorag
   val availableTasks: List<AuthorChallengeEntity>
     get() {
       return transaction {
-        TaskByAuthorView.select { TaskByAuthorView.authorId.neq(entity.id) }.orderBy(TaskByAuthorView.gainTotal, isAsc = false).map { taskRow ->
-          AuthorChallengeEntity(
-              authorId = taskRow[TaskByAuthorView.authorId],
-              authorName = taskRow[TaskByAuthorView.authorName],
-              easyCount = taskRow[TaskByAuthorView.count1],
-              mediumCount = taskRow[TaskByAuthorView.count2],
-              difficultCount = taskRow[TaskByAuthorView.count3],
-              gainTotal = taskRow[TaskByAuthorView.gainTotal]
-          )
-        }
+        TaskByAuthorView.select { TaskByAuthorView.authorId.neq(entity.id) }
+            .orderBy(TaskByAuthorView.gainTotal, SortOrder.DESC)
+            .map { taskRow ->
+              AuthorChallengeEntity(
+                  authorId = taskRow[TaskByAuthorView.authorId],
+                  authorName = taskRow[TaskByAuthorView.authorName],
+                  easyCount = taskRow[TaskByAuthorView.count1],
+                  mediumCount = taskRow[TaskByAuthorView.count2],
+                  difficultCount = taskRow[TaskByAuthorView.count3],
+                  gainTotal = taskRow[TaskByAuthorView.gainTotal]
+              )
+            }
       }
     }
 
@@ -191,14 +201,14 @@ class User(val entity: UserEntity, val txn: Transaction, val storage: UserStorag
   fun createChallengeOffer(difficulty: Int, authorId: Int?): ChallengeOffer {
     val attemptedQuery = QueryAlias(AttemptView.select { AttemptView.attemptUserId.eq(this@User.id) }, "A")
     val selectedQuery = if (authorId == null) {
-      QueryAlias(TaskTable.select {TaskTable.difficulty.eq(difficulty)}, "T")
+      QueryAlias(TaskTable.select { TaskTable.difficulty.eq(difficulty) }, "T")
     } else {
-      QueryAlias(TaskTable.select {TaskTable.difficulty.eq(difficulty).and(TaskTable.authorId.eq(authorId))}, "T")
+      QueryAlias(TaskTable.select { TaskTable.difficulty.eq(difficulty).and(TaskTable.authorId.eq(authorId)) }, "T")
     }
     val resultSet = selectedQuery.join(attemptedQuery, JoinType.LEFT,
-          onColumn = selectedQuery[TaskTable.id],
-          otherColumn = attemptedQuery[AttemptView.taskId]
-    ).select { attemptedQuery[AttemptView.taskId].isNull() }.map { it -> it }
+        onColumn = selectedQuery[TaskTable.id],
+        otherColumn = attemptedQuery[AttemptView.taskId]
+    ).select { attemptedQuery[AttemptView.taskId].isNull() }.map { it }
     return if (resultSet.isEmpty()) {
       ChallengeOffer(taskId = -1, description = "Кажется, вы уже решаете эту задачу")
     } else {
@@ -234,7 +244,7 @@ class User(val entity: UserEntity, val txn: Transaction, val storage: UserStorag
         setNull(3, Types.LONGVARCHAR)
       }
       if (resultSet != null) {
-        println("Записываем result set=${resultSet}")
+        println("Записываем result set=$resultSet")
         setString(4, resultSet)
       } else {
         setNull(4, Types.LONGVARCHAR)
@@ -282,7 +292,7 @@ class UserStorage(val txn: Transaction) {
   }
 
   fun findTask(id: Int): Task? {
-    return TaskTable.select{ TaskTable.id.eq(id) }.map { taskRow ->
+    return TaskTable.select { TaskTable.id.eq(id) }.map { taskRow ->
       Task(TaskEntity(
           id = taskRow[TaskTable.id],
           name = taskRow[TaskTable.name],

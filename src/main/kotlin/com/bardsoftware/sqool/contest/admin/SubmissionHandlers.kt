@@ -24,13 +24,13 @@ class SubmissionGetHandler : RequestHandler<SubmissionGetArgs>() {
     return transaction {
       val attempts = Attempts.select {
         ((Attempts.user_id eq argValues.user_id.toInt())
-        and
-        (Attempts.task_id eq argValues.task_id.toInt()))
+            and
+            (Attempts.task_id eq argValues.task_id.toInt()))
       }.toList()
       when {
-          attempts.size > 1 -> http.error(500, "get more than one attempt by user_id and task_id")
-          attempts.isNotEmpty() -> http.json(hashMapOf("attempt_text" to attempts.last()[Attempts.attempt_text]))
-          else -> http.json(hashMapOf("attempt_text" to "[comment]: # (there was no attempt)"))
+        attempts.size > 1 -> http.error(500, "get more than one attempt by user_id and task_id")
+        attempts.isNotEmpty() -> http.json(hashMapOf("attempt_text" to attempts.last()[Attempts.attempt_text]))
+        else -> http.json(hashMapOf("attempt_text" to "[comment]: # (there was no attempt)"))
       }
     }
   }
@@ -50,13 +50,13 @@ object MyAttempts : Table("Contest.MyAttempts") {
 
   fun asJson(row: ResultRow): JsonNode {
     return JSON_MAPPER.createObjectNode().also {
-      it.put("user_id", row[MyAttempts.user_id])
-      it.put("user_name", row[MyAttempts.user_name])
-      it.put("user_nick", row[MyAttempts.user_nick])
-      it.put("status", row[MyAttempts.status])
-      it.put("count", row[MyAttempts.count])
-      it.put("error_msg", row[MyAttempts.error_msg])
-      it.put("result_set", row[MyAttempts.result_set])
+      it.put("user_id", row[user_id])
+      it.put("user_name", row[user_name])
+      it.put("user_nick", row[user_nick])
+      it.put("status", row[status])
+      it.put("count", row[count])
+      it.put("error_msg", row[error_msg])
+      it.put("result_set", row[result_set])
     }
   }
 }

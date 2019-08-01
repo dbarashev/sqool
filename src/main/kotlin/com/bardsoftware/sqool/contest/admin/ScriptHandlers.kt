@@ -54,7 +54,7 @@ class ScriptEditHandler : RequestHandler<ScriptEditArgs>() {
           http.ok()
         }
         else -> {
-          Scripts.update(where = {Scripts.id eq argValues.id.toInt()}) {
+          Scripts.update(where = { Scripts.id eq argValues.id.toInt() }) {
             it[description] = argValues.description
             it[body] = argValues.body
           }

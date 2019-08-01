@@ -53,9 +53,9 @@ class ContestAllHandler : RequestHandler<RequestArgs>() {
 
 enum class ContestEditMode { INSERT, UPDATE }
 data class ContestEditArgs(
-        var code: String, var name: String,
-        var start_ts: String, var end_ts: String,
-        var variants: String
+    var code: String, var name: String,
+    var start_ts: String, var end_ts: String,
+    var variants: String
 ) : RequestArgs()
 
 class ContestEditHandler(private val mode: ContestEditMode) : RequestHandler<ContestEditArgs>() {
@@ -86,28 +86,28 @@ class ContestEditHandler(private val mode: ContestEditMode) : RequestHandler<Con
 data class ContestBuildArgs(var code: String) : RequestArgs()
 
 class ContestBuildHandler(
-        private val queryManager: DbQueryManager,
-        private val imageManager: (Contest) -> ContestImageManager
+    private val queryManager: DbQueryManager,
+    private val imageManager: (Contest) -> ContestImageManager
 ) : RequestHandler<ContestBuildArgs>() {
 
   override fun args(): ContestBuildArgs = ContestBuildArgs("")
 
   override fun handle(http: HttpApi, argValues: ContestBuildArgs) = try {
-      val contest = queryManager.findContest(argValues.code)
-      val imageManager = imageManager(contest)
-      imageManager.createImage()
+    val contest = queryManager.findContest(argValues.code)
+    val imageManager = imageManager(contest)
+    imageManager.createImage()
 
-      val errorStream = ByteArrayOutputStream()
-      when (imageManager.checkImage(errorStream)) {
-        ImageCheckResult.PASSED -> http.json(mapOf("status" to "OK"))
-        ImageCheckResult.ERROR -> http.error(500, errorStream.toString())
-        ImageCheckResult.FAILED -> http.json(mapOf("status" to "ERROR", "message" to errorStream.toString()))
-      }.also { errorStream.close() }
-    } catch (exception: MalformedDataException) {
-      exception.printStackTrace()
-      http.error(400, exception.message, exception)
-    } catch (exception: NoSuchContestException) {
-      exception.printStackTrace()
-      http.error(404, "No such contest")
-    }
+    val errorStream = ByteArrayOutputStream()
+    when (imageManager.checkImage(errorStream)) {
+      ImageCheckResult.PASSED -> http.json(mapOf("status" to "OK"))
+      ImageCheckResult.ERROR -> http.error(500, errorStream.toString())
+      ImageCheckResult.FAILED -> http.json(mapOf("status" to "ERROR", "message" to errorStream.toString()))
+    }.also { errorStream.close() }
+  } catch (exception: MalformedDataException) {
+    exception.printStackTrace()
+    http.error(400, exception.message, exception)
+  } catch (exception: NoSuchContestException) {
+    exception.printStackTrace()
+    http.error(404, "No such contest")
+  }
 }

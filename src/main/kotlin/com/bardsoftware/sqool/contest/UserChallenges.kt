@@ -13,7 +13,8 @@ class ChallengeHandler {
     val userName = http.session("name") ?: return http.redirect("/login")
     return UserStorage.exec {
       val user = findUser(userName) ?: return@exec http.error(HttpServletResponse.SC_FORBIDDEN)
-      val difficulty = http.formValue("difficulty")?.toInt() ?: return@exec http.error(HttpServletResponse.SC_BAD_REQUEST)
+      val difficulty = http.formValue("difficulty")?.toInt()
+          ?: return@exec http.error(HttpServletResponse.SC_BAD_REQUEST)
       val authorId = http.formValue("author")?.toInt()
       http.json(user.createChallengeOffer(difficulty, authorId))
     }
@@ -52,7 +53,7 @@ class ChallengeHandler {
     val taskId = http.formValue("task-id")?.toInt() ?: return http.error(HttpServletResponse.SC_BAD_REQUEST)
     val solution = http.formValue("solution") ?: return http.error(HttpServletResponse.SC_BAD_REQUEST)
     val contestId = http.formValue("contest-id") ?: "test-contest"
-    println("User: ${userName} Contest:${contestId} Task: ${taskId} Solution:\n${solution}")
+    println("User: $userName Contest:$contestId Task: $taskId Solution:\n$solution")
 
     assessor.submit(contestId, taskId, solution) {
       println("Submitted task $it")
@@ -68,7 +69,7 @@ class ChallengeHandler {
     val attemptId = http.formValue("attempt-id") ?: return http.error(HttpServletResponse.SC_BAD_REQUEST)
     return UserStorage.exec {
       val attempt = findAttempt(attemptId)
-      println("attemptid=${attemptId} attempt=$attempt")
+      println("attemptid=$attemptId attempt=$attempt")
       if (attempt == null) {
         http.error(404)
       } else {

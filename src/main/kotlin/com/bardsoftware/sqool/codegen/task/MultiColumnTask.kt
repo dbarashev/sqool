@@ -5,31 +5,32 @@ import com.bardsoftware.sqool.codegen.task.spec.SqlDataType
 import java.util.regex.Pattern
 
 class MultiColumnTask(name: String, robotQuery: String, private val matcherSpec: MatcherSpec) : ColumnTask(name, robotQuery) {
-    override val resultType: String
-        get() = matcherSpec.relationSpec.getAllColsList().joinToString(", ", "TABLE(", ")")
-    override val mockSolution: String
-        get() = matcherSpec.relationSpec.getAllColsList().joinToString(", ", "SELECT ") { "NULL::${it.type}" }
-    override val mockSolutionError: Regex
-        get() = """
+  override val resultType: String
+    get() = matcherSpec.relationSpec.getAllColsList().joinToString(", ", "TABLE(", ")")
+  override val mockSolution: String
+    get() = matcherSpec.relationSpec.getAllColsList().joinToString(", ", "SELECT ") { "NULL::${it.type}" }
+  override val mockSolutionError: Regex
+    get() = """
             |${Pattern.quote(matcherSpec.wrongKeyColsProjMessage)}
             |Размер пересечения результатов робота и ваших: \d+ строк
             |Размер объединения результатов робота и ваших: \d+ строк
             """.trimMargin().toRegex()
 
 
-    override fun generateStaticCode(): String {
-        val keyColNamesList = matcherSpec.relationSpec.keyCols.map { it.name }
-        val maxAbsDiffChecks = matcherSpec.relationSpec.nonKeyCols
-                .filter { it.type.kind != SqlDataType.Kind.NON_NUMERIC }
-                .joinToString("\n\n") {
-                    val diffVar = if (it.type.kind == SqlDataType.Kind.INTEGER) "max_abs_int_diff" else "max_abs_decimal_diff"
-                    generateMaxAbsDiffCheck(
-                            maxAbsDiffVar = diffVar, colToCheck = it.name,
-                            keyCols = keyColNamesList, failedCheckMessage = matcherSpec.getDiffErrorMessage(it))
-                }
-        val matcherFunName = "${name}_Matcher"
-        val keyColNamesString = matcherSpec.relationSpec.keyCols.joinToString(", ") { it.name }
-        val matcherCode = """
+  override fun generateStaticCode(): String {
+    val keyColNamesList = matcherSpec.relationSpec.keyCols.map { it.name }
+    val maxAbsDiffChecks = matcherSpec.relationSpec.nonKeyCols
+        .filter { it.type.kind != SqlDataType.Kind.NON_NUMERIC }
+        .joinToString("\n\n") {
+          val diffVar = if (it.type.kind == SqlDataType.Kind.INTEGER) "max_abs_int_diff" else "max_abs_decimal_diff"
+          generateMaxAbsDiffCheck(
+              maxAbsDiffVar = diffVar, colToCheck = it.name,
+              keyCols = keyColNamesList, failedCheckMessage = matcherSpec.getDiffErrorMessage(it)
+          )
+        }
+    val matcherFunName = "${name}_Matcher"
+    val keyColNamesString = matcherSpec.relationSpec.keyCols.joinToString(", ") { it.name }
+    val matcherCode = """
             |DECLARE
             |   $intxnSizeVar INT;
             |   $unionSizeVar INT;
@@ -46,7 +47,8 @@ class MultiColumnTask(name: String, robotQuery: String, private val matcherSpec:
             |END IF;
             |
             |${generateUnionIntersectionCheck(
-                colNames = keyColNamesString, failedCheckMessage = matcherSpec.wrongKeyColsProjMessage)}
+                colNames = keyColNamesString, failedCheckMessage = matcherSpec.wrongKeyColsProjMessage
+            )}
             |
             |RETURN NEXT '${matcherSpec.rightKeyColsProjMessage}';
             |
@@ -55,30 +57,32 @@ class MultiColumnTask(name: String, robotQuery: String, private val matcherSpec:
             |END;
             """.trimMargin()
 
-        return """
+    return """
             |${generateFunDef(
                 funName = robotQueryFunName, returnType = resultType,
-                body = solution, language = Language.SQL)}
+                body = solution, language = Language.SQL
+            )}
             |
             |${generateFunDef(
                 funName = userQueryFunName, returnType = resultType,
-                body = mockSolution, language = Language.SQL)}
+                body = mockSolution, language = Language.SQL
+            )}
             |
             |${generateMergedViewCreation()}
             |
             |${generateFunDef(
                 funName = matcherFunName, returnType = "SETOF TEXT",
-                body = matcherCode, language = Language.PLPGSQL)}
+                body = matcherCode, language = Language.PLPGSQL
+            )}
             |
             |DROP FUNCTION $userQueryFunName() CASCADE;
             """.trimMargin()
-    }
+  }
 
-    private fun generateMaxAbsDiffCheck(maxAbsDiffVar: String,
-                                        colToCheck: String,
-                                        keyCols: List<String>,
-                                        failedCheckMessage: String
-    ): String = """
+  private fun generateMaxAbsDiffCheck(
+      maxAbsDiffVar: String, colToCheck: String,
+      keyCols: List<String>, failedCheckMessage: String
+  ): String = """
         |SELECT MAX(ABS(diff)) INTO $maxAbsDiffVar FROM (
         |   SELECT SUM($colToCheck * CASE query_id WHEN 1 THEN 1 ELSE -1 END) AS diff
         |   FROM $mergedView
@@ -87,12 +91,12 @@ class MultiColumnTask(name: String, robotQuery: String, private val matcherSpec:
         |RETURN NEXT '$failedCheckMessage ' || $maxAbsDiffVar::TEXT;
         """.trimIndent()
 
-    override fun equals(other: Any?) =
-            other is MultiColumnTask && other.matcherSpec == matcherSpec && super.equals(other)
+  override fun equals(other: Any?) =
+      other is MultiColumnTask && other.matcherSpec == matcherSpec && super.equals(other)
 
-    override fun hashCode(): Int {
-        var result = super.hashCode()
-        result = 31 * result + matcherSpec.hashCode()
-        return result
-    }
+  override fun hashCode(): Int {
+    var result = super.hashCode()
+    result = 31 * result + matcherSpec.hashCode()
+    return result
+  }
 }

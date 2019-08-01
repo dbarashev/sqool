@@ -17,7 +17,7 @@ import java.nio.charset.Charset
 import kotlin.reflect.KClass
 
 
-typealias HttpResponse  = () -> Any
+typealias HttpResponse = () -> Any
 
 val BAD_REQUEST = 400
 val ERROR_UNAUTHORIZED = 401
@@ -46,7 +46,7 @@ interface HttpApi {
   fun header(name: String, value: String): HttpResponse
   fun render(template: String, model: Any): HttpResponse
   fun json(model: Any): HttpResponse
-  fun <T: Any> json(model: Any, view: KClass<T>): HttpResponse
+  fun <T : Any> json(model: Any, view: KClass<T>): HttpResponse
   fun binaryBase64(bytes: ByteArray): HttpResponse
   fun binaryRaw(bytes: ByteArray): HttpResponse
 
@@ -55,7 +55,7 @@ interface HttpApi {
   fun ok(): HttpResponse
 
   fun attribute(name: String, value: String)
-  fun chain(body: HttpApi.() -> Unit) : HttpResponse
+  fun chain(body: HttpApi.() -> Unit): HttpResponse
 }
 
 class ChainedHttpApi(val delegate: HttpApi) : HttpApi {
@@ -107,7 +107,7 @@ class ChainedHttpApi(val delegate: HttpApi) : HttpApi {
     return delegate.json(model).also { chained.add(it) }
   }
 
-  override fun <T: Any> json(model: Any, view: KClass<T>): HttpResponse {
+  override fun <T : Any> json(model: Any, view: KClass<T>): HttpResponse {
     return delegate.json(model, view).also { chained.add(it) }
   }
 
@@ -136,7 +136,7 @@ class ChainedHttpApi(val delegate: HttpApi) : HttpApi {
   }
 
   override fun session(name: String, value: String?) {
-    return delegate.session(name,  value)
+    return delegate.session(name, value)
   }
 
   override fun attribute(name: String, value: String) {
@@ -154,13 +154,13 @@ class ChainedHttpApi(val delegate: HttpApi) : HttpApi {
 
 val mapper = jacksonObjectMapper()
 
-inline fun <reified T: Any> parseDto(requestBody: String): T {
+inline fun <reified T : Any> parseDto(requestBody: String): T {
   val map = HashMap<String, String>()
-  URLEncodedUtils.parse(requestBody, Charset.defaultCharset()).map { it ->  map[it.name] = it.value }
+  URLEncodedUtils.parse(requestBody, Charset.defaultCharset()).map { it -> map[it.name] = it.value }
   return mapper.readValue(mapper.writeValueAsString(map))
 }
 
-fun <T: Any> toJson(data: Any, view: KClass<T>?): String {
+fun <T : Any> toJson(data: Any, view: KClass<T>?): String {
   return if (view == null) {
     mapper.writeValueAsString(data)
   } else {
@@ -168,23 +168,25 @@ fun <T: Any> toJson(data: Any, view: KClass<T>?): String {
   }
 }
 
-class HttpException: Exception {
+class HttpException : Exception {
   val code: Int
 
-  constructor(code: Int): super("HTTP error $code") {
+  constructor(code: Int) : super("HTTP error $code") {
     this.code = code
   }
 
-  constructor(code: Int, message: String): super(message) {
+  constructor(code: Int, message: String) : super(message) {
     this.code = code
   }
 
   constructor(message: String?) : super(message) {
     this.code = INTERNAL_SERVER_ERROR
   }
+
   constructor(message: String?, cause: Throwable?) : super(message, cause) {
     this.code = INTERNAL_SERVER_ERROR
   }
+
   constructor(cause: Throwable?) : super(cause) {
     this.code = INTERNAL_SERVER_ERROR
   }
