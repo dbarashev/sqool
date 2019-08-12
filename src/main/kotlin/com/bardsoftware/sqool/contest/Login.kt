@@ -13,7 +13,7 @@ class LoginHandler {
     return UserStorage.exec {
       (findUser(req.name) ?: if (req.createIfMissing) {
         val newUser = createUser(req.name, req.password)
-        newUser?.acceptRandomChalenges()
+        newUser?.acceptRandomChallenges()
         newUser
       } else null)?.let {
         if (DigestUtils.md5Hex(req.password) == it.password) {

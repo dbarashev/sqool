@@ -1,23 +1,38 @@
 <template>
   <div class="bmd-layout-container bmd-drawer-f-l" id="app">
-    <AvailableContestsDropdown></AvailableContestsDropdown>
+    <Dashboard></Dashboard>
+    <TaskAttemptPropertiesModal ref="taskAttemptPropertiesModal"></TaskAttemptPropertiesModal>
+    <FailureDetailsModal ref="failureDetailsModal"></FailureDetailsModal>
+    <AlertDialog ref="alertDialog"></AlertDialog>
   </div>
 </template>
 
 <script lang="ts">
 import {Component, Provide, Vue} from 'vue-property-decorator';
-import AvailableContestsDropdown from './components/AvailableContestsDropdown.vue';
+import Dashboard from './components/Dashboard.vue'
+import TaskAttemptPropertiesModal from './components/TaskAttemptPropertiesModal';
+import FailureDetailsModal from "./components/FailureDetailsModal";
 import AlertDialog from '../components/AlertDialog.vue';
 
 @Component({
   components: {
-    AvailableContestsDropdown, AlertDialog
+    Dashboard, AlertDialog, TaskAttemptPropertiesModal, FailureDetailsModal
   },
 })
 export default class App extends Vue {
   @Provide()
   public alertDialog(): AlertDialog {
     return this.$refs.alertDialog as AlertDialog;
+  }
+
+  @Provide()
+  public taskAttemptProperties(): TaskAttemptPropertiesModal {
+    return this.$refs.taskAttemptPropertiesModal as TaskAttemptPropertiesModal;
+  }
+
+  @Provide()
+  public failureDetails(): FailureDetailsModal {
+    return this.$refs.failureDetailsModal as FailureDetailsModal;
   }
 }
 </script>

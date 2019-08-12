@@ -29,7 +29,19 @@ class MalformedDataException : Exception {
 class DbQueryManager {
   private val jsonMapper = ObjectMapper()
 
-  fun findContest(code: String): Contest = transaction {
+  fun listVariantsId(contestCode: String) = transaction {
+    Contests.select { Contests.code eq contestCode }
+        .map { ObjectMapper().readValue(it[Contests.variants_id_json_array], IntArray::class.java).toList() }
+        .firstOrNull()
+  }?.toList() ?: throw Exception("Queried contests doesn't exist")
+
+  fun listTasksId(variantId: Int) = transaction {
+    Variants.select { Variants.id eq variantId }
+        .map { ObjectMapper().readValue(it[Variants.tasks_id_json_array], IntArray::class.java).toList() }
+        .firstOrNull()
+  }?.toList() ?: throw Exception("Queried variant doesn't exist")
+
+  fun findContest(code: String) = transaction {
     val contest = Contests.select {
       Contests.code eq code
     }.map { resultRowToContest(it) }
