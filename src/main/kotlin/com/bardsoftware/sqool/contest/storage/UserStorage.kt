@@ -117,9 +117,15 @@ object AttemptView : Table("Contest.MyAttempts") {
   var review = text("solution_review").nullable()
 }
 
-object AvailableContests : Table("Contest.UserContest") {
+object AvailableContests : Table("Contest.AvailableContests") {
   val user_id = integer("user_id")
   val contest_code = text("contest_code")
+  val contest_name = text("contest_name")
+  val variant_choice = customEnumeration(
+      "variant_choice", "VariantChoice",
+      { value -> Contests.VariantChoice.valueOf(value.toString()) },
+      { Contests.PGEnum("FooEnum", it) }
+  )
   val variant_id = integer("variant_id").nullable()
 }
 
@@ -190,34 +196,36 @@ class User(val entity: UserEntity, val txn: Transaction, val storage: UserStorag
       }
     }
 
-  fun availableContests(): List<Contest> {
-    val contests = transaction {
-      AvailableContests.select { AvailableContests.user_id eq entity.id }
-          .map { it[AvailableContests.contest_code] }
-          .toList()
-    }
-    return transaction {
-      Contests.join(AvailableContests, JoinType.INNER, additionalConstraint = { Contests.code eq AvailableContests.contest_code })
-          .select { Contests.code inList contests }
+  fun availableContests() = transaction {
+    AvailableContests.select { AvailableContests.user_id eq entity.id }
           .mapNotNull { c ->
-            //Variant already determined and client won't choose it
-            if (c[AvailableContests.variant_id] != null || c[Contests.variant_choice] != Contests.VariantChoice.ANY) {
-              return@mapNotNull Contest(c[Contests.code], c[Contests.name], emptyList())
+            val contestCode = c[AvailableContests.contest_code]
+            val contestName = c[AvailableContests.contest_name]
+            if (c[AvailableContests.variant_choice] != Contests.VariantChoice.ANY) {
+              return@mapNotNull Contest(contestCode, contestName, emptyList())
             }
 
-            val variantsId = jsonMapper.readValue(c[Contests.variants_id_json_array], IntArray::class.java).toList()
+            val variantsId = queryManager.listContestVariantsId(contestCode)
             if (variantsId.isEmpty()) {
               return@mapNotNull null
             }
             val variants = Variants.select { Variants.id inList variantsId }.map { Variant(it[Variants.id], it[Variants.name]) }
-            Contest(c[Contests.code], c[Contests.name], variants)
+            Contest(contestCode, contestName, variants)
           }.toList()
     }
-  }
 
   fun acceptRandomChallenges() {
     return storage.procedure("SELECT Contest.AcceptRandomAuthor(?)") {
       setInt(1, this@User.id)
+      execute()
+    }
+  }
+
+  fun assignVariant(contestCode: String, variantId: Int) {
+    storage.procedure("SELECT Contest.AssignVariant(?, ?, ?)") {
+      setInt(1, this@User.id)
+      setString(2, contestCode)
+      setInt(3, variantId)
       execute()
     }
   }
@@ -229,17 +237,21 @@ class User(val entity: UserEntity, val txn: Transaction, val storage: UserStorag
   }
 
   fun getVariantAttempts(id: Int) = transaction {
-    val taskIdList = queryManager.listTasksId(id)
+    val taskIdList = queryManager.listVariantTasksId(id)
     AttemptView.select { (AttemptView.attemptUserId eq this@User.id) and (AttemptView.taskId inList taskIdList) }
         .map(TaskAttemptEntity.Factory::fromRow)
   }
 
-  fun acceptAllVariants(contestCode: String) = queryManager.listVariantsId(contestCode).forEach { acceptVariant(it) }
+  fun acceptAllVariants(contestCode: String) = queryManager.listContestVariantsId(contestCode).forEach { acceptVariant(it) }
 
-  fun getAllVariantsAttempts(contestCode: String) = queryManager.listVariantsId(contestCode).map { getVariantAttempts(it) }.flatten()
+  fun getAllVariantsAttempts(contestCode: String) = transaction {
+    val taskIdList = queryManager.listContestTasksId(contestCode)
+    AttemptView.select { (AttemptView.attemptUserId eq this@User.id) and (AttemptView.taskId inList taskIdList) }
+        .map(TaskAttemptEntity.Factory::fromRow)
+  }
 
   fun acceptRandomVariant(contestCode: String): Int {
-    val variantId = queryManager.listVariantsId(contestCode).random()
+    val variantId = queryManager.listContestVariantsId(contestCode).random()
     storage.procedure("SELECT Contest.AssignVariant(?, ?, ?)") {
       setInt(1, this@User.id)
       setString(2, contestCode)

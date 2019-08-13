@@ -301,12 +301,25 @@ CREATE TABLE UserContest(
   PRIMARY KEY (user_id, contest_code)
 );
 
+CREATE OR REPLACE VIEW AvailableContests AS
+SELECT UC.user_id, UC.contest_code, C.name AS contest_name, C.variant_choice, UC,variant_id
+FROM Contest.UserContest UC JOIN Contest C on UC.contest_code = C.code;
+
 CREATE OR REPLACE FUNCTION AssignVariant(_user_id INT, _contest_code TEXT, _variant_id INT)
 RETURNS VOID AS $$
+BEGIN
   INSERT INTO Contest.UserContest(user_id, contest_code, variant_id) VALUES (_user_id, _contest_code, _variant_id)
   ON CONFLICT (user_id, contest_code)
-  DO UPDATE SET variant_id = _variant_id
-$$ LANGUAGE SQL;
+  DO UPDATE SET variant_id = _variant_id;
+  PERFORM AcceptVariant(_user_id, _variant_id);
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE VIEW TaskContest AS
+SELECT C.code AS contest_code, V.variant_id, T.task_id
+FROM Contest.Contest C
+JOIN Contest.VariantContest V ON C.code = V.contest_code
+JOIN Contest.TaskVariant T ON V.variant_id = T.variant_id;
 
 ------------------------------------------------------------------------------------------------
 -- This function generates a nickname from a random combination of first name (adjective)
@@ -585,7 +598,6 @@ INSERT INTO Contest.Script(description, body) VALUES
 
 INSERT INTO Contest.Contest(code, name, variant_choice) VALUES
   ('1', 'Random variant', 'RANDOM'),
-  ('2', 'Chosen variant', 'ANY'),
   ('3', 'Any variant', 'ANY'),
   ('4', 'Not available', 'ANY'),
   ('5', 'Empty', 'ANY'),
@@ -610,7 +622,6 @@ INSERT INTO Contest.ContestUser(id, name, nick, passwd) VALUES (1, 'user', 'user
 
 INSERT INTO Contest.UserContest(user_id, contest_code, variant_id) VALUES
   (1, '1', NULL),
-  (1, '2', 3),
   (1, '3', NULL),
   (1, '5', NULL),
   (1, '6', NULL),
@@ -620,7 +631,8 @@ INSERT INTO Contest.Task(id, name) VALUES
   (1, 'Solved'),
   (2, 'Failed'),
   (3, 'Testing'),
-  (4, 'Virgin');
+  (4, 'Virgin'),
+  (5, 'From 5 variant');
 
 INSERT INTO Contest.Attempt(task_id, user_id, attempt_id, status) VALUES
   (1, 1, 1, 'success'),
@@ -632,4 +644,4 @@ INSERT INTO Contest.GradingDetails(attempt_id, error_msg, result_set) VALUES
   (2, E'Some error message\nSome error message', '[["col1", "col2", "col3"], {"col1": 42, "col2": "q"}, {"col1": -1, "col2": "t", "col3": 1}]');
 
 INSERT INTO Contest.TaskVariant(task_id, variant_id) VALUES
-  (1, 1), (2, 1), (3, 1), (4, 1);
+  (1, 1), (2, 1), (3, 1), (4, 1), (5, 5);

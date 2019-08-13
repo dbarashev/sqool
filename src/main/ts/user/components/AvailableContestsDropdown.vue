@@ -25,7 +25,7 @@
 <script lang="ts">
 import {Component, Inject, Vue} from 'vue-property-decorator';
 import AlertDialog from '../../components/AlertDialog';
-import {ContestChallenge, VariantChallenge} from "../Challenge";
+import {Contest} from '../Contest';
 
 @Component
 export default class AvailableContestsDropdown extends Vue {
@@ -58,23 +58,35 @@ export default class AvailableContestsDropdown extends Vue {
     });
   }
 
-  private loadVariant(contest: ContestOption, variant: VariantOption | null) {
-    if (!variant && contest.variants.length == 1) {
-      variant = contest.variants[0];
+  private loadVariant(contestOption: ContestOption, variant: VariantOption | null) {
+    if (!variant && contestOption.variants.length == 1) {
+      variant = contestOption.variants[0];
     }
-    let challenge;
+    let ajax;
     if (variant) {
-      this.currentText = `${contest.name} / ${variant.name}`;
-      challenge = new VariantChallenge(contest.code, variant.id);
+      ajax = $.ajax({
+        url: '/acceptVariant',
+        method: 'POST',
+        data: {
+          contest_code: contestOption.code,
+          variant_id: variant.id
+        }
+      })
     } else {
-      this.currentText = contest.name;
-      challenge = new ContestChallenge(contest.code);
+      ajax = $.ajax({
+        url: '/acceptContest',
+        method: 'POST',
+        data: {contest_code: contestOption.code}
+      })
     }
-    challenge.refreshAttempts().fail(xhr => {
+    ajax.done(() => {
+      const contest = new Contest(contestOption.code);
+      this.$emit("input", contest);
+      return contest.refreshAttempts()
+    }).fail(xhr => {
       const title = 'Не удалось загрузить вариант:';
       this.alertDialog().show(title, xhr.statusText);
     });
-    this.$emit("input", challenge);
   }
 }
 

@@ -14,6 +14,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.exc.InvalidDefinitionException
 import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException
 import org.jetbrains.exposed.sql.ResultRow
+import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.lang.IllegalArgumentException
@@ -26,20 +27,35 @@ class MalformedDataException : Exception {
   constructor(message: String?) : super(message)
 }
 
+object ContestTasks : Table("Contest.TaskContest") {
+  val contestCode = text("contest_code")
+  val variantId = integer("variant_id")
+  val taskId = integer("task_id")
+}
+
 class DbQueryManager {
   private val jsonMapper = ObjectMapper()
 
-  fun listVariantsId(contestCode: String) = transaction {
+  fun listContestVariantsId(contestCode: String) = transaction {
     Contests.select { Contests.code eq contestCode }
         .map { ObjectMapper().readValue(it[Contests.variants_id_json_array], IntArray::class.java).toList() }
         .firstOrNull()
-  }?.toList() ?: throw Exception("Queried contests doesn't exist")
+        ?.toList() ?: throw Exception("Queried contests doesn't exist")
+  }
 
-  fun listTasksId(variantId: Int) = transaction {
+  fun listVariantTasksId(variantId: Int) = transaction {
     Variants.select { Variants.id eq variantId }
         .map { ObjectMapper().readValue(it[Variants.tasks_id_json_array], IntArray::class.java).toList() }
         .firstOrNull()
-  }?.toList() ?: throw Exception("Queried variant doesn't exist")
+        ?.toList() ?: throw Exception("Queried contests doesn't exist")
+  }
+
+  fun listContestTasksId(contestCode: String) = transaction {
+    ContestTasks.select { ContestTasks.contestCode eq contestCode }
+        .map { it[ContestTasks.taskId] }
+        .distinct()
+        .toList()
+  }
 
   fun findContest(code: String) = transaction {
     val contest = Contests.select {

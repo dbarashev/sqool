@@ -298,10 +298,14 @@ fun main(args: Array<String>) {
       GET("/logout" BY LogoutHandler())
       GET("/contest/available/all" BY availableContestAllHandler)
       GET("/contest/attempts" BY ContestAttemptsHandler() ARGS mapOf(
-          "code" to ContestAttemptsArgs::code
+          "contest_code" to ContestAttemptsArgs::contest_code
       ))
-      GET("/variant/attempts" BY VariantAttemptsHandler() ARGS mapOf(
-          "id" to VariantAttemptsArgs::id
+      POST("/acceptVariant" BY VariantAcceptHandler() ARGS mapOf(
+          "contest_code" to VariantAcceptArgs::contest_code,
+          "variant_id" to VariantAcceptArgs::variant_id
+      ))
+      POST("/acceptContest" BY ContestAcceptHandler() ARGS mapOf(
+          "contest_code" to ContestAcceptArgs::contest_code
       ))
     }
     get("/login") {

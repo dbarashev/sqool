@@ -4,9 +4,7 @@ import com.bardsoftware.sqool.contest.admin.Contests
 import com.bardsoftware.sqool.contest.storage.AvailableContests
 import com.bardsoftware.sqool.contest.storage.User
 import com.bardsoftware.sqool.contest.storage.UserStorage
-import org.jetbrains.exposed.sql.JoinType
 import org.jetbrains.exposed.sql.select
-import org.jetbrains.exposed.sql.selectAll
 
 abstract class DashboardHandler<T : RequestArgs> : RequestHandler<T>() {
   protected fun withUser(http: HttpApi, handle: User.() -> HttpResponse): HttpResponse {
@@ -39,48 +37,68 @@ class AvailableContestAllHandler : DashboardHandler<RequestArgs>() {
   }
 }
 
-data class VariantAttemptsArgs(var id: String) : RequestArgs()
+data class VariantAcceptArgs(var contest_code: String, var variant_id: String) : RequestArgs()
 
-class VariantAttemptsHandler : DashboardHandler<VariantAttemptsArgs>() {
-  override fun args() = VariantAttemptsArgs("")
+class VariantAcceptHandler : DashboardHandler<VariantAcceptArgs>() {
+  override fun args() = VariantAcceptArgs("", "")
 
-  override fun handle(http: HttpApi, argValues: VariantAttemptsArgs) = withUser(http) {
-    val id = argValues.id.toInt()
-    acceptVariant(id)
-    http.json(getVariantAttempts(id))
+  override fun handle(http: HttpApi, argValues: VariantAcceptArgs) = withUser(http) {
+    AvailableContests.select { AvailableContests.contest_code eq argValues.contest_code }
+        .map {
+          val variantChoice = it[AvailableContests.variant_choice]
+          if (variantChoice == Contests.VariantChoice.ANY) {
+            assignVariant(argValues.contest_code, argValues.variant_id.toInt())
+            http.ok()
+          } else {
+            http.error(400, "Variant can't be chosen by client")
+          }
+        }.firstOrNull() ?: http.error(404, "No contest with code ${argValues.contest_code}")
   }
 }
 
-data class ContestAttemptsArgs(var code: String) : RequestArgs()
+data class ContestAcceptArgs(var contest_code: String) : RequestArgs()
 
-class ContestAttemptsHandler : DashboardHandler<ContestAttemptsArgs>() {
-  override fun args() = ContestAttemptsArgs("")
+class ContestAcceptHandler : DashboardHandler<ContestAcceptArgs>() {
+  override fun args() = ContestAcceptArgs("")
 
-  override fun handle(http: HttpApi, argValues: ContestAttemptsArgs) = withUser(http) {
-    Contests.join(AvailableContests, JoinType.INNER, onColumn = Contests.code, otherColumn = AvailableContests.contest_code)
-        .select { Contests.code eq argValues.code }
+  override fun handle(http: HttpApi, argValues: ContestAcceptArgs) = withUser(http) {
+    AvailableContests.select { AvailableContests.contest_code eq argValues.contest_code }
         .map {
           val variantId = it[AvailableContests.variant_id]
-          val variantChoice = it[Contests.variant_choice]
+          val variantChoice = it[AvailableContests.variant_choice]
           if (variantId != null) {
             acceptVariant(variantId)
-            return@map http.json(getVariantAttempts(variantId))
+            return@map http.ok()
           }
 
           when (variantChoice) {
             Contests.VariantChoice.ANY -> http.error(400, "No variant chosen")
 
-            Contests.VariantChoice.ALL -> {
-              acceptAllVariants(argValues.code)
-              http.json(getAllVariantsAttempts(argValues.code))
-            }
+            Contests.VariantChoice.ALL -> http.ok().also { acceptAllVariants(argValues.contest_code) }
 
-            Contests.VariantChoice.RANDOM -> {
-              val randomVariantId = acceptRandomVariant(argValues.code)
-              http.json(getVariantAttempts(randomVariantId))
-            }
+            Contests.VariantChoice.RANDOM -> http.ok().also { acceptRandomVariant(argValues.contest_code) }
           }
-        }.first()
+        }.firstOrNull() ?: http.error(404, "No contest with code ${argValues.contest_code}")
+  }
+}
+
+data class ContestAttemptsArgs(var contest_code: String) : RequestArgs()
+
+class ContestAttemptsHandler : DashboardHandler<ContestAttemptsArgs>() {
+  override fun args() = ContestAttemptsArgs("")
+
+  override fun handle(http: HttpApi, argValues: ContestAttemptsArgs) = withUser(http) {
+    AvailableContests.select { AvailableContests.contest_code eq argValues.contest_code }
+        .map {
+          val assignedVariant = it[AvailableContests.variant_id]
+          if (assignedVariant != null) {
+            return@map http.json(getVariantAttempts(assignedVariant))
+          }
+          if (it[AvailableContests.variant_choice] == Contests.VariantChoice.ALL) {
+            return@map http.json(getAllVariantsAttempts(argValues.contest_code))
+          }
+          http.error(400, "No variant chosen")
+        }.firstOrNull() ?: http.error(404, "No contest with code ${argValues.contest_code}")
   }
 }
 

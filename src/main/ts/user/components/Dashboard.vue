@@ -4,7 +4,7 @@
             <div class="collapse navbar-collapse w-100 order-1 order-md-0">
                 <ul class="navbar-nav mr-auto">
                     <li class="nav-item">
-                        <AvailableContestsDropdown v-on:input="challenge = arguments[0]"></AvailableContestsDropdown>
+                        <AvailableContestsDropdown v-on:input="contest = arguments[0]"></AvailableContestsDropdown>
                     </li>
                 </ul>
             </div>
@@ -29,7 +29,7 @@
                 </tr>
                 </thead>
                 <tbody>
-                <tr v-for="attempt in challenge.attempts">
+                <tr v-for="attempt in contest.attempts">
                     <td @click="showTaskAttempt(attempt)">{{ attempt.taskEntity.name }}</td>
                     <td @click="showTaskAttempt(attempt)">{{ attempt.taskEntity.difficulty }}</td>
                     <td @click="showTaskAttempt(attempt)">{{ attempt.taskEntity.score }}</td>
@@ -57,7 +57,7 @@
 <script lang="ts">
 import {Component, Inject, Vue} from 'vue-property-decorator';
 import AvailableContestsDropdown from './AvailableContestsDropdown.vue';
-import {Challenge} from '../Challenge';
+import {Contest} from '../Contest';
 import TaskAttemptPropertiesModal from './TaskAttemptPropertiesModal';
 import {TaskAttempt} from '../TaskAttempt';
 import AlertDialog from '../../components/AlertDialog';
@@ -71,13 +71,16 @@ export default class Dashboard extends Vue {
   @Inject() private readonly taskAttemptProperties!: () => TaskAttemptPropertiesModal;
   @Inject() private readonly failureDetails!: () => FailureDetailsModal;
   private userName = window.userName || 'чувак';
-  private challenge = new Challenge();
+  private contest = new Contest('');
 
   private showTaskAttempt(attempt: TaskAttempt) {
     this.taskAttemptProperties().show(attempt).then(solution => {
       return $.ajax('/submit.do', this.buildSubmissionPayload(attempt, solution));
     }).done(() => {
-      this.challenge.refreshAttempts();
+      this.contest.refreshAttempts().fail(xhr => {
+        const title = 'Не удалось обновить вариант:';
+        this.alertDialog().show(title, xhr.statusText);
+      });
     }).fail(xhr => {
       const title = 'Не удалось проверить решение:';
       this.alertDialog().show(title, xhr.statusText);
@@ -92,7 +95,7 @@ export default class Dashboard extends Vue {
       data: {
         'task-id': attempt.taskEntity.id,
         solution: solution,
-        'contest-id': this.challenge.contestCode
+        'contest-id': this.contest.contestCode
       }
     };
   }
