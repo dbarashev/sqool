@@ -10,16 +10,21 @@ export class Contest {
 
   constructor(readonly contestCode: string, readonly variantPolicy: VariantPolicy) {}
 
-  public refreshAttempts() {
+  public refreshAttempts(): JQuery.jqXHR {
     return $.ajax({
       url: '/contest/attempts',
       data: {contest_code: this.contestCode},
     }).done((attempts: TaskAttempt[]) => {
       this.attempts = attempts;
-      const hasTesting = this.attempts.some((attempt) => attempt.status === 'testing');
-      if (hasTesting) {
-        window.setTimeout(() => this.refreshAttempts(), 1000);
-      }
     });
+  }
+
+  public acceptRandomVariant(): JQuery.jqXHR {
+    return $.ajax({
+      url: '/acceptContest',
+      method: 'POST',
+      data: {contest_code: this.contestCode}
+    });
+
   }
 }

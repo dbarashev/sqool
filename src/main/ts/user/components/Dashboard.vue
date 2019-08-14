@@ -17,37 +17,7 @@
         </nav>
 
         <div class="m-3">
-            <table class="table table-hover table-striped table-fixed">
-                <thead class="thead-dark">
-                <tr>
-                    <th class="w-25">Задача</th>
-                    <th class="w-25">Сложность</th>
-                    <th class="w-25">Стоимость</th>
-                    <th class="w-25"></th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr v-for="attempt in contest.attempts">
-                    <td @click="showTaskAttempt(attempt)">{{ attempt.taskEntity.name }}</td>
-                    <td @click="showTaskAttempt(attempt)">{{ attempt.taskEntity.difficulty }}</td>
-                    <td @click="showTaskAttempt(attempt)">{{ attempt.taskEntity.score }}</td>
-                    <td>
-                        <div v-if="attempt.status === 'failure'">
-                            <a href="#" @click="showFailureDetails(attempt)">{{ getErrorMessage(attempt.count) }}</a>
-                        </div>
-                        <div v-if="attempt.status === 'virgin'" @click="showTaskAttempt(attempt)">
-                            Нет решения
-                        </div>
-                        <div v-if="attempt.status === 'testing'" @click="showTaskAttempt(attempt)">
-                            <i class="fa fa-cog fa-spin fa-fw"></i>Проверяем...
-                        </div>
-                        <div v-if="attempt.status === 'success'" @click="showTaskAttempt(attempt)">
-                            <i class="fa fa-thumbs-up"></i>Решена!
-                        </div>
-                    </td>
-                </tr>
-                </tbody>
-            </table>
+            <AttemptTable ref="attemptTable"></AttemptTable>
         </div>
 
         <div class="m-5">
@@ -65,9 +35,10 @@ import {TaskAttempt} from '../TaskAttempt';
 import AlertDialog from '../../components/AlertDialog';
 import FailureDetailsModal from './FailureDetailsModal';
 import VariantChooser from './VariantChooser';
+import AttemptTable from './AttemptTable.vue';
 
 @Component({
-    components: {AvailableContestsDropdown, VariantChooser},
+    components: {AttemptTable, AvailableContestsDropdown, VariantChooser},
 })
 export default class Dashboard extends Vue {
   @Inject() private readonly alertDialog!: () => AlertDialog;
@@ -80,6 +51,12 @@ export default class Dashboard extends Vue {
   public variantChooser(): VariantChooser {
     return this.$refs.variantChooser as VariantChooser;
   }
+
+  @Provide()
+  public attemptTable(): AttemptTable {
+    return this.$refs.attemptTable as AttemptTable;
+  }
+
 
   private showTaskAttempt(attempt: TaskAttempt) {
     this.taskAttemptProperties().show(attempt).then((solution) => {
@@ -106,19 +83,6 @@ export default class Dashboard extends Vue {
         'contest-id': this.contest.contestCode,
       },
     };
-  }
-
-  private getErrorMessage(count: number): string {
-    switch (count) {
-      case 1:
-        return 'Кажется, что-то пошло не так';
-      case 2:
-        return 'Опять нет';
-      case 3:
-        return 'Да что ж такое!';
-      default:
-        return 'Это фиаско, друг!';
-    }
   }
 
   private showFailureDetails(attempt: TaskAttempt) {

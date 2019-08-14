@@ -19,11 +19,14 @@ import {Component, Inject, Vue} from 'vue-property-decorator';
 import AlertDialog from '../../components/AlertDialog';
 import {Contest, VariantPolicy} from '../Contest';
 import VariantChooser from './VariantChooser';
+import AttemptTable from "./AttemptTable";
 
 @Component
 export default class AvailableContestsDropdown extends Vue {
   @Inject() private readonly alertDialog!: () => AlertDialog;
   @Inject() private readonly variantChooser!: () => VariantChooser;
+  @Inject() private readonly attemptTable!: () => AttemptTable;
+
   private currentText = 'Выбрать контест';
   private contests: ContestOption[] = [];
 
@@ -45,16 +48,24 @@ export default class AvailableContestsDropdown extends Vue {
   private onContestChange(contestOption: ContestOption) {
     const contest = new Contest(contestOption.code, contestOption.variantPolicy);
     if (contestOption.chosenVariant) {
-      this.variantChooser().hide();
-      this.$emit('input', contest);
-      contest.refreshAttempts().fail((xhr) => {
-        const title = 'Не удалось загрузить вариант:';
-        this.alertDialog().show(title, xhr.statusText);
-      });
+      this.loadTasks(contest);
     } else {
-      this.variantChooser().show(contest);
+      this.attemptTable().clear();
+      this.variantChooser().show(contest, this.loadTasks, this.onFailure);
     }
   }
+
+  private loadTasks = (contest: Contest) => {
+    this.variantChooser().hide();
+    contest.refreshAttempts()
+        .done(() => this.attemptTable().setAttempts(contest.attempts))
+        .fail(this.onFailure);
+  };
+
+  private onFailure = (xhr: JQuery.jqXHR) => {
+    const title = 'Не удалось загрузить вариант:';
+    this.alertDialog().show(title, xhr.statusText);
+  };
   // private loadVariant(contestOption: ContestOption, variant: VariantOption | null) {
   //   if (!variant && contestOption.variants.length == 1) {
   //     variant = contestOption.variants[0];
