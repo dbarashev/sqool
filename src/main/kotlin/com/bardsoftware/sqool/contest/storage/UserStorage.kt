@@ -159,7 +159,7 @@ class TaskAttempt(val entity: TaskAttemptEntity) {
 
 class Task(val entity: TaskEntity)
 
-data class Contest(val code: String, val name: String, val variants: List<Variant>)
+data class Contest(val code: String, val name: String, val variantPolicy: String, val variants: List<Variant>, val chosenVariant: Variant?)
 
 data class Variant(val id: Int, val name: String)
 
@@ -201,16 +201,19 @@ class User(val entity: UserEntity, val txn: Transaction, val storage: UserStorag
           .mapNotNull { c ->
             val contestCode = c[AvailableContests.contest_code]
             val contestName = c[AvailableContests.contest_name]
-            if (c[AvailableContests.variant_choice] != Contests.VariantChoice.ANY) {
-              return@mapNotNull Contest(contestCode, contestName, emptyList())
+            val chosenVariantId = c[AvailableContests.variant_id]
+
+            val variantIds = queryManager.listContestVariantsId(contestCode)
+            val variants = if (variantIds.isEmpty()) {
+              listOf()
+            } else {
+              Variants.select { Variants.id inList variantIds }.map { Variant(it[Variants.id], it[Variants.name]) }
             }
 
-            val variantsId = queryManager.listContestVariantsId(contestCode)
-            if (variantsId.isEmpty()) {
-              return@mapNotNull null
+            val chosenVariant = chosenVariantId?.let { id ->
+              variants.find { it.id == id }
             }
-            val variants = Variants.select { Variants.id inList variantsId }.map { Variant(it[Variants.id], it[Variants.name]) }
-            Contest(contestCode, contestName, variants)
+            Contest(contestCode, contestName, c[AvailableContests.variant_choice].name, variants, chosenVariant)
           }.toList()
     }
 
@@ -238,6 +241,7 @@ class User(val entity: UserEntity, val txn: Transaction, val storage: UserStorag
 
   fun getVariantAttempts(id: Int) = transaction {
     val taskIdList = queryManager.listVariantTasksId(id)
+    println("We have the following tasks in variant $id: $taskIdList")
     AttemptView.select { (AttemptView.attemptUserId eq this@User.id) and (AttemptView.taskId inList taskIdList) }
         .map(TaskAttemptEntity.Factory::fromRow)
   }

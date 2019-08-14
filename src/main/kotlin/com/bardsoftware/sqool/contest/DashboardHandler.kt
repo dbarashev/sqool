@@ -88,9 +88,11 @@ class ContestAttemptsHandler : DashboardHandler<ContestAttemptsArgs>() {
   override fun args() = ContestAttemptsArgs("")
 
   override fun handle(http: HttpApi, argValues: ContestAttemptsArgs) = withUser(http) {
+    println("Searching for attempts of user $id in contest ${argValues.contest_code}")
     AvailableContests.select { AvailableContests.contest_code eq argValues.contest_code }
         .map {
           val assignedVariant = it[AvailableContests.variant_id]
+          println("User is assigned variant $assignedVariant")
           if (assignedVariant != null) {
             return@map http.json(getVariantAttempts(assignedVariant))
           }
