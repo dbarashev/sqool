@@ -17,7 +17,7 @@
 <script lang="ts">
 import {Component, Inject, Vue} from 'vue-property-decorator';
 import AlertDialog from '../../components/AlertDialog';
-import {Contest, VariantPolicy} from '../Contest';
+import {Contest, VariantOption, VariantPolicy} from "../Contest";
 import VariantChooser from './VariantChooser';
 import AttemptTable from "./AttemptTable";
 
@@ -45,8 +45,8 @@ export default class AvailableContestsDropdown extends Vue {
     this.refresh();
   }
 
-  private onContestChange(contestOption: ContestOption) {
-    const contest = new Contest(contestOption.code, contestOption.variantPolicy);
+  onContestChange(contestOption: ContestOption) {
+    const contest = new Contest(contestOption.code, contestOption.variantPolicy, contestOption.variants);
     if (contestOption.chosenVariant) {
       this.loadTasks(contest);
     } else {
@@ -104,8 +104,4 @@ class ContestOption {
   }
 }
 
-class VariantOption {
-  constructor(readonly id: number, readonly name: string) {
-  }
-}
 </script>

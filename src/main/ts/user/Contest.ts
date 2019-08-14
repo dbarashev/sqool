@@ -4,11 +4,18 @@ import AlertDialog from '../components/AlertDialog';
 
 export type VariantPolicy = 'ANY' | 'RANDOM' | 'ALL';
 
+export class VariantOption {
+  constructor(readonly id: number, readonly name: string) {
+  }
+}
+
 export class Contest {
   public attempts: TaskAttempt[] = [];
   @Inject() private readonly alertDialog!: () => AlertDialog;
 
-  constructor(readonly contestCode: string, readonly variantPolicy: VariantPolicy) {}
+  constructor(readonly contestCode: string,
+              readonly variantPolicy: VariantPolicy,
+              readonly variants: VariantOption[]) {}
 
   public refreshAttempts(): JQuery.jqXHR {
     return $.ajax({

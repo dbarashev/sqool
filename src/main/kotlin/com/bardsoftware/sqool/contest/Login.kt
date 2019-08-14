@@ -19,7 +19,7 @@ class LoginHandler {
         if (DigestUtils.md5Hex(req.password) == it.password) {
           http.chain {
             session("name", it.name)
-            redirect("/me")
+            redirect("/me2")
           }
         } else {
           http.redirect("/error403")

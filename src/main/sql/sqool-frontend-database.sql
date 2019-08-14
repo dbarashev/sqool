@@ -602,7 +602,8 @@ INSERT INTO Contest.Contest(code, name, variant_choice) VALUES
   ('4', 'Not available', 'ANY'),
   ('5', 'Empty', 'ANY'),
   ('6', 'Single variant', 'ANY'),
-  ('7', 'All variants', 'ALL');
+  ('7', 'All variants', 'ALL'),
+  ('8', 'Choose variant', 'ANY');
 
 INSERT INTO Contest.Variant(id, name) VALUES
   (1, 'Variant 1'),
@@ -625,7 +626,8 @@ INSERT INTO Contest.UserContest(user_id, contest_code, variant_id) VALUES
   (1, '3', 2),
   (1, '5', NULL),
   (1, '6', NULL),
-  (1, '7', NULL);
+  (1, '7', NULL),
+  (1, '8', NULL);
 
 INSERT INTO Contest.Task(id, name) VALUES
   (1, 'Solved'),

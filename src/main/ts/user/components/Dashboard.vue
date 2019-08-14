@@ -45,7 +45,7 @@ export default class Dashboard extends Vue {
   @Inject() private readonly taskAttemptProperties!: () => TaskAttemptPropertiesModal;
   @Inject() private readonly failureDetails!: () => FailureDetailsModal;
   private userName = window.userName || 'чувак';
-  private contest = new Contest('', 'RANDOM');
+  private contest?: Contest;
 
   @Provide()
   public variantChooser(): VariantChooser {
@@ -62,10 +62,12 @@ export default class Dashboard extends Vue {
     this.taskAttemptProperties().show(attempt).then((solution) => {
       return $.ajax('/submit.do', this.buildSubmissionPayload(attempt, solution));
     }).done(() => {
-      this.contest.refreshAttempts().fail((xhr) => {
-        const title = 'Не удалось обновить вариант:';
-        this.alertDialog().show(title, xhr.statusText);
-      });
+      if (this.contest) {
+        this.contest.refreshAttempts().fail((xhr) => {
+          const title = 'Не удалось обновить вариант:';
+          this.alertDialog().show(title, xhr.statusText);
+        });
+      }
     }).fail((xhr) => {
       const title = 'Не удалось проверить решение:';
       this.alertDialog().show(title, xhr.statusText);
@@ -75,14 +77,18 @@ export default class Dashboard extends Vue {
   }
 
   private buildSubmissionPayload(attempt: TaskAttempt, solution: string): object {
-    return {
-      method: 'POST',
-      data: {
-        'task-id': attempt.taskEntity.id,
-        'solution': solution,
-        'contest-id': this.contest.contestCode,
-      },
-    };
+    if (this.contest) {
+      return {
+        method: 'POST',
+        data: {
+          'task-id': attempt.taskEntity.id,
+          'solution': solution,
+          'contest-id': this.contest.contestCode,
+        },
+      };
+    } else {
+      return {};
+    }
   }
 
   private showFailureDetails(attempt: TaskAttempt) {
