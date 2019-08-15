@@ -124,7 +124,7 @@ object AvailableContests : Table("Contest.AvailableContests") {
   val variant_choice = customEnumeration(
       "variant_choice", "VariantChoice",
       { value -> Contests.VariantChoice.valueOf(value.toString()) },
-      { Contests.PGEnum("FooEnum", it) }
+      { Contests.PGEnum("VariantChoice", it) }
   )
   val variant_id = integer("variant_id").nullable()
 }
@@ -196,7 +196,7 @@ class User(val entity: UserEntity, val txn: Transaction, val storage: UserStorag
       }
     }
 
-  fun availableContests() = transaction {
+  fun availableContests(): List<Contest> = transaction {
     AvailableContests.select { AvailableContests.user_id eq entity.id }
           .mapNotNull { c ->
             val contestCode = c[AvailableContests.contest_code]
@@ -239,16 +239,16 @@ class User(val entity: UserEntity, val txn: Transaction, val storage: UserStorag
     execute()
   }
 
-  fun getVariantAttempts(id: Int) = transaction {
+  fun getVariantAttempts(id: Int): List<TaskAttemptEntity> = transaction {
     val taskIdList = queryManager.listVariantTasksId(id)
     println("We have the following tasks in variant $id: $taskIdList")
     AttemptView.select { (AttemptView.attemptUserId eq this@User.id) and (AttemptView.taskId inList taskIdList) }
         .map(TaskAttemptEntity.Factory::fromRow)
   }
 
-  fun acceptAllVariants(contestCode: String) = queryManager.listContestVariantsId(contestCode).forEach { acceptVariant(it) }
+  fun acceptAllVariants(contestCode: String): Unit = queryManager.listContestVariantsId(contestCode).forEach { acceptVariant(it) }
 
-  fun getAllVariantsAttempts(contestCode: String) = transaction {
+  fun getAllVariantsAttempts(contestCode: String): List<TaskAttemptEntity> = transaction {
     val taskIdList = queryManager.listContestTasksId(contestCode)
     AttemptView.select { (AttemptView.attemptUserId eq this@User.id) and (AttemptView.taskId inList taskIdList) }
         .map(TaskAttemptEntity.Factory::fromRow)

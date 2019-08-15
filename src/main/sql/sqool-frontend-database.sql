@@ -297,7 +297,7 @@ CREATE TABLE UserContest(
   user_id INT NOT NULL REFERENCES Contest.ContestUser ON DELETE CASCADE ON UPDATE CASCADE,
   contest_code TEXT NOT NULL REFERENCES Contest.Contest ON DELETE CASCADE ON UPDATE CASCADE,
   variant_id INT REFERENCES Contest.Variant ON DELETE CASCADE ON UPDATE CASCADE,
-  CHECK (isVariantInContest(contest_code, variant_id)),
+  FOREIGN KEY (contest_code, variant_id) REFERENCES VariantContest(contest_code, variant_id),
   PRIMARY KEY (user_id, contest_code)
 );
 

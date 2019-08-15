@@ -31,7 +31,7 @@ object Contests : Table("Contest.ContestDto") {
   val variant_choice = customEnumeration(
       "variant_choice", "VariantChoice",
       { value -> VariantChoice.valueOf(value.toString()) },
-      { PGEnum("FooEnum", it) }
+      { PGEnum("VariantChoice", it) }
   )
 
   fun asJson(row: ResultRow): JsonNode {

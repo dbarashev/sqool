@@ -36,28 +36,28 @@ object ContestTasks : Table("Contest.TaskContest") {
 class DbQueryManager {
   private val jsonMapper = ObjectMapper()
 
-  fun listContestVariantsId(contestCode: String) = transaction {
+  fun listContestVariantsId(contestCode: String): List<Int> = transaction {
     Contests.select { Contests.code eq contestCode }
         .map { ObjectMapper().readValue(it[Contests.variants_id_json_array], IntArray::class.java).toList() }
         .firstOrNull()
         ?.toList() ?: throw Exception("Queried contests doesn't exist")
   }
 
-  fun listVariantTasksId(variantId: Int) = transaction {
+  fun listVariantTasksId(variantId: Int): List<Int> = transaction {
     Variants.select { Variants.id eq variantId }
         .map { ObjectMapper().readValue(it[Variants.tasks_id_json_array], IntArray::class.java).toList() }
         .firstOrNull()
         ?.toList() ?: throw Exception("Queried contests doesn't exist")
   }
 
-  fun listContestTasksId(contestCode: String) = transaction {
+  fun listContestTasksId(contestCode: String): List<Int> = transaction {
     ContestTasks.select { ContestTasks.contestCode eq contestCode }
         .map { it[ContestTasks.taskId] }
         .distinct()
         .toList()
   }
 
-  fun findContest(code: String) = transaction {
+  fun findContest(code: String): Contest = transaction {
     val contest = Contests.select {
       Contests.code eq code
     }.map { resultRowToContest(it) }
@@ -65,13 +65,13 @@ class DbQueryManager {
     contest.first()
   }
 
-  fun findVariants(idList: List<Int>) = transaction {
+  fun findVariants(idList: List<Int>): List<Variant> = transaction {
     Variants.select {
       Variants.id inList idList.toList()
     }.map(::resultRowToVariant)
   }
 
-  fun findTasks(idList: List<Int>) = transaction {
+  fun findTasks(idList: List<Int>): List<Task> = transaction {
     Tasks.select {
       Tasks.id inList idList.toList()
     }.map(::resultRowToTask)
@@ -90,7 +90,7 @@ class DbQueryManager {
     return Variant(variant[Variants.name], tasks, schemas)
   }
 
-  fun resultRowToTask(row: ResultRow) = try {
+  fun resultRowToTask(row: ResultRow): Task = try {
     val attributesJson = row[Tasks.result_json]
     val keyAttributes = jsonMapper.readValue(attributesJson, object : TypeReference<List<AttributeDto>>() {})
     TaskDto(row[Tasks.name], row[Tasks.solution], keyAttributes).toTask()
