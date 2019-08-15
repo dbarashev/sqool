@@ -8,12 +8,15 @@ export default class VariantChooser extends Vue {
   private contest?: Contest;
   private onVariantChoice?: (contest: Contest) => void;
   private onFailure?: (xhr: JQuery.jqXHR) => void;
+  private variants: VariantOption[] = [];
   private selectedVariantName: string = "Выберите вариант";
+  private selectedVariantOption: VariantOption | null = null;
 
   public show(contest: Contest, onVariantChoice: (contest: Contest) => void, onFailure: (xhr: JQuery.jqXHR) => void) {
     this.isRandom = contest.variantPolicy === 'RANDOM';
     this.isShown = true;
     this.contest = contest;
+    this.variants = this.contest.variants;
     this.onVariantChoice = onVariantChoice;
     this.onFailure = onFailure;
   }
@@ -22,11 +25,8 @@ export default class VariantChooser extends Vue {
     this.isShown = false;
   }
 
-  variants(): VariantOption[] {
-    return (this.contest) ? this.contest.variants : [];
-  }
-
   selectVariant(v: VariantOption) {
+    this.selectedVariantOption = v;
     this.selectedVariantName = v.name;
   }
 
@@ -39,6 +39,10 @@ export default class VariantChooser extends Vue {
   }
 
   acceptSelected() {
-
+    if (this.contest && this.selectedVariantOption) {
+      this.contest.acceptVariant(this.selectedVariantOption.id)
+          .done(() => this.onVariantChoice!(this.contest!))
+          .fail(this.onFailure!);
+    }
   }
 }

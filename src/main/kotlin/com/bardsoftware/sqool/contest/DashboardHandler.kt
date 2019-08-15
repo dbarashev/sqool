@@ -46,8 +46,7 @@ class VariantAcceptHandler : DashboardHandler<VariantAcceptArgs>() {
   override fun handle(http: HttpApi, argValues: VariantAcceptArgs) = withUser(http) { user ->
     AvailableContests.select {
       (AvailableContests.contest_code eq argValues.contest_code) and
-      (AvailableContests.user_id eq user.id) and
-      (AvailableContests.variant_id eq argValues.variant_id.toInt())
+      (AvailableContests.user_id eq user.id)
     }.map {
       val variantChoice = it[AvailableContests.variant_choice]
       if (variantChoice == Contests.VariantChoice.ANY) {
@@ -56,7 +55,7 @@ class VariantAcceptHandler : DashboardHandler<VariantAcceptArgs>() {
       } else {
         http.error(400, "Variant can't be chosen by client")
       }
-    }.firstOrNull() ?: http.error(404, "Queried available contest and variant not found")
+    }.firstOrNull() ?: http.error(404, "No available contest with code ${argValues.contest_code}")
   }
 }
 
@@ -66,7 +65,7 @@ class ContestAcceptHandler : DashboardHandler<ContestAcceptArgs>() {
   override fun args() = ContestAcceptArgs("")
 
   override fun handle(http: HttpApi, argValues: ContestAcceptArgs) = withUser(http) { user ->
-    AvailableContests.select { AvailableContests.contest_code eq argValues.contest_code }
+    AvailableContests.select { (AvailableContests.contest_code eq argValues.contest_code) and (AvailableContests.user_id eq user.id) }
         .map {
           val variantId = it[AvailableContests.variant_id]
           val variantChoice = it[AvailableContests.variant_choice]
@@ -82,7 +81,7 @@ class ContestAcceptHandler : DashboardHandler<ContestAcceptArgs>() {
 
             Contests.VariantChoice.RANDOM -> http.ok().also { user.acceptRandomVariant(argValues.contest_code) }
           }
-        }.firstOrNull() ?: http.error(404, "No contest with code ${argValues.contest_code}")
+        }.firstOrNull() ?: http.error(404, "No available contest with code ${argValues.contest_code}")
   }
 }
 
@@ -93,7 +92,7 @@ class ContestAttemptsHandler : DashboardHandler<ContestAttemptsArgs>() {
 
   override fun handle(http: HttpApi, argValues: ContestAttemptsArgs) = withUser(http) { user ->
     println("Searching for attempts of user ${user.id} in contest ${argValues.contest_code}")
-    AvailableContests.select { AvailableContests.contest_code eq argValues.contest_code }
+    AvailableContests.select {(AvailableContests.contest_code eq argValues.contest_code) and (AvailableContests.user_id eq user.id) }
         .map {
           val assignedVariant = it[AvailableContests.variant_id]
           println("User is assigned variant $assignedVariant")
@@ -104,7 +103,7 @@ class ContestAttemptsHandler : DashboardHandler<ContestAttemptsArgs>() {
             return@map http.json(user.getAllVariantsAttempts(argValues.contest_code))
           }
           http.error(400, "No variant chosen")
-        }.firstOrNull() ?: http.error(404, "No contest with code ${argValues.contest_code}")
+        }.firstOrNull() ?: http.error(404, "No available contest with code ${argValues.contest_code}")
   }
 }
 

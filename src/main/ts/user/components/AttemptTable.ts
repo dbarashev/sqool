@@ -1,4 +1,3 @@
-import {Contest} from '../Contest';
 import {Component, Vue} from 'vue-property-decorator';
 import {TaskAttempt} from '../TaskAttempt';
 

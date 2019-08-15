@@ -15,7 +15,7 @@
         <div class="dropdown-menu" aria-labelledby="variantDropdown">
           <a class="dropdown-item" href="#"
              @click="selectVariant(v)"
-             v-for="v in variants()">{{ v.name }}</a>
+             v-for="v in variants">{{ v.name }}</a>
         </div>
       </div>
       <button class="btn btn-outline-primary" @click="acceptSelected()">

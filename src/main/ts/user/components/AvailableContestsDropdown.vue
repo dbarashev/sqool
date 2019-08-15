@@ -51,7 +51,11 @@ export default class AvailableContestsDropdown extends Vue {
       this.loadTasks(contest);
     } else {
       this.attemptTable().clear();
-      this.variantChooser().show(contest, this.loadTasks, this.onFailure);
+      const onVariantChoice = (contest: Contest) => {
+        this.refresh();
+        this.loadTasks(contest);
+      };
+      this.variantChooser().show(contest, onVariantChoice, this.onFailure);
     }
   }
 

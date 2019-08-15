@@ -32,6 +32,16 @@ export class Contest {
       method: 'POST',
       data: {contest_code: this.contestCode}
     });
+  }
 
+  public acceptVariant(variantId: number): JQuery.jqXHR {
+    return $.ajax({
+      url: '/acceptVariant',
+      method: 'POST',
+      data: {
+        contest_code: this.contestCode,
+        variant_id: variantId
+      }
+    });
   }
 }
