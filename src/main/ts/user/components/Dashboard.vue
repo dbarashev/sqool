@@ -1,7 +1,7 @@
 <template>
     <div>
         <nav class="navbar navbar-light justify-content-between">
-            <AvailableContestsDropdown v-on:input="contest = arguments[0]"></AvailableContestsDropdown>
+            <AvailableContestsDropdown></AvailableContestsDropdown>
             <div class="dropdown">
                 <a class="nav-link dropdown-toggle" href="#"
                    id="userDropdown"
@@ -27,13 +27,8 @@
 </template>
 
 <script lang="ts">
-import {Component, Inject, Provide, Vue} from 'vue-property-decorator';
+import {Component, Provide, Vue} from 'vue-property-decorator';
 import AvailableContestsDropdown from './AvailableContestsDropdown.vue';
-import {Contest} from '../Contest';
-import TaskAttemptPropertiesModal from './TaskAttemptPropertiesModal';
-import {TaskAttempt} from '../TaskAttempt';
-import AlertDialog from '../../components/AlertDialog';
-import FailureDetailsModal from './FailureDetailsModal';
 import VariantChooser from './VariantChooser';
 import AttemptTable from './AttemptTable.vue';
 
@@ -41,11 +36,7 @@ import AttemptTable from './AttemptTable.vue';
     components: {AttemptTable, AvailableContestsDropdown, VariantChooser},
 })
 export default class Dashboard extends Vue {
-  @Inject() private readonly alertDialog!: () => AlertDialog;
-  @Inject() private readonly taskAttemptProperties!: () => TaskAttemptPropertiesModal;
-  @Inject() private readonly failureDetails!: () => FailureDetailsModal;
   private userName = window.userName || 'чувак';
-  private contest?: Contest;
 
   @Provide()
   public variantChooser(): VariantChooser {
@@ -55,44 +46,6 @@ export default class Dashboard extends Vue {
   @Provide()
   public attemptTable(): AttemptTable {
     return this.$refs.attemptTable as AttemptTable;
-  }
-
-
-  private showTaskAttempt(attempt: TaskAttempt) {
-    this.taskAttemptProperties().show(attempt).then((solution) => {
-      return $.ajax('/submit.do', this.buildSubmissionPayload(attempt, solution));
-    }).done(() => {
-      if (this.contest) {
-        this.contest.refreshAttempts().fail((xhr) => {
-          const title = 'Не удалось обновить вариант:';
-          this.alertDialog().show(title, xhr.statusText);
-        });
-      }
-    }).fail((xhr) => {
-      const title = 'Не удалось проверить решение:';
-      this.alertDialog().show(title, xhr.statusText);
-    }).always(() => {
-      this.taskAttemptProperties().hide();
-    });
-  }
-
-  private buildSubmissionPayload(attempt: TaskAttempt, solution: string): object {
-    if (this.contest) {
-      return {
-        method: 'POST',
-        data: {
-          'task-id': attempt.taskEntity.id,
-          'solution': solution,
-          'contest-id': this.contest.contestCode,
-        },
-      };
-    } else {
-      return {};
-    }
-  }
-
-  private showFailureDetails(attempt: TaskAttempt) {
-    this.failureDetails().show(attempt);
   }
 }
 </script>

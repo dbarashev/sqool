@@ -1,13 +1,19 @@
-import {Component, Vue} from 'vue-property-decorator';
+import {Component, Inject, Vue} from 'vue-property-decorator';
 import {TaskAttempt} from '../TaskAttempt';
+import AlertDialog from '../../components/AlertDialog';
+import TaskAttemptPropertiesModal from './TaskAttemptPropertiesModal';
+import FailureDetailsModal from './FailureDetailsModal';
+import {Contest} from '../Contest';
 
 @Component
 export default class AttemptTable extends Vue {
-  private attempts: TaskAttempt[] = [];
+  @Inject() private readonly alertDialog!: () => AlertDialog;
+  @Inject() private readonly taskAttemptProperties!: () => TaskAttemptPropertiesModal;
+  @Inject() private readonly failureDetails!: () => FailureDetailsModal;
+  private contest: Contest | null = null;
 
-  public setAttempts(attempts: TaskAttempt[]) {
-    this.attempts = [];
-    attempts.forEach((a) => this.attempts.push(a));
+  public setContest(contest: Contest) {
+    this.contest = contest;
   }
 
   private getErrorMessage(count: number): string {
@@ -23,7 +29,44 @@ export default class AttemptTable extends Vue {
     }
   }
 
+  private showTaskAttempt(attempt: TaskAttempt) {
+    this.taskAttemptProperties().show(attempt).then((solution) => {
+      return $.ajax('/submit.do', this.buildSubmissionPayload(attempt, solution));
+    }).done(() => {
+      if (this.contest) {
+        this.contest.refreshAttempts().fail((xhr) => {
+          const title = 'Не удалось обновить вариант:';
+          this.alertDialog().show(title, xhr.statusText);
+        });
+      }
+    }).fail((xhr) => {
+      const title = 'Не удалось проверить решение:';
+      this.alertDialog().show(title, xhr.statusText);
+    }).always(() => {
+      this.taskAttemptProperties().hide();
+    });
+  }
+
+  private buildSubmissionPayload(attempt: TaskAttempt, solution: string): object {
+    if (this.contest) {
+      return {
+        method: 'POST',
+        data: {
+          'task-id': attempt.taskEntity.id,
+          'solution': solution,
+          'contest-id': this.contest.contestCode,
+        },
+      };
+    } else {
+      return {};
+    }
+  }
+
+  private showFailureDetails(attempt: TaskAttempt) {
+    this.failureDetails().show(attempt);
+  }
+
   clear() {
-    this.attempts = [];
+    this.contest = null;
   }
 }

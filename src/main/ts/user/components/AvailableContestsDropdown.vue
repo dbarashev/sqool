@@ -26,7 +26,6 @@ export default class AvailableContestsDropdown extends Vue {
   @Inject() private readonly alertDialog!: () => AlertDialog;
   @Inject() private readonly variantChooser!: () => VariantChooser;
   @Inject() private readonly attemptTable!: () => AttemptTable;
-
   private currentText = 'Выбрать контест';
   private contests: ContestOption[] = [];
 
@@ -62,7 +61,7 @@ export default class AvailableContestsDropdown extends Vue {
   private loadTasks = (contest: Contest) => {
     this.variantChooser().hide();
     contest.refreshAttempts()
-        .done(() => this.attemptTable().setAttempts(contest.attempts))
+        .done(() => this.attemptTable().setContest(contest))
         .fail(this.onFailure);
   };
 

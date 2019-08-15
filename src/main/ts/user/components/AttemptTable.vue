@@ -9,7 +9,7 @@
         </tr>
         </thead>
         <tbody>
-        <tr v-for="attempt in attempts">
+        <tr v-for="attempt in contest ? contest.attempts : []">
             <td @click="showTaskAttempt(attempt)">{{ attempt.taskEntity.name }}</td>
             <td @click="showTaskAttempt(attempt)">{{ attempt.taskEntity.difficulty }}</td>
             <td @click="showTaskAttempt(attempt)">{{ attempt.taskEntity.score }}</td>
