@@ -66,6 +66,7 @@
     <ContestBuildingProgressBar ref="contestBuildingProgressBar"></ContestBuildingProgressBar>
     <ScriptPropertiesModal ref="scriptPropertiesModal"></ScriptPropertiesModal>
     <VariantPropertiesModal ref="variantPropertiesModal"></VariantPropertiesModal>
+    <AttemptsModal ref="attemptsModal"></AttemptsModal>
   </div>
 </template>
 

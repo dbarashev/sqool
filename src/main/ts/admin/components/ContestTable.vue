@@ -4,8 +4,6 @@
         <tr>
             <th scope="col">Код</th>
             <th scope="col">Название</th>
-            <th scope="col">Начало</th>
-            <th scope="col">Окончание</th>
         </tr>
         </thead>
         <tbody>
@@ -14,9 +12,14 @@
             @dblclick="editContest()"
             v-bind:class="{ 'table-active': c.active }">
             <td>{{ c.code }}</td>
-            <td>{{ c.name }}</td>
-            <td>{{ c.start_ts }}</td>
-            <td>{{ c.end_ts }}</td>
+            <td>
+                <a class="btn float-right"
+                   @click="showAttemptsModal(c)"
+                   role="button">
+                Решения
+                </a><span>{{ c.name }}</span>
+                <br><small class="text-muted">{{ c.start_ts }} - {{ c.end_ts }}</small>
+            </td>
         </tr>
         </tbody>
     </table>

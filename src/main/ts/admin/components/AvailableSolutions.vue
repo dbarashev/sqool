@@ -3,6 +3,7 @@
         <table class="table table-hover">
             <thead class="thead-dark">
             <tr>
+                <th scope="col">Задача</th>
                 <th scope="col">Пользователь</th>
                 <th scope="col">Имя</th>
                 <th scope="col">Статус</th>
@@ -25,9 +26,3 @@
 </template>
 <script lang="ts" src="./AvailableSolutions.ts"></script>
 
-<!-- Add "scoped" attribute to limit CSS to this component only -->
-<style scoped lang="scss">
-    table {
-        margin-top: 20px;
-    }
-</style>

@@ -2,8 +2,13 @@ import {ContestDto} from '../Contest';
 import {Component, Inject, Vue} from 'vue-property-decorator';
 import AlertDialog from '../../components/AlertDialog';
 import ContestToolbar from './ContestToolbar';
+import TaskAttempts from './AttemptsModal.vue';
 
-@Component
+@Component({
+  components: {
+    TaskAttempts
+  },
+})
 export default class ContestTable extends Vue {
   public contests: ContestDto[] = [];
   private activeContest?: ContestDto;
@@ -41,5 +46,9 @@ export default class ContestTable extends Vue {
 
   editContest() {
     this.contestToolbar().editContest();
+  }
+
+  showAttemptsModal(contest: ContestDto) {
+
   }
 }
