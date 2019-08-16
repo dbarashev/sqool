@@ -7,7 +7,7 @@ import Showdown from 'showdown';
 export default class TaskAttemptPropertiesModal extends Vue {
   @Inject() private readonly alertDialog!: () => AlertDialog;
   private converter = new Showdown.Converter();
-  private attempt = new TaskAttempt(new Task(-1, '', null, null, -1, -1), 0, null, null, null, null);
+  private attempt = new TaskAttempt(new Task(-1, '', null, null, -1, -1), 0, null, null, null);
   private taskSolution = '';
   private taskSignature = '';
   private deferred: JQueryDeferred<string> = $.Deferred<string>();

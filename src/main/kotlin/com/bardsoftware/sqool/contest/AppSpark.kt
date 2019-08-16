@@ -300,12 +300,9 @@ fun main(args: Array<String>) {
       GET("/contest/attempts" BY ContestAttemptsHandler() ARGS mapOf(
           "contest_code" to ContestAttemptsArgs::contest_code
       ))
-      POST("/acceptVariant" BY VariantAcceptHandler() ARGS mapOf(
-          "contest_code" to VariantAcceptArgs::contest_code,
-          "variant_id" to VariantAcceptArgs::variant_id
-      ))
       POST("/acceptContest" BY ContestAcceptHandler() ARGS mapOf(
-          "contest_code" to ContestAcceptArgs::contest_code
+          "contest_code" to ContestAcceptArgs::contest_code,
+          "variant_id" to ContestAcceptArgs::variant_id
       ))
     }
     get("/login") {

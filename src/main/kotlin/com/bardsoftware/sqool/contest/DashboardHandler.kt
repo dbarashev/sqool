@@ -38,7 +38,7 @@ class AvailableContestAllHandler : DashboardHandler<RequestArgs>() {
   }
 }
 
-data class ContestAcceptArgs(var contest_code: String, var variant_id: String?) : RequestArgs()
+data class ContestAcceptArgs(var contest_code: String, var variant_id: String) : RequestArgs()
 
 class ContestAcceptHandler : DashboardHandler<ContestAcceptArgs>() {
   override fun args() = ContestAcceptArgs("", "")
@@ -47,16 +47,16 @@ class ContestAcceptHandler : DashboardHandler<ContestAcceptArgs>() {
     AvailableContests.select { (AvailableContests.contest_code eq argValues.contest_code) and (AvailableContests.user_id eq user.id) }
         .map {
           val variantChoice = it[AvailableContests.variant_choice]
-          val selectedVariant = argValues.variant_id?.toInt()
-          if (selectedVariant != null && variantChoice == Contests.VariantChoice.ANY) {
-            user.assignVariant(argValues.contest_code, selectedVariant)
+          val selectedVariant = argValues.variant_id
+          if (selectedVariant != "" && variantChoice == Contests.VariantChoice.ANY) {
+            user.assignVariant(argValues.contest_code, selectedVariant.toInt())
             return@map http.ok()
           }
-          if (selectedVariant != null && variantChoice != Contests.VariantChoice.ANY) {
+          if (selectedVariant != "" && variantChoice != Contests.VariantChoice.ANY) {
             return@map http.error(400, "Variant can't be chosen by client")
           }
 
-          val assignedVariant = it[AvailableContests.variant_id]
+          val assignedVariant = it[AvailableContests.assigned_variant_id]
           if (assignedVariant != null) {
             return@map http.ok()
           }
@@ -79,7 +79,7 @@ class ContestAttemptsHandler : DashboardHandler<ContestAttemptsArgs>() {
     println("Searching for attempts of user ${user.id} in contest ${argValues.contest_code}")
     AvailableContests.select {(AvailableContests.contest_code eq argValues.contest_code) and (AvailableContests.user_id eq user.id) }
         .map {
-          val assignedVariant = it[AvailableContests.variant_id]
+          val assignedVariant = it[AvailableContests.assigned_variant_id]
           println("User is assigned variant $assignedVariant")
           if (assignedVariant != null) {
             return@map http.json(user.getVariantAttempts(assignedVariant))

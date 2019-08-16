@@ -48,7 +48,7 @@
                         <div class="tab-pane fade" id="review" role="tabpanel" aria-labelledby="review-tab">
                             <form>
                                 <div class="form-group">
-                                    <div class="text-left" v-html="markdownText(attempt.review)"></div>
+                                    <div class="text-left" v-html="markdownText('')"></div>
                                 </div>
                             </form>
                         </div>

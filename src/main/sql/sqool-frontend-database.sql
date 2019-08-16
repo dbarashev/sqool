@@ -110,34 +110,6 @@ CREATE TRIGGER TaskDto_Update_Trigger
     FOR EACH ROW
 EXECUTE PROCEDURE TaskDto_Insert();
 
-
-CREATE TYPE AttemptStatus AS ENUM('success', 'failure', 'testing', 'virgin');
-CREATE TABLE Contest.Attempt(
-  task_id INT REFERENCES Contest.Task ON UPDATE CASCADE ON DELETE CASCADE,
-  user_id INT REFERENCES Contest.ContestUser,
-  attempt_id TEXT UNIQUE,
-  status AttemptStatus DEFAULT 'failure',
-  attempt_text TEXT,
-  count INT DEFAULT 0,
-  testing_start_ts TIMESTAMP,
-  PRIMARY KEY(task_id, user_id));
-CREATE TABLE Contest.GradingDetails(
-  attempt_id TEXT REFERENCES Contest.Attempt(attempt_id) ON UPDATE CASCADE ON DELETE CASCADE,
-  error_msg TEXT,
-  result_set TEXT
-);
-
-
-CREATE TABLE Contest.SolutionReview (
-  task_id INT REFERENCES Contest.Task ON UPDATE CASCADE ON DELETE CASCADE,
-  user_id INT REFERENCES Contest.ContestUser,
-  reviewer_id INT,
-  solution_review TEXT,
-  PRIMARY KEY(task_id, user_id, reviewer_id),
-  FOREIGN KEY(task_id, user_id) REFERENCES Contest.Attempt(task_id, user_id)
-);
-
-
 ---------------------------------------------------------------------
 -- Contest is a tournament which runs in some time interval.
 -- Contest consists of a few variants.
@@ -289,8 +261,17 @@ CREATE TABLE UserContest(
 );
 
 CREATE OR REPLACE VIEW AvailableContests AS
-SELECT UC.user_id, UC.contest_code, C.name AS contest_name, C.variant_choice, UC,variant_id
-FROM Contest.UserContest UC JOIN Contest C on UC.contest_code = C.code;
+SELECT UC.user_id,
+       UC.contest_code,
+       C.name AS contest_name,
+       C.variant_choice,
+       UC.variant_id AS assigned_variant_id,
+       json_agg(json_object('{id, name}', ARRAY[V.id::TEXT, V.name]))::TEXT AS variants_json_array
+FROM Contest.UserContest UC
+JOIN Contest C on UC.contest_code = C.code
+JOIN Contest.VariantContest VC ON C.code = VC.contest_code
+JOIN Contest.Variant V ON VC.variant_id = V.id
+GROUP BY C.code, UC.user_id, UC.contest_code;
 
 CREATE OR REPLACE FUNCTION AssignVariant(_user_id INT, _contest_code TEXT, _variant_id INT)
 RETURNS VOID AS $$
@@ -307,6 +288,35 @@ SELECT C.code AS contest_code, V.variant_id, T.task_id
 FROM Contest.Contest C
 JOIN Contest.VariantContest V ON C.code = V.contest_code
 JOIN Contest.TaskVariant T ON V.variant_id = T.variant_id;
+
+CREATE TYPE AttemptStatus AS ENUM('success', 'failure', 'testing', 'virgin');
+CREATE TABLE Contest.Attempt(
+  task_id INT REFERENCES Contest.Task ON UPDATE CASCADE ON DELETE CASCADE,
+  variant_id INT REFERENCES Contest.Variant ON UPDATE CASCADE ON DELETE CASCADE,
+  user_id INT REFERENCES Contest.ContestUser,
+  attempt_id TEXT UNIQUE,
+  status AttemptStatus DEFAULT 'failure',
+  attempt_text TEXT,
+  count INT DEFAULT 0,
+  testing_start_ts TIMESTAMP,
+  FOREIGN KEY(task_id, variant_id) REFERENCES TaskVariant(task_id, variant_id),
+  PRIMARY KEY(task_id, user_id, variant_id)
+);
+CREATE TABLE Contest.GradingDetails(
+  attempt_id TEXT REFERENCES Contest.Attempt(attempt_id) ON UPDATE CASCADE ON DELETE CASCADE,
+  error_msg TEXT,
+  result_set TEXT
+);
+
+CREATE TABLE Contest.SolutionReview (
+  task_id INT REFERENCES Contest.Task ON UPDATE CASCADE ON DELETE CASCADE,
+  variant_id INT REFERENCES Contest.Variant ON UPDATE CASCADE ON DELETE CASCADE,
+  user_id INT REFERENCES Contest.ContestUser,
+  reviewer_id INT,
+  solution_review TEXT,
+  PRIMARY KEY(task_id, variant_id, user_id, reviewer_id),
+  FOREIGN KEY(task_id, variant_id, user_id) REFERENCES Contest.Attempt(task_id, variant_id, user_id)
+);
 
 ------------------------------------------------------------------------------------------------
 -- This function generates a nickname from a random combination of first name (adjective)
@@ -423,8 +433,8 @@ $$ LANGUAGE SQL;
 CREATE OR REPLACE FUNCTION AcceptVariant(_user_id INT, _variant_id INT)
 RETURNS VOID AS $$
 BEGIN
-  INSERT INTO Contest.Attempt(user_id, task_id, status)
-  SELECT _user_id, task_id, 'virgin' FROM Contest.TaskVariant
+  INSERT INTO Contest.Attempt(user_id, task_id, variant_id, status)
+  SELECT _user_id, task_id, _variant_id, 'virgin' FROM Contest.TaskVariant
   WHERE variant_id = _variant_id
   ON CONFLICT DO NOTHING;
 END;
@@ -476,6 +486,7 @@ SELECT  T.id AS task_id,
         '' AS author_nick,
         A.attempt_id,
         A.user_id,
+        A.variant_id,
         S.nick AS user_nick,
         S.name AS user_name,
         A.status::TEXT,
@@ -489,7 +500,7 @@ JOIN Contest.Attempt A ON A.task_id = T.id
 JOIN Contest.ContestUser S ON A.user_id = S.id
 LEFT JOIN Contest.GradingDetails D ON A.attempt_id = D.attempt_id
 LEFT JOIN Contest.TaskResult TR ON TR.task_id = T.id
-GROUP BY T.id, TR.task_id, A.user_id, A.task_id, S.id, D.error_msg, D.result_set;
+GROUP BY T.id, TR.task_id, A.user_id, A.task_id, A.variant_id, S.id, D.error_msg, D.result_set;
 
 /**********************************************************************************************************************
  * Administrative procedures and views
@@ -621,16 +632,16 @@ INSERT INTO Contest.Task(id, name) VALUES
   (4, 'Virgin'),
   (5, 'From 5 variant');
 
-INSERT INTO Contest.Attempt(task_id, user_id, attempt_id, status) VALUES
-  (1, 1, 1, 'success'),
-  (2, 1, 2, 'failure'),
-  (3, 1, 3, 'testing'),
-  (4, 1, 4, 'virgin');
+INSERT INTO Contest.TaskVariant(task_id, variant_id) VALUES
+  (1, 1), (2, 1), (3, 1), (4, 1), (5, 5), (1, 2), (2, 2), (3, 2), (4, 2);
+
+INSERT INTO Contest.Attempt(task_id, user_id, variant_id, attempt_id, status) VALUES
+  (1, 1, 2, 1, 'success'),
+  (2, 1, 2, 2, 'failure'),
+  (3, 1, 2, 3, 'testing'),
+  (4, 1, 2, 4, 'virgin');
 
 INSERT INTO Contest.GradingDetails(attempt_id, error_msg, result_set) VALUES
   (2, E'Some error message\nSome error message', '[["col1", "col2", "col3"], {"col1": 42, "col2": "q"}, {"col1": -1, "col2": "t", "col3": 1}]');
-
-INSERT INTO Contest.TaskVariant(task_id, variant_id) VALUES
-  (1, 1), (2, 1), (3, 1), (4, 1), (5, 5), (1, 2), (2, 2), (3, 2);
 
 SELECT AcceptVariant(1, 2);

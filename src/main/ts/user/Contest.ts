@@ -35,7 +35,7 @@ export class Contest {
 
   public acceptVariant(variantId: number): JQuery.jqXHR {
     return $.ajax({
-      url: '/acceptVariant',
+      url: '/acceptContest',
       method: 'POST',
       data: {
         contest_code: this.contestCode,

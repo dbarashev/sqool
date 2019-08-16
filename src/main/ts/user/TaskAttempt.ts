@@ -4,8 +4,7 @@ export class TaskAttempt {
       readonly count: number,
       readonly status: string | null,
       readonly errorMsg: string | null,
-      readonly resultSet: string | null,
-      readonly review: string | null
+      readonly resultSet: string | null
   ) {}
 }
 

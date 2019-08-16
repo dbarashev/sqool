@@ -2,8 +2,8 @@ package com.bardsoftware.sqool.contest.storage
 
 import com.bardsoftware.sqool.contest.admin.Contests
 import com.bardsoftware.sqool.contest.admin.DbQueryManager
-import com.bardsoftware.sqool.contest.admin.Variants
 import com.bardsoftware.sqool.grader.AssessmentPubSubResp
+import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -106,6 +106,7 @@ object AttemptView : Table("Contest.MyAttempts") {
   var signature = text("signature")
   var difficulty = integer("difficulty")
   var score = integer("score")
+  var variantId = integer("variant_id")
   var author = text("author_nick")
   var author_id = integer("author_id")
   var attemptId = text("attempt_id").nullable()
@@ -115,7 +116,6 @@ object AttemptView : Table("Contest.MyAttempts") {
   var count = integer("count")
   var errorMsg = text("error_msg").nullable()
   var resultSet = text("result_set").nullable()
-  var review = text("solution_review").nullable()
 }
 
 /**
@@ -130,7 +130,8 @@ object AvailableContests : Table("Contest.AvailableContests") {
       { value -> Contests.VariantChoice.valueOf(value.toString()) },
       { Contests.PGEnum("VariantChoice", it) }
   )
-  val variant_id = integer("variant_id").nullable()
+  val variants_json_array = text("variants_json_array")
+  val assigned_variant_id = integer("assigned_variant_id").nullable()
 }
 
 /**
@@ -183,7 +184,7 @@ data class Contest(
     val chosenVariant: Variant?
 )
 
-data class Variant(val id: Int, val name: String)
+data class Variant(val id: Int = -1, val name: String = "")
 
 /**
  * Represents a user and provides accessors to objects related to participation of this user
@@ -229,18 +230,12 @@ class User(val entity: UserEntity, val storage: UserStorage) {
    */
   fun availableContests(): List<Contest> = transaction {
     AvailableContests.select { AvailableContests.user_id eq entity.id }
-          .mapNotNull { c ->
+          .map { c ->
             val contestCode = c[AvailableContests.contest_code]
             val contestName = c[AvailableContests.contest_name]
-            val chosenVariantId = c[AvailableContests.variant_id]
+            val chosenVariantId = c[AvailableContests.assigned_variant_id]
 
-            val variantIds = queryManager.listContestVariantsId(contestCode)
-            val variants = if (variantIds.isEmpty()) {
-              listOf()
-            } else {
-              Variants.select { Variants.id inList variantIds }.map { Variant(it[Variants.id], it[Variants.name]) }
-            }
-
+            val variants = ObjectMapper().readValue(c[AvailableContests.variants_json_array], object : TypeReference<List<Variant>>() {})
             val chosenVariant = chosenVariantId?.let { id ->
               variants.find { it.id == id }
             }
@@ -269,12 +264,10 @@ class User(val entity: UserEntity, val storage: UserStorage) {
   }
 
   /**
-   * Returns all attempts made by this user for tasks from the given veriant.
+   * Returns all attempts made by this user for tasks from the given variant.
    */
   fun getVariantAttempts(variantId: Int): List<TaskAttemptEntity> = transaction {
-    val taskIdList = queryManager.listVariantTasksId(variantId)
-    println("We have the following tasks in variant $variantId: $taskIdList")
-    AttemptView.select { (AttemptView.attemptUserId eq this@User.id) and (AttemptView.taskId inList taskIdList) }
+    AttemptView.select { (AttemptView.attemptUserId eq this@User.id) and (AttemptView.variantId eq variantId) }
         .map(TaskAttemptEntity.Factory::fromRow)
   }
 
