@@ -1,5 +1,5 @@
 <template>
-    <table class="table table-hover">
+    <table class="table table-hover mt-2">
         <thead class="thead-dark">
         <tr>
             <th scope="col">Код</th>
@@ -9,7 +9,10 @@
         </tr>
         </thead>
         <tbody>
-        <tr v-for="c in contests"  @click="makeActive(c)" v-bind:class="{ 'table-active': c.active }">
+        <tr v-for="c in contests"
+            @click="makeActive(c)"
+            @dblclick="editContest()"
+            v-bind:class="{ 'table-active': c.active }">
             <td>{{ c.code }}</td>
             <td>{{ c.name }}</td>
             <td>{{ c.start_ts }}</td>
@@ -22,9 +25,3 @@
 <script lang="ts" src="./ContestTable.ts">
 </script>
 
-<!-- Add "scoped" attribute to limit CSS to this component only -->
-<style scoped lang="scss">
-    table {
-        margin-top: 20px;
-    }
-</style>

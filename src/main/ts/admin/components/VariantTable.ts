@@ -1,12 +1,14 @@
 import {Component, Inject, Vue} from 'vue-property-decorator';
 import {VariantDto} from '../Variant';
 import AlertDialog from '../../components/AlertDialog';
+import VariantToolbar from './VariantToolbar';
 
 @Component
 export default class VariantTable extends Vue {
   public variants: VariantDto[] = [];
   private activeVariant?: VariantDto;
   @Inject() private readonly alertDialog!: () => AlertDialog;
+  @Inject() private readonly variantToolbar!: () => VariantToolbar;
 
   public mounted() {
     this.refresh();
@@ -35,5 +37,9 @@ export default class VariantTable extends Vue {
     this.activeVariant = variant;
     variant.active = true;
     this.$forceUpdate();
+  }
+
+  editVariant() {
+    this.variantToolbar().editVariant();
   }
 }

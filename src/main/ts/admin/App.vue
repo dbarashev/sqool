@@ -1,5 +1,5 @@
 <template>
-  <div class="bmd-layout-container bmd-drawer-f-l" id="app">
+  <div class="bmd-layout-container bmd-drawer-f-l bmd-drawer-in" id="app">
     <header class="bmd-layout-header">
       <div class="navbar navbar-light bg-faded">
         <button class="navbar-toggler" type="button" data-toggle="drawer" data-target="#dw-s1">
@@ -11,7 +11,7 @@
         </ul>
       </div>
     </header>
-    <div id="dw-s1" class="bmd-layout-drawer bg-faded">
+    <div id="dw-s1" class="bmd-layout-drawer">
       <header>
         <a class="navbar-brand"></a>
       </header>
@@ -34,25 +34,25 @@
       <div class="container">
         <div class="pt-4 tab-content" id="nav-tabContent">
           <div class="tab-pane fade" id="list-contest" role="tabpanel">
-            <ContestToolbar>
+            <ContestToolbar ref="contestToolbar">
             </ContestToolbar>
             <ContestTable ref="contestTable">
             </ContestTable>
           </div>
           <div class="tab-pane fade show active" id="list-tasks" role="tabpanel">
-            <TaskToolbar>
+            <TaskToolbar ref="taskToolbar">
             </TaskToolbar>
             <TaskMainWindow ref="taskMainWindow">
             </TaskMainWindow>
           </div>
           <div class="tab-pane fade" id="list-variants" role="tabpanel">
-            <VariantToolbar>
+            <VariantToolbar ref="variantToolbar">
             </VariantToolbar>
             <VariantTable ref="variantTable">
             </VariantTable>
           </div>
           <div class="tab-pane fade" id="list-schemes" role="tabpanel">
-            <ScriptToolbar>
+            <ScriptToolbar ref="scriptToolbar">
             </ScriptToolbar>
             <ScriptTable ref="scriptTable">
             </ScriptTable>
@@ -129,8 +129,18 @@ export default class App extends Vue {
   }
 
   @Provide()
+  public variantToolbar(): VariantToolbar {
+    return this.$refs.variantToolbar as VariantToolbar;
+  }
+
+  @Provide()
   public contestBuildingProgressBar(): ContestBuildingProgressBar {
     return this.$refs.contestBuildingProgressBar as ContestBuildingProgressBar;
+  }
+
+  @Provide()
+  public contestToolbar(): ContestToolbar {
+    return this.$refs.contestToolbar as ContestToolbar;
   }
 
   @Provide()
@@ -144,9 +154,20 @@ export default class App extends Vue {
   }
 
   @Provide()
+  public taskToolbar(): TaskToolbar {
+    return this.$refs.taskToolbar as TaskToolbar;
+  }
+
+  @Provide()
   public scriptTable(): ScriptTable {
     return this.$refs.scriptTable as ScriptTable;
   }
+
+  @Provide()
+  public scriptToolbar(): ScriptToolbar {
+    return this.$refs.scriptToolbar as ScriptToolbar;
+  }
+
 }
 </script>
 
@@ -155,7 +176,6 @@ export default class App extends Vue {
     font-family: 'Avenir', Helvetica, Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    text-align: center;
     color: #2c3e50;
   }
   .bmd-layout-canvas {

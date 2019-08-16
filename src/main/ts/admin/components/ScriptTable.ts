@@ -1,12 +1,14 @@
 import {Component, Inject, Vue} from 'vue-property-decorator';
 import {ScriptDto} from '../Script';
 import AlertDialog from '../../components/AlertDialog';
+import ScriptToolbar from './ScriptToolbar';
 
 @Component
 export default class ScriptTable extends Vue {
   public scripts: ScriptDto[] = [];
   private activeScript?: ScriptDto;
   @Inject() private readonly alertDialog!: () => AlertDialog;
+  @Inject() private readonly scriptToolbar!: () => ScriptToolbar;
 
   public mounted() {
     this.refresh();
@@ -35,5 +37,9 @@ export default class ScriptTable extends Vue {
     }
     this.activeScript = script;
     this.$forceUpdate();
+  }
+
+  editScript() {
+    this.scriptToolbar().editScript();
   }
 }
