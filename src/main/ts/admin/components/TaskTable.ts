@@ -1,11 +1,13 @@
 import {Component, Inject, Vue} from 'vue-property-decorator';
 import {getTaskResultSql, TaskDto} from '../Task';
 import AlertDialog from '../../components/AlertDialog';
+import TaskToolbar from './TaskToolbar';
 
 @Component
 export default class TaskTable extends Vue {
   public tasks: TaskDto[] = [];
   private activeTask?: TaskDto;
+  @Inject() private readonly taskToolbar!: () => TaskToolbar;
   @Inject() private readonly alertDialog!: () => AlertDialog;
 
   public mounted() {
@@ -27,6 +29,10 @@ export default class TaskTable extends Vue {
 
   public getActiveTask(): TaskDto | undefined {
     return this.activeTask;
+  }
+
+  editTask() {
+    this.taskToolbar().editTask();
   }
 
   public refresh() {

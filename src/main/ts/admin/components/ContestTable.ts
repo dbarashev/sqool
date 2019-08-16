@@ -1,12 +1,14 @@
 import {ContestDto} from '../Contest';
 import {Component, Inject, Vue} from 'vue-property-decorator';
 import AlertDialog from '../../components/AlertDialog';
+import ContestToolbar from './ContestToolbar';
 
 @Component
 export default class ContestTable extends Vue {
   public contests: ContestDto[] = [];
   private activeContest?: ContestDto;
   @Inject() private readonly alertDialog!: () => AlertDialog;
+  @Inject() private readonly contestToolbar!: () => ContestToolbar;
 
   public mounted() {
     this.refresh();
@@ -22,7 +24,6 @@ export default class ContestTable extends Vue {
       const title = 'Не удалось получить список контестов:';
       this.alertDialog().show(title, xhr.statusText);
     });
-
   }
 
   public getActiveContest(): ContestDto | undefined {
@@ -38,4 +39,7 @@ export default class ContestTable extends Vue {
     this.$forceUpdate();
   }
 
+  editContest() {
+    this.contestToolbar().editContest();
+  }
 }

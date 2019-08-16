@@ -1,36 +1,33 @@
 <template>
-    <div id="scriptAccordion" class="text-left">
-
-        <div class="card" v-for="s in scripts">
-            <div class="card-header bg-light" :id="'scriptHeading' + s.id" @click="makeActive(s)">
-                <h5 class="mb-0"
-                            data-toggle="collapse"
-                            :data-target="'#scriptCollapse' + s.id"
-                            aria-expanded="false"
-                            :aria-controls="'scriptCollapse' + s.id">
-                        {{ s.description }}
-                </h5>
-            </div>
-
-            <div :id="'scriptCollapse' + s.id" class="collapse" :aria-labelledby="'scriptHeading' + s.id" data-parent="#scriptAccordion">
-                <div class="card-body">
-                    <pre>{{ s.body }}</pre>
-                </div>
-            </div>
-        </div>
+    <div>
+        <table class="table table-hover mt-2">
+            <thead class="thead-dark">
+            <tr>
+                <th scope="col">Название схемы</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr v-for="s in scripts"
+                @click="makeActive(s)"
+                @dblclick="editScript()"
+                v-bind:class="{ 'table-active': s.active }">
+                <td><span>{{ s.description }}</span>
+                    <a class="btn float-right"
+                       data-toggle="collapse"
+                       :href="'#scriptBody' + s.id"
+                       role="button">
+                    Показать SQL
+                </a>
+                    <div :id="'scriptBody' + s.id" class="collapse m-4 p-2 bg-dark">
+                        <pre class="text-light">{{ s.body }}</pre>
+                    </div>
+                </td>
+            </tr>
+            </tbody>
+        </table>
     </div>
 </template>
 
 <script lang="ts" src="./ScriptTable.ts">
 </script>
 
-<!-- Add "scoped" attribute to limit CSS to this component only -->
-<style scoped lang="scss">
-#scriptAccordion {
-    .card-header {
-        cursor: pointer;
-    }
-
-}
-
-</style>
