@@ -11,7 +11,6 @@ export class VariantOption {
 
 export class Contest {
   public attempts: TaskAttempt[] = [];
-  @Inject() private readonly alertDialog!: () => AlertDialog;
 
   constructor(readonly contestCode: string,
               readonly variantPolicy: VariantPolicy,

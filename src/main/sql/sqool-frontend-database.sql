@@ -280,19 +280,6 @@ CREATE TRIGGER VariantDto_Update_Trigger
   FOR EACH ROW
 EXECUTE PROCEDURE VariantDto_InsertUpdate();
 
-CREATE OR REPLACE FUNCTION isVariantInContest(contest TEXT, variant INT)
-RETURNS BOOLEAN AS $$
-BEGIN
-  IF variant IS NULL THEN
-     RETURN TRUE;
-  END IF;
-  IF EXISTS (SELECT 1 FROM Contest.VariantContest WHERE contest_code = contest AND variant_id = variant) THEN
-    RETURN TRUE;
-  END IF;
-  RETURN FALSE;
-END;
-$$ LANGUAGE plpgsql;
-
 CREATE TABLE UserContest(
   user_id INT NOT NULL REFERENCES Contest.ContestUser ON DELETE CASCADE ON UPDATE CASCADE,
   contest_code TEXT NOT NULL REFERENCES Contest.Contest ON DELETE CASCADE ON UPDATE CASCADE,
@@ -495,16 +482,14 @@ SELECT  T.id AS task_id,
         A.count,
         A.testing_start_ts,
         D.error_msg,
-        D.result_set,
-        R.solution_review
+        D.result_set
 FROM Contest.Task T
 --JOIN Contest.ContestUser U ON T.author_id = U.id
 JOIN Contest.Attempt A ON A.task_id = T.id
 JOIN Contest.ContestUser S ON A.user_id = S.id
 LEFT JOIN Contest.GradingDetails D ON A.attempt_id = D.attempt_id
-LEFT JOIN Contest.SolutionReview R ON R.task_id = A.task_id AND R.user_id = A.user_id
 LEFT JOIN Contest.TaskResult TR ON TR.task_id = T.id
-GROUP BY T.id, TR.task_id, A.user_id, A.task_id, S.id, D.error_msg, D.result_set, R.solution_review;
+GROUP BY T.id, TR.task_id, A.user_id, A.task_id, S.id, D.error_msg, D.result_set;
 
 /**********************************************************************************************************************
  * Administrative procedures and views
@@ -602,7 +587,7 @@ INSERT INTO Contest.Contest(code, name, variant_choice) VALUES
   ('4', 'Not available', 'ANY'),
   ('5', 'Empty', 'ANY'),
   ('6', 'Single variant', 'ANY'),
-  ('7', 'All variants', 'ALL'),
+  ('7', 'All variants', 'ANY'),
   ('8', 'Choose variant', 'ANY');
 
 INSERT INTO Contest.Variant(id, name) VALUES

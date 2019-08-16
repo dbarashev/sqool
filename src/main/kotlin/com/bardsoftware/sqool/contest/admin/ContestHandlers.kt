@@ -45,7 +45,7 @@ object Contests : Table("Contest.ContestDto") {
   }
 
   enum class VariantChoice {
-    ALL, RANDOM, ANY
+    RANDOM, ANY
   }
 
   class PGEnum<T:Enum<T>>(enumTypeName: String, enumValue: T?) : PGobject() {

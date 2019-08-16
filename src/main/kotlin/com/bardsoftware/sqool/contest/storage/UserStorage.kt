@@ -23,8 +23,7 @@ data class TaskAttemptEntity(
     var status: String?,
     var testingStartMs: DateTime?,
     var errorMsg: String?,
-    var resultSet: String?,
-    var review: String?
+    var resultSet: String?
 ) {
   companion object Factory {
     fun fromRow(attemptRow: ResultRow) = TaskAttemptEntity(
@@ -43,8 +42,7 @@ data class TaskAttemptEntity(
         attemptId = attemptRow[AttemptView.attemptId],
         testingStartMs = attemptRow[AttemptView.testingStartTs],
         errorMsg = attemptRow[AttemptView.errorMsg],
-        resultSet = attemptRow[AttemptView.resultSet],
-        review = attemptRow[AttemptView.review]
+        resultSet = attemptRow[AttemptView.resultSet]
     )
   }
 }
@@ -233,12 +231,6 @@ class User(val entity: UserEntity, val txn: Transaction, val storage: UserStorag
     }
   }
 
-  fun acceptVariant(id: Int) = storage.procedure("SELECT Contest.AcceptVariant(?, ?)") {
-    setInt(1, this@User.id)
-    setInt(2, id)
-    execute()
-  }
-
   fun getVariantAttempts(id: Int): List<TaskAttemptEntity> = transaction {
     val taskIdList = queryManager.listVariantTasksId(id)
     println("We have the following tasks in variant $id: $taskIdList")
@@ -246,23 +238,9 @@ class User(val entity: UserEntity, val txn: Transaction, val storage: UserStorag
         .map(TaskAttemptEntity.Factory::fromRow)
   }
 
-  fun acceptAllVariants(contestCode: String): Unit = queryManager.listContestVariantsId(contestCode).forEach { acceptVariant(it) }
-
-  fun getAllVariantsAttempts(contestCode: String): List<TaskAttemptEntity> = transaction {
-    val taskIdList = queryManager.listContestTasksId(contestCode)
-    AttemptView.select { (AttemptView.attemptUserId eq this@User.id) and (AttemptView.taskId inList taskIdList) }
-        .map(TaskAttemptEntity.Factory::fromRow)
-  }
-
-  fun acceptRandomVariant(contestCode: String): Int {
+  fun assignRandomVariant(contestCode: String): Int {
     val variantId = queryManager.listContestVariantsId(contestCode).random()
-    storage.procedure("SELECT Contest.AssignVariant(?, ?, ?)") {
-      setInt(1, this@User.id)
-      setString(2, contestCode)
-      setInt(3, variantId)
-      execute()
-    }
-    acceptVariant(variantId)
+    assignVariant(contestCode, variantId)
     return variantId
   }
 

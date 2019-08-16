@@ -23,6 +23,8 @@
         <div class="m-5">
             <VariantChooser ref="variantChooser"></VariantChooser>
         </div>
+        <TaskAttemptPropertiesModal ref="taskAttemptPropertiesModal"></TaskAttemptPropertiesModal>
+        <FailureDetailsModal ref="failureDetailsModal"></FailureDetailsModal>
     </div>
 </template>
 
@@ -31,9 +33,11 @@ import {Component, Provide, Vue} from 'vue-property-decorator';
 import AvailableContestsDropdown from './AvailableContestsDropdown.vue';
 import VariantChooser from './VariantChooser';
 import AttemptTable from './AttemptTable.vue';
+import TaskAttemptPropertiesModal from '../components/TaskAttemptPropertiesModal';
+import FailureDetailsModal from '../components/FailureDetailsModal';
 
 @Component({
-    components: {AttemptTable, AvailableContestsDropdown, VariantChooser},
+    components: {AttemptTable, AvailableContestsDropdown, VariantChooser, TaskAttemptPropertiesModal, FailureDetailsModal},
 })
 export default class Dashboard extends Vue {
   private userName = window.userName || 'чувак';
@@ -46,6 +50,16 @@ export default class Dashboard extends Vue {
   @Provide()
   public attemptTable(): AttemptTable {
     return this.$refs.attemptTable as AttemptTable;
+  }
+
+  @Provide()
+  public taskAttemptProperties(): TaskAttemptPropertiesModal {
+    return this.$refs.taskAttemptPropertiesModal as TaskAttemptPropertiesModal;
+  }
+
+  @Provide()
+  public failureDetails(): FailureDetailsModal {
+    return this.$refs.failureDetailsModal as FailureDetailsModal;
   }
 }
 </script>

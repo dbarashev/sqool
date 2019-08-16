@@ -38,48 +38,33 @@ class AvailableContestAllHandler : DashboardHandler<RequestArgs>() {
   }
 }
 
-data class VariantAcceptArgs(var contest_code: String, var variant_id: String) : RequestArgs()
-
-class VariantAcceptHandler : DashboardHandler<VariantAcceptArgs>() {
-  override fun args() = VariantAcceptArgs("", "")
-
-  override fun handle(http: HttpApi, argValues: VariantAcceptArgs) = withUser(http) { user ->
-    AvailableContests.select {
-      (AvailableContests.contest_code eq argValues.contest_code) and
-      (AvailableContests.user_id eq user.id)
-    }.map {
-      val variantChoice = it[AvailableContests.variant_choice]
-      if (variantChoice == Contests.VariantChoice.ANY) {
-        user.assignVariant(argValues.contest_code, argValues.variant_id.toInt())
-        http.ok()
-      } else {
-        http.error(400, "Variant can't be chosen by client")
-      }
-    }.firstOrNull() ?: http.error(404, "No available contest with code ${argValues.contest_code}")
-  }
-}
-
-data class ContestAcceptArgs(var contest_code: String) : RequestArgs()
+data class ContestAcceptArgs(var contest_code: String, var variant_id: String?) : RequestArgs()
 
 class ContestAcceptHandler : DashboardHandler<ContestAcceptArgs>() {
-  override fun args() = ContestAcceptArgs("")
+  override fun args() = ContestAcceptArgs("", "")
 
   override fun handle(http: HttpApi, argValues: ContestAcceptArgs) = withUser(http) { user ->
     AvailableContests.select { (AvailableContests.contest_code eq argValues.contest_code) and (AvailableContests.user_id eq user.id) }
         .map {
-          val variantId = it[AvailableContests.variant_id]
           val variantChoice = it[AvailableContests.variant_choice]
-          if (variantId != null) {
-            user.acceptVariant(variantId)
+          val selectedVariant = argValues.variant_id?.toInt()
+          if (selectedVariant != null && variantChoice == Contests.VariantChoice.ANY) {
+            user.assignVariant(argValues.contest_code, selectedVariant)
+            return@map http.ok()
+          }
+          if (selectedVariant != null && variantChoice != Contests.VariantChoice.ANY) {
+            return@map http.error(400, "Variant can't be chosen by client")
+          }
+
+          val assignedVariant = it[AvailableContests.variant_id]
+          if (assignedVariant != null) {
             return@map http.ok()
           }
 
           when (variantChoice) {
             Contests.VariantChoice.ANY -> http.error(400, "No variant chosen")
 
-            Contests.VariantChoice.ALL -> http.ok().also { user.acceptAllVariants(argValues.contest_code) }
-
-            Contests.VariantChoice.RANDOM -> http.ok().also { user.acceptRandomVariant(argValues.contest_code) }
+            Contests.VariantChoice.RANDOM -> http.ok().also { user.assignRandomVariant(argValues.contest_code) }
           }
         }.firstOrNull() ?: http.error(404, "No available contest with code ${argValues.contest_code}")
   }
@@ -98,9 +83,6 @@ class ContestAttemptsHandler : DashboardHandler<ContestAttemptsArgs>() {
           println("User is assigned variant $assignedVariant")
           if (assignedVariant != null) {
             return@map http.json(user.getVariantAttempts(assignedVariant))
-          }
-          if (it[AvailableContests.variant_choice] == Contests.VariantChoice.ALL) {
-            return@map http.json(user.getAllVariantsAttempts(argValues.contest_code))
           }
           http.error(400, "No variant chosen")
         }.firstOrNull() ?: http.error(404, "No available contest with code ${argValues.contest_code}")
