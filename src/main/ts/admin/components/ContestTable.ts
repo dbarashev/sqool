@@ -3,10 +3,11 @@ import {Component, Inject, Vue} from 'vue-property-decorator';
 import AlertDialog from '../../components/AlertDialog';
 import ContestToolbar from './ContestToolbar';
 import TaskAttempts from './AttemptsModal.vue';
+import AttemptsModal from './AttemptsModal';
 
 @Component({
   components: {
-    TaskAttempts
+    TaskAttempts,
   },
 })
 export default class ContestTable extends Vue {
@@ -14,6 +15,7 @@ export default class ContestTable extends Vue {
   private activeContest?: ContestDto;
   @Inject() private readonly alertDialog!: () => AlertDialog;
   @Inject() private readonly contestToolbar!: () => ContestToolbar;
+  @Inject() private readonly attemptsModal!: () => AttemptsModal;
 
   public mounted() {
     this.refresh();
@@ -25,7 +27,7 @@ export default class ContestTable extends Vue {
     }).done((contests: ContestDto[]) => {
       this.contests = [];
       contests.forEach((c) => this.contests.push(c));
-    }).fail(xhr => {
+    }).fail((xhr) => {
       const title = 'Не удалось получить список контестов:';
       this.alertDialog().show(title, xhr.statusText);
     });
@@ -44,11 +46,11 @@ export default class ContestTable extends Vue {
     this.$forceUpdate();
   }
 
-  editContest() {
+  public editContest() {
     this.contestToolbar().editContest();
   }
 
-  showAttemptsModal(contest: ContestDto) {
-
+  public showAttemptsModal(contest: ContestDto) {
+    this.attemptsModal().show(contest);
   }
 }
