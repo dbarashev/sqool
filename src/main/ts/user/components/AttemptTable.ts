@@ -10,10 +10,14 @@ export default class AttemptTable extends Vue {
   @Inject() private readonly alertDialog!: () => AlertDialog;
   @Inject() private readonly taskAttemptProperties!: () => TaskAttemptPropertiesModal;
   @Inject() private readonly failureDetails!: () => FailureDetailsModal;
-  private contest: Contest | null = null;
+  private contest?: Contest;
 
   public setContest(contest: Contest) {
     this.contest = contest;
+  }
+
+  public clear() {
+    this.contest = undefined;
   }
 
   private getErrorMessage(count: number): string {
@@ -64,9 +68,5 @@ export default class AttemptTable extends Vue {
 
   private showFailureDetails(attempt: TaskAttempt) {
     this.failureDetails().show(attempt);
-  }
-
-  clear() {
-    this.contest = null;
   }
 }

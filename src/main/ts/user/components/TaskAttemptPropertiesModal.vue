@@ -20,7 +20,7 @@
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" id="review-tab" data-toggle="tab" href="#review" role="tab"
-                               aria-controls="variants" aria-selected="false">Ревью</a>
+                               aria-controls="variants" aria-selected="false">Рецензия</a>
                         </li>
                     </ul>
                     <div class="tab-content">
@@ -48,6 +48,7 @@
                         <div class="tab-pane fade" id="review" role="tabpanel" aria-labelledby="review-tab">
                             <form>
                                 <div class="form-group">
+                                    <!-- TODO: get review from the server -->
                                     <div class="text-left" v-html="markdownText('')"></div>
                                 </div>
                             </form>

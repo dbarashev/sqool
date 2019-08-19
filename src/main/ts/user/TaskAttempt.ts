@@ -4,7 +4,7 @@ export class TaskAttempt {
       readonly count: number,
       readonly status: string | null,
       readonly errorMsg: string | null,
-      readonly resultSet: string | null
+      readonly resultSet: string | null,
   ) {}
 }
 
@@ -15,7 +15,7 @@ export class Task {
       readonly signatureJson: string | null,
       readonly description: string | null,
       readonly score: number,
-      readonly difficulty: number
+      readonly difficulty: number,
   ) {}
 }
 

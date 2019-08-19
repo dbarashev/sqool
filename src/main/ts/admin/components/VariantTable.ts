@@ -17,8 +17,8 @@ export default class VariantTable extends Vue {
       url: '/admin/variant/all',
     }).done((variants: VariantDto[]) => {
       this.variants = [];
-      variants.forEach(variant => this.variants.push(variant));
-    }).fail(xhr => {
+      variants.forEach((variant) => this.variants.push(variant));
+    }).fail((xhr) => {
       const title = 'Не удалось получить список вариантов:';
       this.alertDialog().show(title, xhr.statusText);
     });

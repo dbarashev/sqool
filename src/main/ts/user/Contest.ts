@@ -1,6 +1,4 @@
 import {TaskAttempt} from './TaskAttempt';
-import {Inject} from 'vue-property-decorator';
-import AlertDialog from '../components/AlertDialog';
 
 export type VariantPolicy = 'ANY' | 'RANDOM' | 'ALL';
 
@@ -29,7 +27,7 @@ export class Contest {
     return $.ajax({
       url: '/acceptContest',
       method: 'POST',
-      data: {contest_code: this.contestCode}
+      data: {contest_code: this.contestCode},
     });
   }
 
@@ -39,8 +37,8 @@ export class Contest {
       method: 'POST',
       data: {
         contest_code: this.contestCode,
-        variant_id: variantId
-      }
+        variant_id: variantId,
+      },
     });
   }
 }

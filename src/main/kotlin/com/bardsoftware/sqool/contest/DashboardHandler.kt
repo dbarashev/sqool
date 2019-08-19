@@ -7,11 +7,6 @@ import com.bardsoftware.sqool.contest.storage.UserStorage
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.select
 
-fun redirectToLogin(http: HttpApi) = http.chain {
-  clearSession()
-  redirect("/login")
-}
-
 abstract class DashboardHandler<T : RequestArgs> : RequestHandler<T>() {
   protected fun withUser(http: HttpApi, handle: (User) -> HttpResponse): HttpResponse {
     val userName = http.session("name") ?: return redirectToLogin(http)
@@ -44,29 +39,38 @@ class ContestAcceptHandler : DashboardHandler<ContestAcceptArgs>() {
   override fun args() = ContestAcceptArgs("", "")
 
   override fun handle(http: HttpApi, argValues: ContestAcceptArgs) = withUser(http) { user ->
-    AvailableContests.select { (AvailableContests.contest_code eq argValues.contest_code) and (AvailableContests.user_id eq user.id) }
-        .map {
-          val variantChoice = it[AvailableContests.variant_choice]
-          val selectedVariant = argValues.variant_id
-          if (selectedVariant != "" && variantChoice == Contests.VariantChoice.ANY) {
+    val rowUserContest = AvailableContests.select {
+      (AvailableContests.contest_code eq argValues.contest_code) and (AvailableContests.user_id eq user.id)
+    }.toList()
+
+    if (rowUserContest.size > 1) {
+      http.error(500, """Too many records for (${argValues.contest_code}, ${user.id}) 
+        |returned from AvailableContests (${rowUserContest.size} records in the result""".trimMargin())
+    } else {
+      rowUserContest.firstOrNull()?.let {
+        val variantChoice = it[AvailableContests.variant_choice]
+        val selectedVariant = argValues.variant_id
+        if (selectedVariant != "") {
+          if (variantChoice == Contests.VariantChoice.ANY) {
             user.assignVariant(argValues.contest_code, selectedVariant.toInt())
-            return@map http.ok()
+            return@let http.ok()
+          } else {
+            return@let http.error(400, "Variant can't be chosen by client in contest ${argValues.contest_code}")
           }
-          if (selectedVariant != "" && variantChoice != Contests.VariantChoice.ANY) {
-            return@map http.error(400, "Variant can't be chosen by client")
-          }
+        }
 
-          val assignedVariant = it[AvailableContests.assigned_variant_id]
-          if (assignedVariant != null) {
-            return@map http.ok()
-          }
+        val assignedVariant = it[AvailableContests.assigned_variant_id]
+        if (assignedVariant != null) {
+          return@let http.ok()
+        }
 
-          when (variantChoice) {
-            Contests.VariantChoice.ANY -> http.error(400, "No variant chosen")
+        when (variantChoice) {
+          Contests.VariantChoice.ANY -> http.error(400, "No variant chosen in contest ${argValues.contest_code}")
 
-            Contests.VariantChoice.RANDOM -> http.ok().also { user.assignRandomVariant(argValues.contest_code) }
-          }
-        }.firstOrNull() ?: http.error(404, "No available contest with code ${argValues.contest_code}")
+          Contests.VariantChoice.RANDOM -> http.ok().also { user.assignRandomVariant(argValues.contest_code) }
+        }
+      } ?: http.error(404, "No available contest with code ${argValues.contest_code}")
+    }
   }
 }
 
@@ -76,21 +80,22 @@ class ContestAttemptsHandler : DashboardHandler<ContestAttemptsArgs>() {
   override fun args() = ContestAttemptsArgs("")
 
   override fun handle(http: HttpApi, argValues: ContestAttemptsArgs) = withUser(http) { user ->
-    println("Searching for attempts of user ${user.id} in contest ${argValues.contest_code}")
-    AvailableContests.select {(AvailableContests.contest_code eq argValues.contest_code) and (AvailableContests.user_id eq user.id) }
-        .map {
-          val assignedVariant = it[AvailableContests.assigned_variant_id]
-          println("User is assigned variant $assignedVariant")
-          if (assignedVariant != null) {
-            return@map http.json(user.getVariantAttempts(assignedVariant))
-          }
-          http.error(400, "No variant chosen")
-        }.firstOrNull() ?: http.error(404, "No available contest with code ${argValues.contest_code}")
+    val rowUserContest = AvailableContests.select {
+      (AvailableContests.contest_code eq argValues.contest_code) and (AvailableContests.user_id eq user.id)
+    }.toList()
+
+    if (rowUserContest.size > 1) {
+      http.error(500, """Too many records for (${argValues.contest_code}, ${user.id}) 
+        |returned from AvailableContests (${rowUserContest.size} records in the result""".trimMargin())
+    } else {
+      rowUserContest.firstOrNull()?.let {
+        val assignedVariant = it[AvailableContests.assigned_variant_id]
+        if (assignedVariant != null) {
+          return@let http.json(user.getVariantAttempts(assignedVariant))
+        }
+        http.error(400, "No variant chosen")
+      } ?: http.error(404, "No available contest with code ${argValues.contest_code}")
+    }
   }
 }
 
-class LogoutHandler : DashboardHandler<RequestArgs>() {
-  override fun args() = RequestArgs()
-
-  override fun handle(http: HttpApi, argValues: RequestArgs) = redirectToLogin(http)
-}

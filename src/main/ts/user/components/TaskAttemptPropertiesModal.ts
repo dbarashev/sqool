@@ -25,6 +25,10 @@ export default class TaskAttemptPropertiesModal extends Vue {
     $('#task-attempt').modal('hide');
   }
 
+  public markdownText(text: string): string {
+    return this.converter.makeHtml(text);
+  }
+
   private submit() {
     if (this.taskSolution === '') {
       this.alertDialog().show('Решение не может быть пустым');
@@ -32,9 +36,5 @@ export default class TaskAttemptPropertiesModal extends Vue {
     }
     localStorage.setItem(String(this.attempt.taskEntity.id), this.taskSolution);
     this.deferred.resolve(this.taskSolution);
-  }
-
-  public markdownText(text: string): string {
-    return this.converter.makeHtml(text);
   }
 }
