@@ -1,6 +1,7 @@
 package com.bardsoftware.sqool.contest
 
 import com.bardsoftware.sqool.contest.admin.Contests
+import com.bardsoftware.sqool.contest.admin.SolutionReview
 import com.bardsoftware.sqool.contest.storage.AvailableContests
 import com.bardsoftware.sqool.contest.storage.User
 import com.bardsoftware.sqool.contest.storage.UserStorage
@@ -99,3 +100,30 @@ class ContestAttemptsHandler : DashboardHandler<ContestAttemptsArgs>() {
   }
 }
 
+data class ReviewGetArgs(var contest_code: String, var task_id: String) : RequestArgs()
+
+class ReviewGetHandler : DashboardHandler<ReviewGetArgs>() {
+  override fun args() = ReviewGetArgs("", "")
+
+  override fun handle(http: HttpApi, argValues: ReviewGetArgs) = withUser(http) { user ->
+    val rowUserContest = AvailableContests.select {
+      (AvailableContests.contest_code eq argValues.contest_code) and (AvailableContests.user_id eq user.id)
+    }.toList()
+
+    if (rowUserContest.size > 1) {
+      http.error(500, """Too many records for (${argValues.contest_code}, ${user.id}) 
+        |returned from AvailableContests (${rowUserContest.size} records in the result""".trimMargin())
+    } else {
+      rowUserContest.firstOrNull()?.let {
+        val assignedVariant = it[AvailableContests.assigned_variant_id] ?: return@withUser http.error(400, "No variant chosen")
+        val reviewRow = SolutionReview.select {
+          (SolutionReview.user_id eq user.id) and
+          (SolutionReview.task_id eq argValues.task_id.toInt()) and
+          (SolutionReview.variant_id eq assignedVariant)
+        }.toList()
+        val reviews = reviewRow.joinToString("\n\n") { row -> row[SolutionReview.solution_review] }
+        http.json(reviews)
+      } ?: http.error(404, "No available contest with code ${argValues.contest_code}")
+    }
+  }
+}
