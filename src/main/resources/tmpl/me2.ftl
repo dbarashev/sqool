@@ -7,6 +7,7 @@
 	<title>Vue App</title>
 	<link rel="stylesheet" href="https://unpkg.com/bootstrap-material-design@4.1.1/dist/css/bootstrap-material-design.min.css" integrity="sha384-wXznGJNEXNG1NFsbm0ugrLFMQPWswR3lds2VeinahP8N0zJw9VWSopbjv2x7WCvX" crossorigin="anonymous">
 	<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Material+Icons">
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"/>
 	<link href="/js/user.js" rel="preload" as="script">
 </head>
 <body>
@@ -25,7 +26,7 @@
 				crossorigin="anonymous"></script>
 <script>$(document).ready(function() { $('body').bootstrapMaterialDesign(); });</script>
 <script>
-    window.userId = "${userId}";
+    window.userName = "${userName}";
 </script>
 <script type="text/javascript" src="/js/user.js"></script>
 </body>

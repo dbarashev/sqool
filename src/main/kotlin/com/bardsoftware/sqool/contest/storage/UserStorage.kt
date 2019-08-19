@@ -1,7 +1,9 @@
 package com.bardsoftware.sqool.contest.storage
 
 import com.bardsoftware.sqool.contest.admin.Contests
+import com.bardsoftware.sqool.contest.admin.DbQueryManager
 import com.bardsoftware.sqool.grader.AssessmentPubSubResp
+import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -22,12 +24,34 @@ data class TaskAttemptEntity(
     var testingStartMs: DateTime?,
     var errorMsg: String?,
     var resultSet: String?
-)
+) {
+  companion object Factory {
+    fun fromRow(attemptRow: ResultRow) = TaskAttemptEntity(
+        taskEntity = TaskEntity(
+            id = attemptRow[AttemptView.taskId],
+            name = attemptRow[AttemptView.name],
+            score = attemptRow[AttemptView.score],
+            description = attemptRow[AttemptView.description],
+            signatureJson = attemptRow[AttemptView.signature],
+            difficulty = attemptRow[AttemptView.difficulty],
+            authorName = attemptRow[AttemptView.author]
+        ),
+        userId = attemptRow[AttemptView.attemptUserId],
+        status = attemptRow[AttemptView.status],
+        count = attemptRow[AttemptView.count],
+        attemptId = attemptRow[AttemptView.attemptId],
+        testingStartMs = attemptRow[AttemptView.testingStartTs],
+        errorMsg = attemptRow[AttemptView.errorMsg],
+        resultSet = attemptRow[AttemptView.resultSet]
+    )
+  }
+}
+
 
 data class TaskEntity(
     var id: Int,
     var name: String,
-    var signature: String?,
+    var signatureJson: String?,
     var description: String?,
     var score: Int,
     var difficulty: Int,
@@ -72,13 +96,18 @@ object TaskTable : Table("Contest.Task") {
   var authorId = integer("author_id")
 }
 
+/**
+ * Interface to MyAttempts view which shows the state of user task attempts.
+ */
 object AttemptView : Table("Contest.MyAttempts") {
   var taskId = integer("task_id")
   var name = text("name")
   var description = text("description")
+  var signature = text("signature")
   var difficulty = integer("difficulty")
   var score = integer("score")
-  var author = text("nick")
+  var variantId = integer("variant_id")
+  var author = text("author_nick")
   var author_id = integer("author_id")
   var attemptId = text("attempt_id").nullable()
   var attemptUserId = integer("user_id")
@@ -89,11 +118,26 @@ object AttemptView : Table("Contest.MyAttempts") {
   var resultSet = text("result_set").nullable()
 }
 
-object AvailableContests : Table("Contest.AvailableContestDto") {
+/**
+ * Interface to AvailableContests view which maps users to contests which they can join
+ */
+object AvailableContests : Table("Contest.AvailableContests") {
   val user_id = integer("user_id")
   val contest_code = text("contest_code")
+  val contest_name = text("contest_name")
+  val variant_choice = customEnumeration(
+      "variant_choice", "VariantChoice",
+      { value -> Contests.VariantChoice.valueOf(value.toString()) },
+      { Contests.PGEnum("VariantChoice", it) }
+  )
+  val variants_json_array = text("variants_json_array")
+  val assigned_variant_id = integer("assigned_variant_id").nullable()
 }
 
+/**
+ * Represents student's attempt to solve a task. Contains fields and methods
+ * indicating attempt's testing status and response from the assessment system.
+ */
 class TaskAttempt(val entity: TaskAttemptEntity) {
   val id: Int get() = entity.taskEntity.id
   val name: String get() = entity.taskEntity.name
@@ -102,28 +146,12 @@ class TaskAttempt(val entity: TaskAttemptEntity) {
   val count: Int get() = entity.count
 
   companion object Factory {
-    fun fromRow(attemptRow: ResultRow): TaskAttempt {
-      return TaskAttempt(TaskAttemptEntity(
-          taskEntity = TaskEntity(
-              id = attemptRow[AttemptView.taskId],
-              name = attemptRow[AttemptView.name],
-              score = attemptRow[AttemptView.score],
-              description = attemptRow[AttemptView.description],
-              signature = null,
-              difficulty = attemptRow[AttemptView.difficulty],
-              authorName = attemptRow[AttemptView.author]
-          ),
-          userId = attemptRow[AttemptView.attemptUserId],
-          status = attemptRow[AttemptView.status],
-          count = attemptRow[AttemptView.count],
-          attemptId = attemptRow[AttemptView.attemptId],
-          testingStartMs = attemptRow[AttemptView.testingStartTs],
-          errorMsg = attemptRow[AttemptView.errorMsg],
-          resultSet = attemptRow[AttemptView.resultSet]
-      ))
-    }
+    fun fromRow(attemptRow: ResultRow) = TaskAttempt(TaskAttemptEntity.fromRow(attemptRow))
   }
 
+  /**
+   * Write-only field for recording assessment response.
+   */
   var assessorResponse: AssessmentPubSubResp? = null
     set(value) {
       val attemptId = this.entity.attemptId
@@ -139,21 +167,40 @@ class TaskAttempt(val entity: TaskAttemptEntity) {
         }
       }
     }
-
 }
 
 class Task(val entity: TaskEntity)
 
-class Contest(val code: String, val name: String)
+/**
+ * Represents contest which some user joined or may join. Most of the fields are not
+ * tied to user, however chosenVariant indicates the variant which is assigned to the
+ * context user.
+ */
+data class Contest(
+    val code: String,
+    val name: String,
+    val variantPolicy: String,
+    val variants: List<Variant>,
+    val chosenVariant: Variant?
+)
 
-class User(val entity: UserEntity, val txn: Transaction, val storage: UserStorage) {
-  private val jsonMapper = ObjectMapper()
+data class Variant(val id: Int = -1, val name: String = "")
+
+/**
+ * Represents a user and provides accessors to objects related to participation of this user
+ * in contests, such as the list of available contests, available tasks, etc.
+ */
+class User(val entity: UserEntity, val storage: UserStorage) {
+  private val queryManager = DbQueryManager()
   val password: String
     get() = entity.passwd
   val name: String
     get() = entity.name
   val id: Int get() = entity.id
 
+  /**
+   * Returns the list of all attempts made by this user.
+   */
   fun attempts(): List<TaskAttempt> {
     return transaction {
       AttemptView.select { AttemptView.attemptUserId.eq(entity.id) }.map(TaskAttempt.Factory::fromRow)
@@ -178,26 +225,69 @@ class User(val entity: UserEntity, val txn: Transaction, val storage: UserStorag
       }
     }
 
-  fun availableContests(): List<Contest> {
-    val contests = transaction {
-      AvailableContests.select {
-        AvailableContests.user_id eq entity.id
-      }.map { it[AvailableContests.contest_code] }.toList()
-    }
-    return transaction {
-      Contests.select {
-        Contests.code inList contests
-      }.map { Contest(it[Contests.code], it[Contests.name]) }.toList()
-    }
-  }
+  /**
+   * Returns the list of all contests available to this user
+   */
+  fun availableContests(): List<Contest> = transaction {
+    AvailableContests.select { AvailableContests.user_id eq entity.id }
+          .map { c ->
+            val contestCode = c[AvailableContests.contest_code]
+            val contestName = c[AvailableContests.contest_name]
+            val chosenVariantId = c[AvailableContests.assigned_variant_id]
 
-  fun acceptRandomChalenges() {
-    return storage.procedure("SELECT Contest.AcceptRandomAuthor(?)") {
+            val variants = ObjectMapper().readValue(c[AvailableContests.variants_json_array], object : TypeReference<List<Variant>>() {})
+            val chosenVariant = chosenVariantId?.let { id ->
+              variants.find { it.id == id }
+            }
+            Contest(contestCode, contestName, c[AvailableContests.variant_choice].name, variants, chosenVariant)
+          }.toList()
+    }
+
+  /**
+   * Assigns the given variant from the given contest to this user and adds attempts for all
+   * tasks in that variant in "virgin" state.
+   */
+  fun assignVariant(contestCode: String, variantId: Int) {
+    storage.procedure("SELECT Contest.AssignVariant(?, ?, ?)") {
       setInt(1, this@User.id)
+      setString(2, contestCode)
+      setInt(3, variantId)
       execute()
     }
   }
 
+  /**
+   * Returns all attempts made by this user for tasks from the given variant.
+   */
+  fun getVariantAttempts(variantId: Int): List<TaskAttemptEntity> = transaction {
+    AttemptView.select { (AttemptView.attemptUserId eq this@User.id) and (AttemptView.variantId eq variantId) }
+        .map(TaskAttemptEntity.Factory::fromRow)
+  }
+
+  /**
+   * Returns all attempts made by this user for all tasks from the given contest.
+   */
+  fun getAllVariantsAttempts(contestCode: String): List<TaskAttemptEntity> = transaction {
+    val taskIdList = queryManager.listContestTasksId(contestCode)
+    AttemptView.select { (AttemptView.attemptUserId eq this@User.id) and (AttemptView.taskId inList taskIdList) }
+        .map(TaskAttemptEntity.Factory::fromRow)
+  }
+
+  /**
+   * Assigns random variant from the given contest to this user and creates new virgin attempts
+   * for all tasks from that variant.
+   */
+  fun assignRandomVariant(contestCode: String): Int {
+    val variantId = queryManager.listContestVariantsId(contestCode).random()
+    assignVariant(contestCode, variantId)
+    return variantId
+  }
+
+  /**
+   * Selects a random task with the given difficulty authored by the given aurhor.
+   * This is supposed to be used in peer challenge contests where contestants
+   * act as both task authors and solvers.
+   */
   fun createChallengeOffer(difficulty: Int, authorId: Int?): ChallengeOffer {
     val attemptedQuery = QueryAlias(AttemptView.select { AttemptView.attemptUserId.eq(this@User.id) }, "A")
     val selectedQuery = if (authorId == null) {
@@ -225,6 +315,11 @@ class User(val entity: UserEntity, val txn: Transaction, val storage: UserStorag
     }
   }
 
+  /**
+   * Records that student submitted a new solution which was sent to the assesment service and
+   * is being tested now. Removes previously saved assessment details, if any, and sets attempt
+   * status to "testing"
+   */
   fun recordAttempt(taskId: Int, attemptId: String): Boolean {
     return storage.procedure("SELECT Contest.StartAttemptTesting(?, ?, ?)") {
       setInt(1, this@User.id)
@@ -234,6 +329,9 @@ class User(val entity: UserEntity, val txn: Transaction, val storage: UserStorag
     }
   }
 
+  /**
+   * Records the result of testing received from the assessment service.
+   */
   fun recordAssessment(attemptId: String, score: Int, errorMsg: String?, resultSet: String?) {
     return storage.procedure("SELECT Contest.RecordAttemptResult(?, ?, ?, ?)") {
       setString(1, attemptId)
@@ -266,7 +364,7 @@ class UserStorage(val txn: Transaction) {
               id = it.getInt("id"),
               name = it.getString("name"),
               nick = it.getString("nick"),
-              passwd = it.getString("passwd")), txn, this@UserStorage)
+              passwd = it.getString("passwd")), this@UserStorage)
         } else {
           null
         }
@@ -274,13 +372,13 @@ class UserStorage(val txn: Transaction) {
     }
   }
 
-  fun fromRow(userRow: ResultRow): User {
+  private fun fromRow(userRow: ResultRow): User {
     return User(UserEntity(
         id = userRow[UserTable.id],
         name = userRow[UserTable.name],
         nick = userRow[UserTable.nick],
         passwd = userRow[UserTable.passwd]
-    ), txn, this@UserStorage)
+    ), this@UserStorage)
   }
 
   fun findUserById(id: Int): User? {
@@ -297,7 +395,7 @@ class UserStorage(val txn: Transaction) {
           id = taskRow[TaskTable.id],
           name = taskRow[TaskTable.name],
           description = taskRow[TaskTable.description],
-          signature = taskRow[TaskTable.signature],
+          signatureJson = taskRow[TaskTable.signature],
           score = taskRow[TaskTable.score],
           difficulty = taskRow[TaskTable.difficulty],
           authorName = ""

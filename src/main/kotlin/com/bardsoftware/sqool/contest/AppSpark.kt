@@ -293,8 +293,16 @@ fun main(args: Array<String>) {
       GET("/auth/dev" BY authDevHandler ARGS mapOf(
           "user_id" to AuthDevArgs::user_id
       ))
-      GET("/contest/available/all" BY availableContestAllHandler ARGS mapOf(
-          "user_id" to AvailableContestAllArgs::userId
+
+      GET("/me2" BY DashboardPageHandler())
+      GET("/logout" BY LogoutHandler())
+      GET("/contest/available/all" BY availableContestAllHandler)
+      GET("/contest/attempts" BY ContestAttemptsHandler() ARGS mapOf(
+          "contest_code" to ContestAttemptsArgs::contest_code
+      ))
+      POST("/contest/accept" BY ContestAcceptHandler() ARGS mapOf(
+          "contest_code" to ContestAcceptArgs::contest_code,
+          "variant_id" to ContestAcceptArgs::variant_id
       ))
     }
     get("/login") {
@@ -310,10 +318,6 @@ fun main(args: Array<String>) {
 
     get("/me") {
       UserDashboardHandler().handle(Http(request, response, { session() }, freemarker))()
-    }
-
-    get("/me2") {
-      DashboardHandler().handle(Http(request, response, { session() }, freemarker))()
     }
 
     get("/getAcceptedChallenges") {

@@ -1,5 +1,5 @@
 import Vue from 'vue';
 
 declare global {
-  interface Window { userId: number; }
+  interface Window { userName: string | undefined; }
 }

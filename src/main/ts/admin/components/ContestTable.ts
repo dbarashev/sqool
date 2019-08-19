@@ -20,7 +20,7 @@ export default class ContestTable extends Vue {
     }).done((contests: ContestDto[]) => {
       this.contests = [];
       contests.forEach((c) => this.contests.push(c));
-    }).fail(xhr => {
+    }).fail((xhr) => {
       const title = 'Не удалось получить список контестов:';
       this.alertDialog().show(title, xhr.statusText);
     });

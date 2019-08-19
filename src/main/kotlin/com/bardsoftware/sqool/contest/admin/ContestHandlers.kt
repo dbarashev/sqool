@@ -10,6 +10,7 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.statements.UpdateBuilder
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.format.DateTimeFormatterBuilder
+import org.postgresql.util.PGobject
 import java.io.ByteArrayOutputStream
 
 private val DATE_FORMATTER = DateTimeFormatterBuilder()
@@ -27,6 +28,11 @@ object Contests : Table("Contest.ContestDto") {
   val start_ts = datetime("start_ts")
   val end_ts = datetime("end_ts")
   val variants_id_json_array = text("variants_id_json_array")
+  val variant_choice = customEnumeration(
+      "variant_choice", "VariantChoice",
+      { value -> VariantChoice.valueOf(value.toString()) },
+      { PGEnum("VariantChoice", it) }
+  )
 
   fun asJson(row: ResultRow): JsonNode {
     return JSON_MAPPER.createObjectNode().also {
@@ -35,6 +41,17 @@ object Contests : Table("Contest.ContestDto") {
       it.put("start_ts", row[start_ts].toString(DATE_FORMATTER))
       it.put("end_ts", row[end_ts].toString(DATE_FORMATTER))
       it.set<JsonNode>("variants", JSON_MAPPER.readTree(row[variants_id_json_array]))
+    }
+  }
+
+  enum class VariantChoice {
+    RANDOM, ANY
+  }
+
+  class PGEnum<T:Enum<T>>(enumTypeName: String, enumValue: T?) : PGobject() {
+    init {
+      value = enumValue?.name
+      type = enumTypeName
     }
   }
 }

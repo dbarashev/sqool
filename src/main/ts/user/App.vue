@@ -1,17 +1,18 @@
 <template>
   <div class="bmd-layout-container bmd-drawer-f-l" id="app">
-    <AvailableContestsDropdown></AvailableContestsDropdown>
+    <Dashboard></Dashboard>
+    <AlertDialog ref="alertDialog"></AlertDialog>
   </div>
 </template>
 
 <script lang="ts">
 import {Component, Provide, Vue} from 'vue-property-decorator';
-import AvailableContestsDropdown from './components/AvailableContestsDropdown.vue';
+import Dashboard from './components/Dashboard.vue'
 import AlertDialog from '../components/AlertDialog.vue';
 
 @Component({
   components: {
-    AvailableContestsDropdown, AlertDialog
+    Dashboard, AlertDialog
   },
 })
 export default class App extends Vue {
