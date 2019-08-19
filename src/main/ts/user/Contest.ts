@@ -1,6 +1,4 @@
 import {TaskAttempt} from './TaskAttempt';
-import {Inject} from 'vue-property-decorator';
-import AlertDialog from '../components/AlertDialog';
 
 export type VariantPolicy = 'ANY' | 'RANDOM' | 'ALL';
 
@@ -27,7 +25,7 @@ export class Contest {
 
   public acceptRandomVariant(): JQuery.jqXHR {
     return $.ajax({
-      url: '/acceptContest',
+      url: '/contest/accept',
       method: 'POST',
       data: {contest_code: this.contestCode}
     });
@@ -35,7 +33,7 @@ export class Contest {
 
   public acceptVariant(variantId: number): JQuery.jqXHR {
     return $.ajax({
-      url: '/acceptContest',
+      url: '/contest/accept',
       method: 'POST',
       data: {
         contest_code: this.contestCode,

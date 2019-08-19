@@ -495,6 +495,7 @@ SELECT  T.id AS task_id,
         D.error_msg,
         D.result_set
 FROM Contest.Task T
+-- TODO: will be uncommented when admin dashboard support task author
 --JOIN Contest.ContestUser U ON T.author_id = U.id
 JOIN Contest.Attempt A ON A.task_id = T.id
 JOIN Contest.ContestUser S ON A.user_id = S.id
