@@ -10,14 +10,15 @@ export default class AttemptTable extends Vue {
   @Inject() private readonly alertDialog!: () => AlertDialog;
   @Inject() private readonly taskAttemptProperties!: () => TaskAttemptPropertiesModal;
   @Inject() private readonly failureDetails!: () => FailureDetailsModal;
-  private contest?: Contest;
+  // This can't be undefined because it is used in Vue template
+  private contest: Contest | null = null;
 
   public setContest(contest: Contest) {
     this.contest = contest;
   }
 
   public clear() {
-    this.contest = undefined;
+    this.contest = null;
   }
 
   private getErrorMessage(count: number): string {
