@@ -18,6 +18,7 @@ export class TaskDto {
       // tslint:disable-next-line
       readonly result_json: string,
       readonly solution: string,
-      readonly script_id: number | null
+      // tslint:disable-next-line
+      readonly script_id: number | null,
   ) {}
 }

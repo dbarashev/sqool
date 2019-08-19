@@ -16,7 +16,7 @@
                         </div>
                         <div class="form-group">
                             <div class="text-left">
-                                <label class="bmd-label-static" for="result-rows">Первые строки вашего реузьтата</label>
+                                <label class="bmd-label-static" for="result-rows">Первые строки вашего результата</label>
                             </div>
                             <table id="result-rows" class="table table-hover table-striped table-fixed">
                                 <thead class="thead-dark">

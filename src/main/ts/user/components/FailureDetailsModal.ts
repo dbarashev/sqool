@@ -23,8 +23,8 @@ export default class FailureDetailsModal extends Vue {
     if (this.attempt.resultSet) {
       const jsonList = JSON.parse(this.attempt.resultSet);
       this.rows = jsonList.slice(1);
-      for (let colName of jsonList[0]) {
-        if(colName !== 'query_id') {
+      for (const colName of jsonList[0]) {
+        if (colName !== 'query_id') {
           this.columnNames.push(colName);
         }
       }

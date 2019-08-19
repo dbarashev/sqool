@@ -34,13 +34,14 @@ export default class ContestPropertiesModal extends Vue {
   public submit() {
     this.contestCode = this.contestCode.toLowerCase();
     if (!/^[a-z0-9]+([-_][a-z0-9]+)*$/.test(this.contestCode)) {
-      const message = 'Код может содержать слова, состоящие из цифр и букв английского алфавита, разделённые подчеркиванием или дешем';
-      this.alertDialog().show('Недопустимый код конеста', message);
+      const message = `Код может содержать слова, состоящие из цифр и букв
+      английского алфавита, разделённые подчеркиванием или дешем`;
+      this.alertDialog().show('Недопустимый код контеста', message);
       return;
     }
-    const selectedVariants = this.selectedVariants.map(variant => variant.id);
+    const selectedVariants = this.selectedVariants.map((variant) => variant.id);
     this.deferred.resolve(
-        new ContestDto(this.contestCode, this.contestName, this.contestStart, this.contestEnd, selectedVariants)
+        new ContestDto(this.contestCode, this.contestName, this.contestStart, this.contestEnd, selectedVariants),
     );
 
   }
@@ -49,15 +50,15 @@ export default class ContestPropertiesModal extends Vue {
     this.variants = [];
     this.selectedVariants = [];
     $.ajax({
-      url: '/admin/variant/all'
+      url: '/admin/variant/all',
     }).done((variants: VariantDto[]) => {
-      variants.forEach(variant => {
+      variants.forEach((variant) => {
         this.variants.push(variant);
         if (selectedVariantIdList.includes(variant.id)) {
           this.selectedVariants.push(variant);
         }
       });
-    }).fail(xhr => {
+    }).fail((xhr) => {
       const title = 'Не удалось получить список вариантов:';
       this.alertDialog().show(title, xhr.statusText);
     });

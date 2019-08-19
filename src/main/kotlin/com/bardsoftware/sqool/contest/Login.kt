@@ -12,9 +12,7 @@ class LoginHandler {
   fun handle(http: HttpApi, req: LoginReq): HttpResponse {
     return UserStorage.exec {
       (findUser(req.name) ?: if (req.createIfMissing) {
-        val newUser = createUser(req.name, req.password)
-        newUser?.acceptRandomChallenges()
-        newUser
+        createUser(req.name, req.password)
       } else null)?.let {
         if (DigestUtils.md5Hex(req.password) == it.password) {
           http.chain {
@@ -28,3 +26,15 @@ class LoginHandler {
     }
   }
 }
+
+class LogoutHandler : RequestHandler<RequestArgs>() {
+  override fun args() = RequestArgs()
+
+  override fun handle(http: HttpApi, argValues: RequestArgs) = redirectToLogin(http)
+}
+
+fun redirectToLogin(http: HttpApi) = http.chain {
+  clearSession()
+  redirect("/login")
+}
+

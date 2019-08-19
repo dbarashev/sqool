@@ -27,7 +27,7 @@ export class Contest {
     return $.ajax({
       url: '/contest/accept',
       method: 'POST',
-      data: {contest_code: this.contestCode}
+      data: {contest_code: this.contestCode},
     });
   }
 
@@ -37,8 +37,8 @@ export class Contest {
       method: 'POST',
       data: {
         contest_code: this.contestCode,
-        variant_id: variantId
-      }
+        variant_id: variantId,
+      },
     });
   }
 }

@@ -17,9 +17,9 @@
 <script lang="ts">
 import {Component, Inject, Vue} from 'vue-property-decorator';
 import AlertDialog from '../../components/AlertDialog';
-import {Contest, VariantOption, VariantPolicy} from "../Contest";
+import {Contest, VariantOption, VariantPolicy} from '../Contest';
 import VariantChooser from './VariantChooser';
-import AttemptTable from "./AttemptTable";
+import AttemptTable from './AttemptTable';
 
 @Component
 export default class AvailableContestsDropdown extends Vue {
@@ -44,15 +44,15 @@ export default class AvailableContestsDropdown extends Vue {
     this.refresh();
   }
 
-  onContestChange(contestOption: ContestOption) {
+  public onContestChange(contestOption: ContestOption) {
     const contest = new Contest(contestOption.code, contestOption.variantPolicy, contestOption.variants);
     if (contestOption.chosenVariant) {
       this.loadTasks(contest);
     } else {
       this.attemptTable().clear();
-      const onVariantChoice = (contest: Contest) => {
+      const onVariantChoice = (newContest: Contest) => {
         this.refresh();
-        this.loadTasks(contest);
+        this.loadTasks(newContest);
       };
       this.variantChooser().show(contest, onVariantChoice, this.onFailure);
     }
@@ -63,42 +63,12 @@ export default class AvailableContestsDropdown extends Vue {
     contest.refreshAttempts()
         .done(() => this.attemptTable().setContest(contest))
         .fail(this.onFailure);
-  };
+  }
 
   private onFailure = (xhr: JQuery.jqXHR) => {
     const title = 'Не удалось загрузить вариант:';
     this.alertDialog().show(title, xhr.statusText);
-  };
-  // private loadVariant(contestOption: ContestOption, variant: VariantOption | null) {
-  //   if (!variant && contestOption.variants.length == 1) {
-  //     variant = contestOption.variants[0];
-  //   }
-  //   let ajax;
-  //   if (variant) {
-  //     ajax = $.ajax({
-  //       url: '/acceptVariant',
-  //       method: 'POST',
-  //       data: {
-  //         contest_code: contestOption.code,
-  //         variant_id: variant.id
-  //       }
-  //     })
-  //   } else {
-  //     ajax = $.ajax({
-  //       url: '/acceptContest',
-  //       method: 'POST',
-  //       data: {contest_code: contestOption.code}
-  //     })
-  //   }
-  //   ajax.done(() => {
-  //     const contest = new Contest(contestOption.code);
-  //     this.$emit("input", contest);
-  //     return contest.refreshAttempts()
-  //   }).fail(xhr => {
-  //     const title = 'Не удалось загрузить вариант:';
-  //     this.alertDialog().show(title, xhr.statusText);
-  //   });
-  // }
+  }
 }
 
 class ContestOption {
@@ -106,5 +76,4 @@ class ContestOption {
               readonly variants: VariantOption[], readonly chosenVariant?: VariantOption) {
   }
 }
-
 </script>

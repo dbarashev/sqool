@@ -243,13 +243,6 @@ class User(val entity: UserEntity, val storage: UserStorage) {
           }.toList()
     }
 
-  fun acceptRandomChallenges() {
-    return storage.procedure("SELECT Contest.AcceptRandomAuthor(?)") {
-      setInt(1, this@User.id)
-      execute()
-    }
-  }
-
   /**
    * Assigns the given variant from the given contest to this user and adds attempts for all
    * tasks in that variant in "virgin" state.
