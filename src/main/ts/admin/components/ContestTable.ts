@@ -4,6 +4,7 @@ import AlertDialog from '../../components/AlertDialog';
 import ContestToolbar from './ContestToolbar';
 import TaskAttempts from './AttemptsModal.vue';
 import AttemptsModal from './AttemptsModal';
+import ContestMainWindow from "./ContestMainWindow";
 
 @Component({
   components: {
@@ -16,6 +17,8 @@ export default class ContestTable extends Vue {
   @Inject() private readonly alertDialog!: () => AlertDialog;
   @Inject() private readonly contestToolbar!: () => ContestToolbar;
   @Inject() private readonly attemptsModal!: () => AttemptsModal;
+  @Inject() private readonly contestMainWindow!: () => ContestMainWindow;
+
 
   public mounted() {
     this.refresh();
@@ -52,5 +55,18 @@ export default class ContestTable extends Vue {
 
   public showAttemptsModal(contest: ContestDto) {
     this.attemptsModal().show(contest);
+  }
+
+  public showAttemptsTable(contest: ContestDto) {
+    this.contestMainWindow().showAttemptTableByTask(contest);
+  }
+
+  public hide() {
+    this.$el.setAttribute('hidden', 'true');
+  }
+
+  public show() {
+    this.refresh();
+    this.$el.removeAttribute('hidden');
   }
 }

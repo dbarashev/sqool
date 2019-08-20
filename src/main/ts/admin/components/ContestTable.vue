@@ -14,7 +14,7 @@
             <td>{{ c.code }}</td>
             <td>
                 <a class="btn float-right"
-                   @click="showAttemptsModal(c)"
+                   @click="showAttemptsTable(c)"
                    role="button">
                 Решения
                 </a><span>{{ c.name }}</span>

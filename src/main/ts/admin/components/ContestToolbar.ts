@@ -81,6 +81,14 @@ export default class ContestToolbar extends Vue {
       this.alertDialog().show(title, xhr.statusText);
     });
   }
+
+  public hide() {
+    $('#contest-toolbar').attr('style', 'display: none !important');
+  }
+
+  public show() {
+    $('#contest-toolbar').attr('style', 'display: block');
+  }
 }
 
 class ImageBuildingResult {
