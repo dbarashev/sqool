@@ -39,7 +39,7 @@ export default class ScriptTable extends Vue {
     this.$forceUpdate();
   }
 
-  editScript() {
+  public editScript() {
     this.scriptToolbar().editScript();
   }
 }

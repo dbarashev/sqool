@@ -1,46 +1,38 @@
-import {Component, Provide, Vue} from "vue-property-decorator";
-import ContestToolbar from "./ContestToolbar";
-import ContestTable from "./ContestTable";
-import AttemptToolbar from "./AttemptToolbar";
-import AttemptTable from "./AttemptTable";
-import {ContestDto} from "../Contest";
+import {Component, Provide, Vue} from 'vue-property-decorator';
+import ContestToolbar from './ContestToolbar';
+import ContestTable from './ContestTable';
+import AttemptToolbar from './AttemptToolbar';
+import AttemptTable from './AttemptTable';
+import {ContestDto} from '../Contest';
 
+type VisibleComponent = 'contests' | 'attempts-by-task' | 'attempts-by-student';
 @Component({
   components: {
     ContestTable, ContestToolbar,
-    AttemptToolbar, AttemptTable
+    AttemptToolbar, AttemptTable,
   },
 })
 export default class ContestMainWindow extends Vue {
-  private isContestTableVisible = false;
-  private isAttemptTableVisible = false;
-
+  private visibleComponent: VisibleComponent = 'contests';
   public mounted() {
     this.showContestTable();
   }
 
-  public hideChildren() {
-    this.isAttemptTableVisible = false;
-    this.isContestTableVisible = false;
-  }
 
   public showAttemptTableByTask(contest: ContestDto) {
-    this.hideChildren();
-    this.isAttemptTableVisible = true;
+    this.visibleComponent = 'attempts-by-task';
     this.attemptToolbar().show(contest);
     this.attemptTableByTask().show(contest);
   }
 
   public showAttemptTableByStudent(contest: ContestDto) {
-    this.hideChildren();
-    this.isAttemptTableVisible = true;
+    this.visibleComponent = 'attempts-by-student';
     this.attemptToolbar().show(contest);
     this.attemptTableByStudent().show(contest);
   }
 
   public showContestTable() {
-    this.hideChildren();
-    this.isContestTableVisible = true;
+    this.visibleComponent = 'contests';
   }
 
   @Provide()

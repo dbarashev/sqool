@@ -8,6 +8,6 @@ export class ContestDto {
       readonly start_ts: string,
       // tslint:disable-next-line
       readonly end_ts: string,
-      readonly variants: number[]
+      readonly variants: number[],
   ) {}
 }

@@ -1,18 +1,18 @@
-import {Vue, Component, Prop} from 'vue-property-decorator'
+import {Vue, Component, Prop} from 'vue-property-decorator';
 
 @Component
 export default class Dropdown extends Vue {
   @Prop()
-  readonly options!: Option[];
+  public readonly options!: Option[];
   @Prop()
-  readonly value!: Option;
+  public readonly value!: Option;
 
   get selected(): Option {
     return this.value || this.options[0];
   }
 
   set selected(value: Option) {
-    this.$emit("input", value);
+    this.$emit('input', value);
   }
 
   public mounted() {
@@ -20,4 +20,4 @@ export default class Dropdown extends Vue {
   }
 }
 
-type Option = { value: any, text: string };
+interface Option { value: any; text: string; }

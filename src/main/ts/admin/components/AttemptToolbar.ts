@@ -1,10 +1,10 @@
-import {Component, Inject, Vue} from "vue-property-decorator";
-import ContestMainWindow from "./ContestMainWindow";
-import {ContestDto} from "../Contest";
+import {Component, Inject, Vue} from 'vue-property-decorator';
+import ContestMainWindow from './ContestMainWindow';
+import {ContestDto} from '../Contest';
 
 @Component
 export default class AttemptToolbar extends Vue {
-  private contest = new ContestDto("", "", "", "", []);
+  private contest = new ContestDto('', '', '', '', []);
   @Inject() private readonly contestMainWindow!: () => ContestMainWindow;
 
   public showContests() {

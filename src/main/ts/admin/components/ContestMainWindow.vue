@@ -1,15 +1,15 @@
 <template>
     <div>
-        <ContestToolbar ref="contestToolbar" v-if="isContestTableVisible">
+        <ContestToolbar ref="contestToolbar" v-if="visibleComponent === 'contests'">
         </ContestToolbar>
-        <ContestTable ref="contestTable" v-if="isContestTableVisible">
+        <ContestTable ref="contestTable" v-if="visibleComponent === 'contests'">
         </ContestTable>
 
-        <AttemptToolbar ref="attemptToolbar" v-if="isAttemptTableVisible">
+        <AttemptToolbar ref="attemptToolbar" v-if="visibleComponent !== 'contests'">
         </AttemptToolbar>
-        <AttemptTable ref="attemptTableByStudent" v-if="isAttemptTableVisible">
+        <AttemptTable ref="attemptTableByStudent" v-if="visibleComponent === 'attempts-by-student'">
         </AttemptTable>
-        <AttemptTable ref="attemptTableByTask" v-if="isAttemptTableVisible">
+        <AttemptTable ref="attemptTableByTask" v-if="visibleComponent === 'attempts-by-task'">
         </AttemptTable>
     </div>
 </template>

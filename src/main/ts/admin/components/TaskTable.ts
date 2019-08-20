@@ -31,7 +31,7 @@ export default class TaskTable extends Vue {
     return this.activeTask;
   }
 
-  editTask() {
+  public editTask() {
     this.taskToolbar().editTask();
   }
 
@@ -41,7 +41,7 @@ export default class TaskTable extends Vue {
     }).done((tasks: TaskDto[]) => {
       this.tasks = [];
       tasks.forEach((t) => this.tasks.push(t));
-    }).fail(xhr => {
+    }).fail((xhr) => {
       const title = 'Не удалось получить список задач:';
       this.alertDialog().show(title, xhr.statusText);
     });

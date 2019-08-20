@@ -12,7 +12,7 @@ export default class VariantToolbar extends Vue {
       data: {
         id: variant.id,
         name: variant.name,
-        tasks: JSON.stringify(variant.tasks)
+        tasks: JSON.stringify(variant.tasks),
       },
     };
   }
@@ -40,7 +40,7 @@ export default class VariantToolbar extends Vue {
     }).done(() => {
       this.variantProperties().hide();
       this.variantTable().refresh();
-    }).fail(xhr => {
+    }).fail((xhr) => {
       // Call it again to be able to make another request
       this.showAndSubmitVariant(variant, url);
       const title = `Что-то пошло не так: ${xhr.status}`;
