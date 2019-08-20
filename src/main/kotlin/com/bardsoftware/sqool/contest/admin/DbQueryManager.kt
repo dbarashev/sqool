@@ -3,7 +3,10 @@ package com.bardsoftware.sqool.contest.admin
 import com.bardsoftware.sqool.codegen.Contest
 import com.bardsoftware.sqool.codegen.Schema
 import com.bardsoftware.sqool.codegen.Variant
-import com.bardsoftware.sqool.codegen.task.*
+import com.bardsoftware.sqool.codegen.task.MultiColumnTask
+import com.bardsoftware.sqool.codegen.task.ScalarValueTask
+import com.bardsoftware.sqool.codegen.task.SingleColumnTask
+import com.bardsoftware.sqool.codegen.task.Task
 import com.bardsoftware.sqool.codegen.task.spec.MatcherSpec
 import com.bardsoftware.sqool.codegen.task.spec.RelationSpec
 import com.bardsoftware.sqool.codegen.task.spec.SqlDataType
@@ -14,9 +17,9 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.exc.InvalidDefinitionException
 import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException
 import org.jetbrains.exposed.sql.ResultRow
+import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
-import java.lang.IllegalArgumentException
 
 class NoSuchContestException : Exception()
 
@@ -26,8 +29,28 @@ class MalformedDataException : Exception {
   constructor(message: String?) : super(message)
 }
 
+object ContestTasks : Table("Contest.TaskContest") {
+  val contestCode = text("contest_code")
+  val variantId = integer("variant_id")
+  val taskId = integer("task_id")
+}
+
 class DbQueryManager {
   private val jsonMapper = ObjectMapper()
+
+  fun listContestVariantsId(contestCode: String): List<Int> = transaction {
+    Contests.select { Contests.code eq contestCode }
+        .map { ObjectMapper().readValue(it[Contests.variants_id_json_array], IntArray::class.java).toList() }
+        .firstOrNull()
+        ?.toList() ?: throw Exception("Queried contests doesn't exist")
+  }
+
+  fun listContestTasksId(contestCode: String): List<Int> = transaction {
+    ContestTasks.select { ContestTasks.contestCode eq contestCode }
+        .map { it[ContestTasks.taskId] }
+        .distinct()
+        .toList()
+  }
 
   fun findContest(code: String): Contest = transaction {
     val contest = Contests.select {
@@ -37,32 +60,32 @@ class DbQueryManager {
     contest.first()
   }
 
-  fun findVariants(idList: List<Int>) = transaction {
+  private fun findVariants(idList: List<Int>): List<Variant> = transaction {
     Variants.select {
       Variants.id inList idList.toList()
     }.map(::resultRowToVariant)
   }
 
-  fun findTasks(idList: List<Int>) = transaction {
+  private fun findTasks(idList: List<Int>): List<Task> = transaction {
     Tasks.select {
       Tasks.id inList idList.toList()
     }.map(::resultRowToTask)
   }
 
-  fun resultRowToContest(contest: ResultRow): Contest {
+  private fun resultRowToContest(contest: ResultRow): Contest {
     val variantsIdList = jsonMapper.readValue(contest[Contests.variants_id_json_array], IntArray::class.java)
     val variants = findVariants(variantsIdList.toList())
     return Contest(contest[Contests.code], contest[Contests.name], variants)
   }
 
-  fun resultRowToVariant(variant: ResultRow): Variant {
+  private fun resultRowToVariant(variant: ResultRow): Variant {
     val schemas = jsonMapper.readValue(variant[Variants.scripts_id_json_array], IntArray::class.java).map(::Schema)
     val tasksIdList = jsonMapper.readValue(variant[Variants.tasks_id_json_array], IntArray::class.java)
     val tasks = findTasks(tasksIdList.toList())
     return Variant(variant[Variants.name], tasks, schemas)
   }
 
-  fun resultRowToTask(row: ResultRow) = try {
+  fun resultRowToTask(row: ResultRow): Task = try {
     val attributesJson = row[Tasks.result_json]
     val keyAttributes = jsonMapper.readValue(attributesJson, object : TypeReference<List<AttributeDto>>() {})
     TaskDto(row[Tasks.name], row[Tasks.solution], keyAttributes).toTask()

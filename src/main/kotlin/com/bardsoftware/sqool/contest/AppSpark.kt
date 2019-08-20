@@ -2,6 +2,8 @@ package com.bardsoftware.sqool.contest
 
 import com.bardsoftware.sqool.codegen.docker.ContestImageManager
 import com.bardsoftware.sqool.contest.admin.*
+import com.bardsoftware.sqool.contest.admin.ReviewGetArgs as AdminReviewGetArgs
+import com.bardsoftware.sqool.contest.admin.ReviewGetHandler as AdminReviewGetHandler
 import com.google.common.io.ByteStreams
 import com.google.common.net.HttpHeaders
 import com.google.common.net.MediaType
@@ -202,7 +204,7 @@ fun main(args: Array<String>) {
   val adminVariantAllHandler = VariantAllHandler(flags)
   val adminSubmissionGetHandler = SubmissionGetHandler()
   val adminSubmissionListHandler = SubmissionListHandler()
-  val adminReviewGetHandler = ReviewGetHandler()
+  val adminReviewGetHandler = AdminReviewGetHandler()
   val adminReviewSaveHandler = ReviewSaveHandler()
   val challengeHandler = ChallengeHandler()
   val authDevHandler = AuthDevHandler()
@@ -282,8 +284,8 @@ fun main(args: Array<String>) {
           "task_id" to SubmissionListArgs::task_id
       ))
       GET("/admin/review/get" BY adminReviewGetHandler ARGS mapOf(
-          "task_id" to ReviewGetArgs::task_id,
-          "user_id" to ReviewGetArgs::user_id
+          "task_id" to AdminReviewGetArgs::task_id,
+          "user_id" to AdminReviewGetArgs::user_id
       ))
       POST("/admin/review/save" BY adminReviewSaveHandler ARGS mapOf(
           "task_id" to ReviewSaveArgs::task_id,
@@ -293,8 +295,20 @@ fun main(args: Array<String>) {
       GET("/auth/dev" BY authDevHandler ARGS mapOf(
           "user_id" to AuthDevArgs::user_id
       ))
-      GET("/contest/available/all" BY availableContestAllHandler ARGS mapOf(
-          "user_id" to AvailableContestAllArgs::userId
+
+      GET("/me2" BY DashboardPageHandler())
+      GET("/logout" BY LogoutHandler())
+      GET("/review/get" BY ReviewGetHandler() ARGS mapOf(
+          "contest_code" to ReviewGetArgs::contest_code,
+          "task_id" to ReviewGetArgs::task_id
+      ))
+      GET("/contest/available/all" BY availableContestAllHandler)
+      GET("/contest/attempts" BY ContestAttemptsHandler() ARGS mapOf(
+          "contest_code" to ContestAttemptsArgs::contest_code
+      ))
+      POST("/contest/accept" BY ContestAcceptHandler() ARGS mapOf(
+          "contest_code" to ContestAcceptArgs::contest_code,
+          "variant_id" to ContestAcceptArgs::variant_id
       ))
     }
     get("/login") {
@@ -310,10 +324,6 @@ fun main(args: Array<String>) {
 
     get("/me") {
       UserDashboardHandler().handle(Http(request, response, { session() }, freemarker))()
-    }
-
-    get("/me2") {
-      DashboardHandler().handle(Http(request, response, { session() }, freemarker))()
     }
 
     get("/getAcceptedChallenges") {

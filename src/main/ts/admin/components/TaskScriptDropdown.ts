@@ -3,20 +3,20 @@ import {ScriptDto} from '../Script';
 import Dropdown from '../../components/Dropdown';
 import AlertDialog from '../../components/AlertDialog';
 
-const NO_SCHEMA = {value: null, text: 'Без схемы'};
+const NO_SCRIPT_OPTION = {value: null, text: 'Без схемы'};
 
 @Component({
   components: {Dropdown},
 })
 export default class TaskScriptDropdown extends Vue {
-  public selectedScript: Option = NO_SCHEMA;
+  public selectedScript: Option = NO_SCRIPT_OPTION;
   private scripts: Option[] = [];
   @Inject() private readonly alertDialog!: () => AlertDialog;
 
   public setSelectedScriptById(id: number | null) {
     this.scripts = [];
-    this.selectedScript = NO_SCHEMA;
-    this.scripts.push(NO_SCHEMA);
+    this.selectedScript = NO_SCRIPT_OPTION;
+    this.scripts.push(NO_SCRIPT_OPTION);
 
     $.ajax({
       url: '/admin/script/all',
@@ -36,6 +36,7 @@ export default class TaskScriptDropdown extends Vue {
       this.alertDialog().show(title, xhr.statusText);
     });
   }
+
 }
 
 interface Option { value: number | null; text: string; }
