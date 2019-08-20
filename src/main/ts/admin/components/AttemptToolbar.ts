@@ -19,12 +19,7 @@ export default class AttemptToolbar extends Vue {
     this.contestMainWindow().showAttemptTableByTask(this.contest);
   }
 
-  public hide() {
-    $('#attempt-toolbar').attr('style', 'display: none !important');
-  }
-
   public show(contest: ContestDto) {
     this.contest = contest;
-    $('#attempt-toolbar').attr('style', 'display: block');
   }
 }

@@ -12,34 +12,35 @@ import {ContestDto} from "../Contest";
   },
 })
 export default class ContestMainWindow extends Vue {
+  private isContestTableVisible = false;
+  private isAttemptTableVisible = false;
+
   public mounted() {
     this.showContestTable();
   }
 
   public hideChildren() {
-    this.contestToolbar().hide();
-    this.contestTable().hide();
-    this.attemptToolbar().hide();
-    this.attemptTableByTask().hide();
-    this.attemptTableByStudent().hide();
+    this.isAttemptTableVisible = false;
+    this.isContestTableVisible = false;
   }
 
   public showAttemptTableByTask(contest: ContestDto) {
     this.hideChildren();
+    this.isAttemptTableVisible = true;
     this.attemptToolbar().show(contest);
     this.attemptTableByTask().show(contest);
   }
 
   public showAttemptTableByStudent(contest: ContestDto) {
     this.hideChildren();
+    this.isAttemptTableVisible = true;
     this.attemptToolbar().show(contest);
     this.attemptTableByStudent().show(contest);
   }
 
   public showContestTable() {
     this.hideChildren();
-    this.contestToolbar().show();
-    this.contestTable().show();
+    this.isContestTableVisible = true;
   }
 
   @Provide()
