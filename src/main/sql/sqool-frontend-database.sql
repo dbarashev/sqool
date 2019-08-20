@@ -616,15 +616,15 @@ WHERE C.name <> 'Empty' AND C.name <> 'Single variant';
 
 INSERT INTO Contest.VariantContest(variant_id, contest_code) VALUES (2, '6');
 
-INSERT INTO Contest.ContestUser(id, name, nick, passwd) VALUES (1, 'user', 'user', md5(''));
+INSERT INTO Contest.ContestUser(id, name, nick, passwd) VALUES (0, 'user', 'user', md5(''));
 
 INSERT INTO Contest.UserContest(user_id, contest_code, variant_id) VALUES
-  (1, '1', NULL),
-  (1, '3', 2),
-  (1, '5', NULL),
-  (1, '6', NULL),
-  (1, '7', NULL),
-  (1, '8', NULL);
+  (0, '1', NULL),
+  (0, '3', 2),
+  (0, '5', NULL),
+  (0, '6', NULL),
+  (0, '7', NULL),
+  (0, '8', NULL);
 
 INSERT INTO Contest.Task(id, name) VALUES
   (1, 'Solved'),
@@ -637,14 +637,14 @@ INSERT INTO Contest.TaskVariant(task_id, variant_id) VALUES
   (1, 1), (2, 1), (3, 1), (4, 1), (5, 5), (1, 2), (2, 2), (3, 2), (4, 2);
 
 INSERT INTO Contest.Attempt(task_id, user_id, variant_id, attempt_id, status) VALUES
-  (1, 1, 2, 1, 'success'),
-  (2, 1, 2, 2, 'failure'),
-  (3, 1, 2, 3, 'testing'),
-  (4, 1, 2, 4, 'virgin');
+  (1, 0, 2, 1, 'success'),
+  (2, 0, 2, 2, 'failure'),
+  (3, 0, 2, 3, 'testing'),
+  (4, 0, 2, 4, 'virgin');
 
 INSERT INTO Contest.GradingDetails(attempt_id, error_msg, result_set) VALUES
   (2, E'Some error message\nSome error message', '[["col1", "col2", "col3"], {"col1": 42, "col2": "q"}, {"col1": -1, "col2": "t", "col3": 1}]');
 
-INSERT INTO Contest.SolutionReview(task_id, variant_id, user_id, solution_review, reviewer_id) VALUES (1, 2, 1, 'review', 1);
+INSERT INTO Contest.SolutionReview(task_id, variant_id, user_id, solution_review, reviewer_id) VALUES (1, 2, 0, 'review', 1);
 
-SELECT AcceptVariant(1, 2);
+SELECT AcceptVariant(0, 2);
