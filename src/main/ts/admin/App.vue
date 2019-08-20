@@ -64,7 +64,6 @@
     <ContestBuildingProgressBar ref="contestBuildingProgressBar"></ContestBuildingProgressBar>
     <ScriptPropertiesModal ref="scriptPropertiesModal"></ScriptPropertiesModal>
     <VariantPropertiesModal ref="variantPropertiesModal"></VariantPropertiesModal>
-    <AttemptsModal ref="attemptsModal"></AttemptsModal>
   </div>
 </template>
 
@@ -72,7 +71,6 @@
 import {Component, Provide, Vue} from 'vue-property-decorator';
 import TaskToolbar from './components/TaskToolbar.vue';
 import TaskPropertiesModal from './components/TaskPropertiesModal.vue';
-import AttemptsModal from './components/AttemptsModal.vue';
 import ContestPropertiesModal from './components/ContestPropertiesModal.vue';
 import ContestBuildingProgressBar from './components/ContestBuildingProgressBar.vue';
 import ContestMainWindow from './components/ContestMainWindow';
@@ -89,7 +87,7 @@ import VariantTable from './components/VariantTable';
   components: {
     ContestMainWindow,
     ScriptTable,
-    AttemptsModal, ContestPropertiesModal,
+    ContestPropertiesModal,
     TaskToolbar, TaskPropertiesModal,
     ContestBuildingProgressBar, AlertDialog,
     TaskMainWindow, ScriptToolbar, ScriptPropertiesModal,
@@ -135,11 +133,6 @@ export default class App extends Vue {
   @Provide()
   public contestMainWindow(): ContestMainWindow {
     return this.$refs.contestMainWindow as ContestMainWindow;
-  }
-
-  @Provide()
-  public attemptsModal(): AttemptsModal {
-    return this.$refs.attemptsModal as AttemptsModal;
   }
 
   @Provide()
