@@ -49,7 +49,7 @@
                             <form>
                                 <div class="form-group">
                                     <!-- TODO: get review from the server -->
-                                    <div class="text-left" v-html="markdownText('')"></div>
+                                    <div class="text-left" v-html="markdownText(review)"></div>
                                 </div>
                             </form>
                         </div>

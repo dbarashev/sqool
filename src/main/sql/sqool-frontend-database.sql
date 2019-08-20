@@ -645,4 +645,6 @@ INSERT INTO Contest.Attempt(task_id, user_id, variant_id, attempt_id, status) VA
 INSERT INTO Contest.GradingDetails(attempt_id, error_msg, result_set) VALUES
   (2, E'Some error message\nSome error message', '[["col1", "col2", "col3"], {"col1": 42, "col2": "q"}, {"col1": -1, "col2": "t", "col3": 1}]');
 
+INSERT INTO Contest.SolutionReview(task_id, variant_id, user_id, solution_review, reviewer_id) VALUES (1, 2, 1, 'review', 1);
+
 SELECT AcceptVariant(1, 2);

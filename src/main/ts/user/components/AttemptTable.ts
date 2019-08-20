@@ -35,21 +35,30 @@ export default class AttemptTable extends Vue {
   }
 
   private showTaskAttempt(attempt: TaskAttempt) {
-    this.taskAttemptProperties().show(attempt).then((solution) => {
-      return $.ajax('/submit.do', this.buildSubmissionPayload(attempt, solution));
-    }).done(() => {
-      if (this.contest) {
-        this.contest.refreshAttempts().fail((xhr) => {
-          const title = 'Не удалось обновить вариант:';
-          this.alertDialog().show(title, xhr.statusText);
-        });
-      }
-    }).fail((xhr) => {
-      const title = 'Не удалось проверить решение:';
-      this.alertDialog().show(title, xhr.statusText);
-    }).always(() => {
-      this.taskAttemptProperties().hide();
-    });
+    if (this.contest) {
+      const review = $.ajax({
+        url: '/review/get',
+        data: {
+          contest_code: this.contest.contestCode,
+          task_id: attempt.taskEntity.id
+        },
+      });
+      this.taskAttemptProperties().show(attempt, review).then((solution) => {
+        return $.ajax('/submit.do', this.buildSubmissionPayload(attempt, solution));
+      }).done(() => {
+        if (this.contest) {
+          this.contest.refreshAttempts().fail((xhr) => {
+            const title = 'Не удалось обновить вариант:';
+            this.alertDialog().show(title, xhr.statusText);
+          });
+        }
+      }).fail((xhr) => {
+        const title = 'Не удалось проверить решение:';
+        this.alertDialog().show(title, xhr.statusText);
+      }).always(() => {
+        this.taskAttemptProperties().hide();
+      });
+    }
   }
 
   private buildSubmissionPayload(attempt: TaskAttempt, solution: string): object {
