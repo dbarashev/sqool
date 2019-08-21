@@ -112,7 +112,6 @@ object AttemptsByContest : Table("Contest.AttemptsByContest") {
       it.put("score", row[score])
       it.put("variant_id", row[variantId])
       it.put("author", row[author])
-      it.put("author_id", row[authorId])
       it.put("attempt_id", row[attemptId])
       it.put("user_id", row[attemptUserId])
       it.put("status", row[status])

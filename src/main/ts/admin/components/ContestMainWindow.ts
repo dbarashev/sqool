@@ -21,14 +21,18 @@ export default class ContestMainWindow extends Vue {
 
   public showAttemptTableByTask(contest: ContestDto) {
     this.visibleComponent = 'attempts-by-task';
-    this.attemptToolbar().show(contest);
-    this.attemptTableByTask().show(contest);
+    this.$nextTick(() => {
+      this.attemptToolbar().show(contest);
+      this.attemptTableByTask().show(contest);
+    });
   }
 
   public showAttemptTableByStudent(contest: ContestDto) {
     this.visibleComponent = 'attempts-by-student';
-    this.attemptToolbar().show(contest);
-    this.attemptTableByStudent().show(contest);
+    this.$nextTick(() => {
+      this.attemptToolbar().show(contest);
+      this.attemptTableByStudent().show(contest);
+    });
   }
 
   public showContestTable() {
