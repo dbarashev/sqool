@@ -2,7 +2,7 @@ import {Component, Vue} from 'vue-property-decorator';
 import {ContestDto} from '../Contest';
 
 @Component
-export default class AttemptToolbar extends Vue {
+export default class AttemptTable extends Vue {
   private contest = new ContestDto('', '', '', '', []);
 
   public refresh() {

@@ -503,6 +503,11 @@ LEFT JOIN Contest.GradingDetails D ON A.attempt_id = D.attempt_id
 LEFT JOIN Contest.TaskResult TR ON TR.task_id = T.id
 GROUP BY T.id, TR.task_id, A.user_id, A.task_id, A.variant_id, S.id, D.error_msg, D.result_set;
 
+CREATE OR REPLACE VIEW AttemptsByContest AS
+SELECT C.contest_code, A.*
+FROM Contest.VariantContest C
+JOIN Contest.MyAttempts A ON C.variant_id = A.variant_id;
+
 /**********************************************************************************************************************
  * Administrative procedures and views
  */

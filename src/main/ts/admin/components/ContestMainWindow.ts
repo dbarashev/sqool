@@ -2,6 +2,7 @@ import {Component, Provide, Vue} from 'vue-property-decorator';
 import ContestToolbar from './ContestToolbar';
 import ContestTable from './ContestTable';
 import AttemptToolbar from './AttemptToolbar';
+import AttemptTableByTask from './AttemptTableByTask';
 import AttemptTable from './AttemptTable';
 import {ContestDto} from '../Contest';
 
@@ -9,7 +10,7 @@ type VisibleComponent = 'contests' | 'attempts-by-task' | 'attempts-by-student';
 @Component({
   components: {
     ContestTable, ContestToolbar,
-    AttemptToolbar, AttemptTable,
+    AttemptToolbar, AttemptByTaskTable: AttemptTableByTask, AttemptTable,
   },
 })
 export default class ContestMainWindow extends Vue {
@@ -17,7 +18,6 @@ export default class ContestMainWindow extends Vue {
   public mounted() {
     this.showContestTable();
   }
-
 
   public showAttemptTableByTask(contest: ContestDto) {
     this.visibleComponent = 'attempts-by-task';
@@ -56,7 +56,7 @@ export default class ContestMainWindow extends Vue {
   }
 
   @Provide()
-  public attemptTableByTask(): AttemptTable {
-    return this.$refs.attemptTableByTask as AttemptTable;
+  public attemptTableByTask(): AttemptTableByTask {
+    return this.$refs.attemptTableByTask as AttemptTableByTask;
   }
 }
