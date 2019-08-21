@@ -9,8 +9,8 @@
         </AttemptToolbar>
         <AttemptTable ref="attemptTableByStudent" v-if="visibleComponent === 'attempts-by-student'">
         </AttemptTable>
-        <AttemptByTaskTable ref="attemptTableByTask" v-if="visibleComponent === 'attempts-by-task'">
-        </AttemptByTaskTable>
+        <AttemptTableByTask ref="attemptTableByTask" v-if="visibleComponent === 'attempts-by-task'">
+        </AttemptTableByTask>
     </div>
 </template>
 

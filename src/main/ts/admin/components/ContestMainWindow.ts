@@ -10,7 +10,7 @@ type VisibleComponent = 'contests' | 'attempts-by-task' | 'attempts-by-student';
 @Component({
   components: {
     ContestTable, ContestToolbar,
-    AttemptToolbar, AttemptByTaskTable: AttemptTableByTask, AttemptTable,
+    AttemptToolbar, AttemptTableByTask, AttemptTable,
   },
 })
 export default class ContestMainWindow extends Vue {
