@@ -15,11 +15,18 @@ type VisibleComponent = 'contests' | 'attempts-by-task' | 'attempts-by-student';
 })
 export default class ContestMainWindow extends Vue {
   private visibleComponent: VisibleComponent = 'contests';
+
   public mounted() {
     this.showContestTable();
   }
 
+  public hideAttemptTables() {
+    this.attemptTableByTask().hide();
+    this.attemptTableByStudent().hide();
+  }
+
   public showAttemptTableByTask(contest: ContestDto) {
+    this.hideAttemptTables();
     this.visibleComponent = 'attempts-by-task';
     this.$nextTick(() => {
       this.attemptToolbar().show(contest);
@@ -28,6 +35,7 @@ export default class ContestMainWindow extends Vue {
   }
 
   public showAttemptTableByStudent(contest: ContestDto) {
+    this.hideAttemptTables();
     this.visibleComponent = 'attempts-by-student';
     this.$nextTick(() => {
       this.attemptToolbar().show(contest);
@@ -36,6 +44,7 @@ export default class ContestMainWindow extends Vue {
   }
 
   public showContestTable() {
+    this.hideAttemptTables();
     this.visibleComponent = 'contests';
   }
 
