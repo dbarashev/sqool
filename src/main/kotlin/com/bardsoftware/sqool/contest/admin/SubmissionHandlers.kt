@@ -6,9 +6,13 @@ import com.bardsoftware.sqool.contest.RequestArgs
 import com.bardsoftware.sqool.contest.RequestHandler
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.ResultRow
+import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
-import org.joda.time.format.DateTimeFormatterBuilder
+import org.ocpsoft.prettytime.PrettyTime
+import java.util.*
 
 private val JSON_MAPPER = ObjectMapper()
 
@@ -76,13 +80,6 @@ class SubmissionListHandler : RequestHandler<SubmissionListArgs>() {
   override fun args(): SubmissionListArgs = SubmissionListArgs("")
 }
 
-private val DATE_FORMATTER = DateTimeFormatterBuilder()
-    .appendYear(2, 4).appendLiteral('-')
-    .appendMonthOfYear(2).appendLiteral('-')
-    .appendDayOfMonth(2).appendLiteral(' ')
-    .appendHourOfDay(2).appendLiteral(':')
-    .appendMinuteOfHour(2).toFormatter()
-
 object AttemptsByContest : Table("Contest.AttemptsByContest") {
   var contestCode = text("contest_code")
   var taskId = integer("task_id")
@@ -115,7 +112,10 @@ object AttemptsByContest : Table("Contest.AttemptsByContest") {
       it.put("attempt_id", row[attemptId])
       it.put("user_id", row[attemptUserId])
       it.put("status", row[status])
-      it.put("testing_start_ts", row[testingStartTs]?.toString(DATE_FORMATTER))
+      it.put("testing_start_ts", row[testingStartTs]?.let { dateTime ->
+        val time = PrettyTime(dateTime.toDate())
+        time.format(Date(0))
+      })
       it.put("count", row[count])
       it.put("error_msg", row[errorMsg])
       it.put("result_set", row[resultSet])
@@ -132,6 +132,39 @@ class SubmissionsByContestHandler : RequestHandler<SubmissionsByContestArgs>() {
     val attempts = transaction {
       AttemptsByContest.select { AttemptsByContest.contestCode eq argValues.contestCode }
           .map(AttemptsByContest::asJson)
+          .toList()
+    }
+    return http.json(attempts)
+  }
+}
+
+object TaskSubmissionsStats : Table("Contest.TaskSubmissionsStats") {
+  var taskId = integer("task_id")
+  var taskName = text("task_name")
+  var contestCode = text("contest_code")
+  var solved = integer("solved")
+  var attempted = integer("attempted")
+
+  fun asJson(row: ResultRow): JsonNode {
+    return JSON_MAPPER.createObjectNode().also {
+      it.put("task_id", row[taskId])
+      it.put("task_name", row[taskName])
+      it.put("contest_code", row[contestCode])
+      it.put("solved", row[solved])
+      it.put("attempted", row[attempted])
+    }
+  }
+}
+
+data class TaskSubmissionsStatsByContestArgs(var contestCode: String) : RequestArgs()
+
+class TaskSubmissionsStatsByContestHandler : RequestHandler<TaskSubmissionsStatsByContestArgs>() {
+  override fun args() = TaskSubmissionsStatsByContestArgs("")
+
+  override fun handle(http: HttpApi, argValues: TaskSubmissionsStatsByContestArgs): HttpResponse {
+    val attempts = transaction {
+      TaskSubmissionsStats.select { TaskSubmissionsStats.contestCode eq argValues.contestCode }
+          .map(TaskSubmissionsStats::asJson)
           .toList()
     }
     return http.json(attempts)

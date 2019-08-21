@@ -8,10 +8,10 @@
         </tr>
         </thead>
         <tbody>
-        <tr v-for="task in attempts.keys()">
-            <td>{{ task }}</td>
-            <td>{{ attempts.get(task).filter(a => a.status === 'success').length }}</td>
-            <td>{{ attempts.get(task).filter(a => a.status !== 'virgin').length }}</td>
+        <tr v-for="task in taskStats">
+            <td>{{ task.task_name }}</td>
+            <td>{{ task.solved }}</td>
+            <td>{{ task.attempted }}</td>
         </tr>
         </tbody>
     </table>
