@@ -39,7 +39,7 @@ export default class VariantTable extends Vue {
     this.$forceUpdate();
   }
 
-  editVariant() {
+  public editVariant() {
     this.variantToolbar().editVariant();
   }
 }

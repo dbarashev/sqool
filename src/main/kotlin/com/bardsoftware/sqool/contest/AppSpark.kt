@@ -283,6 +283,12 @@ fun main(args: Array<String>) {
       GET("/admin/submission/list" BY adminSubmissionListHandler ARGS mapOf(
           "task_id" to SubmissionListArgs::task_id
       ))
+      GET("/admin/submission/contest" BY SubmissionsByContestHandler() ARGS mapOf(
+          "contest_code" to SubmissionsByContestArgs::contestCode
+      ))
+      GET("/admin/submission/contest/stats" BY TaskSubmissionsStatsByContestHandler() ARGS mapOf(
+          "contest_code" to TaskSubmissionsStatsByContestArgs::contestCode
+      ))
       GET("/admin/review/get" BY adminReviewGetHandler ARGS mapOf(
           "task_id" to AdminReviewGetArgs::task_id,
           "user_id" to AdminReviewGetArgs::user_id

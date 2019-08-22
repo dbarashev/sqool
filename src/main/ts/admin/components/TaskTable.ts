@@ -31,7 +31,7 @@ export default class TaskTable extends Vue {
     return this.activeTask;
   }
 
-  editTask() {
+  public editTask() {
     this.taskToolbar().editTask();
   }
 

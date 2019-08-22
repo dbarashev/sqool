@@ -34,10 +34,8 @@
       <div class="container">
         <div class="pt-4 tab-content" id="nav-tabContent">
           <div class="tab-pane fade" id="list-contest" role="tabpanel">
-            <ContestToolbar ref="contestToolbar">
-            </ContestToolbar>
-            <ContestTable ref="contestTable">
-            </ContestTable>
+            <ContestMainWindow ref="contestMainWindow">
+            </ContestMainWindow>
           </div>
           <div class="tab-pane fade show active" id="list-tasks" role="tabpanel">
             <TaskToolbar ref="taskToolbar">
@@ -73,10 +71,9 @@
 import {Component, Provide, Vue} from 'vue-property-decorator';
 import TaskToolbar from './components/TaskToolbar.vue';
 import TaskPropertiesModal from './components/TaskPropertiesModal.vue';
-import ContestTable from './components/ContestTable';
-import ContestToolbar from './components/ContestToolbar.vue';
 import ContestPropertiesModal from './components/ContestPropertiesModal.vue';
 import ContestBuildingProgressBar from './components/ContestBuildingProgressBar.vue';
+import ContestMainWindow from './components/ContestMainWindow';
 import AlertDialog from '../components/AlertDialog.vue';
 import ScriptTable from './components/ScriptTable.vue';
 import ScriptToolbar from './components/ScriptToolbar.vue';
@@ -88,9 +85,9 @@ import VariantTable from './components/VariantTable';
 
 @Component({
   components: {
+    ContestMainWindow,
     ScriptTable,
-    ContestToolbar,
-    ContestTable, ContestPropertiesModal,
+    ContestPropertiesModal,
     TaskToolbar, TaskPropertiesModal,
     ContestBuildingProgressBar, AlertDialog,
     TaskMainWindow, ScriptToolbar, ScriptPropertiesModal,
@@ -119,11 +116,6 @@ export default class App extends Vue {
   }
 
   @Provide()
-  public contestTable(): ContestTable {
-    return this.$refs.contestTable as ContestTable;
-  }
-
-  @Provide()
   public variantTable(): VariantTable {
     return this.$refs.variantTable as VariantTable;
   }
@@ -139,8 +131,8 @@ export default class App extends Vue {
   }
 
   @Provide()
-  public contestToolbar(): ContestToolbar {
-    return this.$refs.contestToolbar as ContestToolbar;
+  public contestMainWindow(): ContestMainWindow {
+    return this.$refs.contestMainWindow as ContestMainWindow;
   }
 
   @Provide()

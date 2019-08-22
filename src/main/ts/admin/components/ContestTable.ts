@@ -2,6 +2,7 @@ import {ContestDto} from '../Contest';
 import {Component, Inject, Vue} from 'vue-property-decorator';
 import AlertDialog from '../../components/AlertDialog';
 import ContestToolbar from './ContestToolbar';
+import ContestMainWindow from './ContestMainWindow';
 
 @Component
 export default class ContestTable extends Vue {
@@ -9,6 +10,8 @@ export default class ContestTable extends Vue {
   private activeContest?: ContestDto;
   @Inject() private readonly alertDialog!: () => AlertDialog;
   @Inject() private readonly contestToolbar!: () => ContestToolbar;
+  @Inject() private readonly contestMainWindow!: () => ContestMainWindow;
+
 
   public mounted() {
     this.refresh();
@@ -39,7 +42,20 @@ export default class ContestTable extends Vue {
     this.$forceUpdate();
   }
 
-  editContest() {
+  public editContest() {
     this.contestToolbar().editContest();
+  }
+
+  public showAttemptsTable(contest: ContestDto) {
+    this.contestMainWindow().showAttemptTableByTask(contest);
+  }
+
+  public hide() {
+    this.$el.setAttribute('hidden', 'true');
+  }
+
+  public show() {
+    this.refresh();
+    this.$el.removeAttribute('hidden');
   }
 }

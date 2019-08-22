@@ -40,6 +40,8 @@ dependencies {
 	
 	compile group: 'com.spotify', name: 'docker-client', version: '8.+'
 
+	compile 'org.ocpsoft.prettytime:prettytime:4.0.1.Final'
+
 	// PubSub stuff
 	compile 'com.google.cloud:google-cloud-pubsub:0.26.+'
 

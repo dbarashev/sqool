@@ -503,6 +503,19 @@ LEFT JOIN Contest.GradingDetails D ON A.attempt_id = D.attempt_id
 LEFT JOIN Contest.TaskResult TR ON TR.task_id = T.id
 GROUP BY T.id, TR.task_id, A.user_id, A.task_id, A.variant_id, S.id, D.error_msg, D.result_set;
 
+CREATE OR REPLACE VIEW AttemptsByContest AS
+SELECT C.contest_code, A.*
+FROM Contest.VariantContest C
+JOIN Contest.MyAttempts A ON C.variant_id = A.variant_id;
+
+CREATE OR REPLACE VIEW TaskSubmissionsStats AS
+SELECT T.id AS task_id, T.name AS task_name, C.contest_code, SUM(CASE WHEN A.status = 'success' THEN 1 ELSE 0 END) AS solved,
+       SUM(CASE WHEN A.count > 0 THEN 1 ELSE 0 END) AS attempted
+FROM Contest.Attempt A
+JOIN Contest.Task T ON A.task_id = T.id
+JOIN Contest.VariantContest C ON C.variant_id = A.variant_id
+GROUP BY T.id, C.contest_code;
+
 /**********************************************************************************************************************
  * Administrative procedures and views
  */
@@ -636,11 +649,11 @@ INSERT INTO Contest.Task(id, name) VALUES
 INSERT INTO Contest.TaskVariant(task_id, variant_id) VALUES
   (1, 1), (2, 1), (3, 1), (4, 1), (5, 5), (1, 2), (2, 2), (3, 2), (4, 2);
 
-INSERT INTO Contest.Attempt(task_id, user_id, variant_id, attempt_id, status) VALUES
-  (1, 0, 2, 1, 'success'),
-  (2, 0, 2, 2, 'failure'),
-  (3, 0, 2, 3, 'testing'),
-  (4, 0, 2, 4, 'virgin');
+INSERT INTO Contest.Attempt(task_id, user_id, variant_id, attempt_id, status, count) VALUES
+  (1, 0, 2, 1, 'success', 1),
+  (2, 0, 2, 2, 'failure', 1),
+  (3, 0, 2, 3, 'testing', 1),
+  (4, 0, 2, 4, 'virgin', 0);
 
 INSERT INTO Contest.GradingDetails(attempt_id, error_msg, result_set) VALUES
   (2, E'Some error message\nSome error message', '[["col1", "col2", "col3"], {"col1": 42, "col2": "q"}, {"col1": -1, "col2": "t", "col3": 1}]');
