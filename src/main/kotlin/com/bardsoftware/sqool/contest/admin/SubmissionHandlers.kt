@@ -93,6 +93,7 @@ object AttemptsByContest : Table("Contest.AttemptsByContest") {
   var authorId = integer("author_id")
   var attemptId = text("attempt_id").nullable()
   var attemptUserId = integer("user_id")
+  var attemptUserName = text("user_name")
   var status = text("status").nullable()
   var testingStartTs = date("testing_start_ts").nullable()
   var count = integer("count")
@@ -132,7 +133,7 @@ class UserSubmissionsByContestHandler : RequestHandler<UserSubmissionsByContestA
     val attempts = transaction {
       AttemptsByContest.select {
         (AttemptsByContest.contestCode eq argValues.contestCode) and
-        (AttemptsByContest.attemptUserId eq argValues.userId.toInt())
+            (AttemptsByContest.attemptUserId eq argValues.userId.toInt())
       }.map(AttemptsByContest::asJson).toList()
     }
     return http.json(attempts)
@@ -172,20 +173,6 @@ class TaskSubmissionsStatsByContestHandler : RequestHandler<TaskSubmissionsStats
   }
 }
 
-object ContestParticipant : Table("Contest.ContestParticipant") {
-  var contestCode = text("contest_code")
-  var userId = integer("user_id")
-  var userName = text("user_name")
-
-  fun asJson(row: ResultRow): JsonNode {
-    return JSON_MAPPER.createObjectNode().also {
-      it.put("contest_code", row[contestCode])
-      it.put("user_id", row[userId])
-      it.put("user_name", row[userName])
-    }
-  }
-}
-
 data class ContestUsersArgs(var contestCode: String) : RequestArgs()
 
 class ContestUsersHandler : RequestHandler<ContestUsersArgs>() {
@@ -193,9 +180,15 @@ class ContestUsersHandler : RequestHandler<ContestUsersArgs>() {
 
   override fun handle(http: HttpApi, argValues: ContestUsersArgs): HttpResponse {
     val users = transaction {
-      ContestParticipant.select { ContestParticipant.contestCode eq argValues.contestCode }
-          .map(ContestParticipant::asJson)
-          .toList()
+      AttemptsByContest.slice(AttemptsByContest.contestCode, AttemptsByContest.attemptUserId, AttemptsByContest.attemptUserName)
+          .select { AttemptsByContest.contestCode eq argValues.contestCode }
+          .withDistinct()
+          .map {
+            mapOf(
+                "user_id" to it[AttemptsByContest.attemptUserId],
+                "user_name" to it[AttemptsByContest.attemptUserName]
+            )
+          }.toList()
     }
     return http.json(users)
   }

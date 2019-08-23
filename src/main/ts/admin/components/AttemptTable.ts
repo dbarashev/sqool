@@ -9,10 +9,6 @@ export default class AttemptTable extends Vue {
   @Prop() private readonly userId!: number;
   private attempts: Attempt[] = [];
 
-  public mounted() {
-    this.refresh();
-  }
-
   public refresh() {
     $.ajax({
       url: '/admin/submission/contest',

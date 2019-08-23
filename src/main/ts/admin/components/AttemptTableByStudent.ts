@@ -1,4 +1,4 @@
-import {Component, Inject, Vue} from 'vue-property-decorator';
+import {Component, Inject, Provide, Vue} from 'vue-property-decorator';
 import {ContestDto} from '../Contest';
 import AlertDialog from '../../components/AlertDialog';
 import AttemptTable from './AttemptTable';
@@ -27,6 +27,10 @@ export default class AttemptTableByStudent extends Vue {
     });
   }
 
+  public refreshUserTable(ref: string) {
+    this.userAttemptTable(ref).refresh();
+  }
+
   public hide() {
     this.$el.setAttribute('hidden', 'true');
   }
@@ -35,6 +39,12 @@ export default class AttemptTableByStudent extends Vue {
     this.contest = contest;
     this.refresh();
     this.$el.removeAttribute('hidden');
+  }
+
+  @Provide()
+  public userAttemptTable(ref: string): AttemptTable {
+    const table = this.$refs[ref] as AttemptTable[];
+    return table[0];
   }
 }
 
