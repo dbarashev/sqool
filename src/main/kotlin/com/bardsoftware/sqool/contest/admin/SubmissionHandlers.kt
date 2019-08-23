@@ -123,16 +123,17 @@ object AttemptsByContest : Table("Contest.AttemptsByContest") {
   }
 }
 
-data class SubmissionsByContestArgs(var contestCode: String) : RequestArgs()
+data class UserSubmissionsByContestArgs(var contestCode: String, var userId: String) : RequestArgs()
 
-class SubmissionsByContestHandler : RequestHandler<SubmissionsByContestArgs>() {
-  override fun args() = SubmissionsByContestArgs("")
+class UserSubmissionsByContestHandler : RequestHandler<UserSubmissionsByContestArgs>() {
+  override fun args() = UserSubmissionsByContestArgs("", "")
 
-  override fun handle(http: HttpApi, argValues: SubmissionsByContestArgs): HttpResponse {
+  override fun handle(http: HttpApi, argValues: UserSubmissionsByContestArgs): HttpResponse {
     val attempts = transaction {
-      AttemptsByContest.select { AttemptsByContest.contestCode eq argValues.contestCode }
-          .map(AttemptsByContest::asJson)
-          .toList()
+      AttemptsByContest.select {
+        (AttemptsByContest.contestCode eq argValues.contestCode) and
+        (AttemptsByContest.attemptUserId eq argValues.userId.toInt())
+      }.map(AttemptsByContest::asJson).toList()
     }
     return http.json(attempts)
   }
@@ -168,5 +169,34 @@ class TaskSubmissionsStatsByContestHandler : RequestHandler<TaskSubmissionsStats
           .toList()
     }
     return http.json(attempts)
+  }
+}
+
+object ContestParticipant : Table("Contest.ContestParticipant") {
+  var contestCode = text("contest_code")
+  var userId = integer("user_id")
+  var userName = text("user_name")
+
+  fun asJson(row: ResultRow): JsonNode {
+    return JSON_MAPPER.createObjectNode().also {
+      it.put("contest_code", row[contestCode])
+      it.put("user_id", row[userId])
+      it.put("user_name", row[userName])
+    }
+  }
+}
+
+data class ContestUsersArgs(var contestCode: String) : RequestArgs()
+
+class ContestUsersHandler : RequestHandler<ContestUsersArgs>() {
+  override fun args() = ContestUsersArgs("")
+
+  override fun handle(http: HttpApi, argValues: ContestUsersArgs): HttpResponse {
+    val users = transaction {
+      ContestParticipant.select { ContestParticipant.contestCode eq argValues.contestCode }
+          .map(ContestParticipant::asJson)
+          .toList()
+    }
+    return http.json(users)
   }
 }

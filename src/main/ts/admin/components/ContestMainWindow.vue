@@ -7,8 +7,8 @@
 
         <AttemptToolbar ref="attemptToolbar" v-if="visibleComponent !== 'contests'">
         </AttemptToolbar>
-        <AttemptTable ref="attemptTableByStudent">
-        </AttemptTable>
+        <AttemptTableByStudent ref="attemptTableByStudent">
+        </AttemptTableByStudent>
         <AttemptTableByTask ref="attemptTableByTask">
         </AttemptTableByTask>
     </div>

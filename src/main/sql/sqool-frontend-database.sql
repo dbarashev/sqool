@@ -516,6 +516,11 @@ JOIN Contest.Task T ON A.task_id = T.id
 JOIN Contest.VariantContest C ON C.variant_id = A.variant_id
 GROUP BY T.id, C.contest_code;
 
+CREATE OR REPLACE VIEW ContestParticipant AS
+SELECT DISTINCT C.contest_code, A.user_id, A.user_name
+FROM Contest.VariantContest C
+JOIN Contest.MyAttempts A ON C.variant_id = A.variant_id;
+
 /**********************************************************************************************************************
  * Administrative procedures and views
  */
