@@ -74,6 +74,7 @@ export default class ReviewPage extends Vue {
     this.userId = userId;
     this.taskId = taskId;
     this.variantId = variantId;
+    this.getLastReview();
     this.$el.removeAttribute('hidden');
   }
 }
