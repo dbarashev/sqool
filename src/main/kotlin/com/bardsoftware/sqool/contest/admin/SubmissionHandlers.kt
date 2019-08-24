@@ -93,6 +93,7 @@ object AttemptsByContest : Table("Contest.AttemptsByContest") {
   var authorId = integer("author_id")
   var attemptId = text("attempt_id").nullable()
   var attemptUserId = integer("user_id")
+  var attemptUserName = text("user_name")
   var status = text("status").nullable()
   var testingStartTs = date("testing_start_ts").nullable()
   var count = integer("count")
@@ -123,16 +124,17 @@ object AttemptsByContest : Table("Contest.AttemptsByContest") {
   }
 }
 
-data class SubmissionsByContestArgs(var contestCode: String) : RequestArgs()
+data class UserSubmissionsByContestArgs(var contestCode: String, var userId: String) : RequestArgs()
 
-class SubmissionsByContestHandler : RequestHandler<SubmissionsByContestArgs>() {
-  override fun args() = SubmissionsByContestArgs("")
+class UserSubmissionsByContestHandler : RequestHandler<UserSubmissionsByContestArgs>() {
+  override fun args() = UserSubmissionsByContestArgs("", "")
 
-  override fun handle(http: HttpApi, argValues: SubmissionsByContestArgs): HttpResponse {
+  override fun handle(http: HttpApi, argValues: UserSubmissionsByContestArgs): HttpResponse {
     val attempts = transaction {
-      AttemptsByContest.select { AttemptsByContest.contestCode eq argValues.contestCode }
-          .map(AttemptsByContest::asJson)
-          .toList()
+      AttemptsByContest.select {
+        (AttemptsByContest.contestCode eq argValues.contestCode) and
+            (AttemptsByContest.attemptUserId eq argValues.userId.toInt())
+      }.map(AttemptsByContest::asJson).toList()
     }
     return http.json(attempts)
   }
@@ -168,5 +170,26 @@ class TaskSubmissionsStatsByContestHandler : RequestHandler<TaskSubmissionsStats
           .toList()
     }
     return http.json(attempts)
+  }
+}
+
+data class ContestUsersArgs(var contestCode: String) : RequestArgs()
+
+class ContestUsersHandler : RequestHandler<ContestUsersArgs>() {
+  override fun args() = ContestUsersArgs("")
+
+  override fun handle(http: HttpApi, argValues: ContestUsersArgs): HttpResponse {
+    val users = transaction {
+      AttemptsByContest.slice(AttemptsByContest.contestCode, AttemptsByContest.attemptUserId, AttemptsByContest.attemptUserName)
+          .select { AttemptsByContest.contestCode eq argValues.contestCode }
+          .withDistinct()
+          .map {
+            mapOf(
+                "user_id" to it[AttemptsByContest.attemptUserId],
+                "user_name" to it[AttemptsByContest.attemptUserName]
+            )
+          }.toList()
+    }
+    return http.json(users)
   }
 }

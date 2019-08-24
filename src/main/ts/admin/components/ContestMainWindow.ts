@@ -3,14 +3,14 @@ import ContestToolbar from './ContestToolbar';
 import ContestTable from './ContestTable';
 import AttemptToolbar from './AttemptToolbar';
 import AttemptTableByTask from './AttemptTableByTask';
-import AttemptTable from './AttemptTable';
+import AttemptTableByStudent from './AttemptTableByStudent';
 import {ContestDto} from '../Contest';
 
 type VisibleComponent = 'contests' | 'attempts-by-task' | 'attempts-by-student';
 @Component({
   components: {
     ContestTable, ContestToolbar,
-    AttemptToolbar, AttemptTableByTask, AttemptTable,
+    AttemptToolbar, AttemptTableByTask, AttemptTableByStudent,
   },
 })
 export default class ContestMainWindow extends Vue {
@@ -64,8 +64,8 @@ export default class ContestMainWindow extends Vue {
   }
 
   @Provide()
-  public attemptTableByStudent(): AttemptTable {
-    return this.$refs.attemptTableByStudent as AttemptTable;
+  public attemptTableByStudent(): AttemptTableByStudent {
+    return this.$refs.attemptTableByStudent as AttemptTableByStudent;
   }
 
   @Provide()
