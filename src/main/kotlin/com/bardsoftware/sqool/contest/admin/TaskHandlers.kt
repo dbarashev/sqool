@@ -2,15 +2,12 @@ package com.bardsoftware.sqool.contest.admin
 
 import com.bardsoftware.sqool.codegen.task.spec.SqlDataType
 import com.bardsoftware.sqool.codegen.task.spec.TaskResultColumn
-import com.bardsoftware.sqool.contest.Flags
 import com.bardsoftware.sqool.contest.HttpApi
-import com.bardsoftware.sqool.contest.HttpResponse
 import com.bardsoftware.sqool.contest.RequestArgs
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.common.base.Strings
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.transactions.transaction
 
 private val JSON_MAPPER = ObjectMapper()
 
@@ -38,11 +35,9 @@ object Tasks : Table("Contest.TaskDto") {
  * @author dbarashev@bardsoftware.com
  */
 
-class TaskAllHandler(flags: Flags) : DbHandler<RequestArgs>(flags) {
-  override fun handle(http: HttpApi, argValues: RequestArgs): HttpResponse {
-    return transaction {
-      http.json(Tasks.selectAll().map(Tasks::asJson).toList())
-    }
+class TaskAllHandler : AdminHandler<RequestArgs>() {
+  override fun handle(http: HttpApi, argValues: RequestArgs) = withAdminUser(http) {
+    http.json(Tasks.selectAll().map(Tasks::asJson).toList())
   }
 
   override fun args(): RequestArgs {
@@ -61,35 +56,32 @@ data class TaskEditArgs(
     var script_id: String
 ) : RequestArgs()
 
-class TaskEditHandler(flags: Flags) : DbHandler<TaskEditArgs>(flags) {
+class TaskEditHandler : AdminHandler<TaskEditArgs>() {
   override fun args(): TaskEditArgs = TaskEditArgs(
       id = "", name = "", description = "", result = "", solution = "", script_id = "")
 
-  override fun handle(http: HttpApi, argValues: TaskEditArgs): HttpResponse {
+  override fun handle(http: HttpApi, argValues: TaskEditArgs) = withAdminUser(http) {
     val resultJson = buildResultJson(argValues.result)
-
-    return transaction {
-      when (Strings.emptyToNull(argValues.id)) {
-        null -> {
-          Tasks.insert {
-            it[name] = argValues.name
-            it[description] = argValues.description
-            it[result_json] = resultJson
-            it[solution] = argValues.solution
-            it[script_id] = argValues.script_id.toIntOrNull()
-          }
-          http.ok()
+    when (Strings.emptyToNull(argValues.id)) {
+      null -> {
+        Tasks.insert {
+          it[name] = argValues.name
+          it[description] = argValues.description
+          it[result_json] = resultJson
+          it[solution] = argValues.solution
+          it[script_id] = argValues.script_id.toIntOrNull()
         }
-        else -> {
-          Tasks.update(where = { Tasks.id eq argValues.id.toInt() }) {
-            it[name] = argValues.name
-            it[description] = argValues.description
-            it[result_json] = resultJson
-            it[solution] = argValues.solution
-            it[script_id] = argValues.script_id.toIntOrNull()
-          }
-          http.ok()
+        http.ok()
+      }
+      else -> {
+        Tasks.update(where = { Tasks.id eq argValues.id.toInt() }) {
+          it[name] = argValues.name
+          it[description] = argValues.description
+          it[result_json] = resultJson
+          it[solution] = argValues.solution
+          it[script_id] = argValues.script_id.toIntOrNull()
         }
+        http.ok()
       }
     }
   }
@@ -116,7 +108,8 @@ fun buildResultJson(resultSpecSql: String): String {
   }
 
   val indexInc = if (resultColumns.size == 1 && resultColumns[0].name == "") 0 else 1
-  return resultColumns.mapIndexed { index, column -> """
+  return resultColumns.mapIndexed { index, column ->
+    """
       |{ "col_num": ${index + indexInc},
       |  "col_name": "${column.name}",
       |  "col_type": "${column.type.name}"

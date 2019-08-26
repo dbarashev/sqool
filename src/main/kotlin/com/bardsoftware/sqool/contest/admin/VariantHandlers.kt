@@ -4,7 +4,6 @@ import com.bardsoftware.sqool.contest.*
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.transactions.transaction
 
 private val JSON_MAPPER = ObjectMapper()
 
@@ -23,22 +22,20 @@ object Variants : Table("Contest.VariantDto") {
   }
 }
 
-class VariantAllHandler(flags: Flags) : DbHandler<RequestArgs>(flags) {
+class VariantAllHandler : AdminHandler<RequestArgs>() {
   override fun args(): RequestArgs = RequestArgs()
 
-  override fun handle(http: HttpApi, argValues: RequestArgs): HttpResponse {
-    return transaction {
-      http.json(Variants.selectAll().map(Variants::asJson).toList())
-    }
+  override fun handle(http: HttpApi, argValues: RequestArgs) = withAdminUser(http) {
+    http.json(Variants.selectAll().map(Variants::asJson).toList())
   }
 }
 
 data class VariantEditArgs(var id: String, var name: String, var tasksJson: String) : RequestArgs()
 
-class VariantEditHandler(flags: Flags) : DbHandler<VariantEditArgs>(flags) {
+class VariantEditHandler : AdminHandler<VariantEditArgs>() {
   override fun args(): VariantEditArgs = VariantEditArgs("", "", "")
 
-  override fun handle(http: HttpApi, argValues: VariantEditArgs): HttpResponse = transaction {
+  override fun handle(http: HttpApi, argValues: VariantEditArgs) = withAdminUser(http) {
     when (argValues.id) {
       "" -> {
         Variants.insert {

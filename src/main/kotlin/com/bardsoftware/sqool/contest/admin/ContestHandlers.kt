@@ -8,7 +8,6 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.statements.UpdateBuilder
-import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.format.DateTimeFormatterBuilder
 import org.postgresql.util.PGobject
 import java.io.ByteArrayOutputStream
@@ -48,7 +47,7 @@ object Contests : Table("Contest.ContestDto") {
     RANDOM, ANY
   }
 
-  class PGEnum<T:Enum<T>>(enumTypeName: String, enumValue: T?) : PGobject() {
+  class PGEnum<T : Enum<T>>(enumTypeName: String, enumValue: T?) : PGobject() {
     init {
       value = enumValue?.name
       type = enumTypeName
@@ -56,11 +55,9 @@ object Contests : Table("Contest.ContestDto") {
   }
 }
 
-class ContestAllHandler : RequestHandler<RequestArgs>() {
-  override fun handle(http: HttpApi, argValues: RequestArgs): HttpResponse {
-    return transaction {
-      http.json(Contests.selectAll().map(Contests::asJson).toList())
-    }
+class ContestAllHandler : AdminHandler<RequestArgs>() {
+  override fun handle(http: HttpApi, argValues: RequestArgs) = withAdminUser(http) {
+    http.json(Contests.selectAll().map(Contests::asJson).toList())
   }
 
   override fun args(): RequestArgs {
@@ -75,28 +72,26 @@ data class ContestEditArgs(
     var variants: String
 ) : RequestArgs()
 
-class ContestEditHandler(private val mode: ContestEditMode) : RequestHandler<ContestEditArgs>() {
+class ContestEditHandler(private val mode: ContestEditMode) : AdminHandler<ContestEditArgs>() {
   override fun args(): ContestEditArgs = ContestEditArgs("", "", "", "", "")
 
-  override fun handle(http: HttpApi, argValues: ContestEditArgs): HttpResponse {
-    return transaction {
-      fun prepareStmt(it: UpdateBuilder<Number>) {
-        it[Contests.code] = argValues.code
-        it[Contests.name] = argValues.name
-        it[Contests.start_ts] = DATE_FORMATTER.parseDateTime(argValues.start_ts)
-        it[Contests.end_ts] = DATE_FORMATTER.parseDateTime(argValues.end_ts)
-        it[Contests.variants_id_json_array] = argValues.variants
-      }
-      when (mode) {
-        ContestEditMode.INSERT -> Contests.insert {
-          prepareStmt(it)
-        }
-        ContestEditMode.UPDATE -> Contests.update {
-          prepareStmt(it)
-        }
-      }
-      http.ok()
+  override fun handle(http: HttpApi, argValues: ContestEditArgs) = withAdminUser(http) {
+    fun prepareStmt(it: UpdateBuilder<Number>) {
+      it[Contests.code] = argValues.code
+      it[Contests.name] = argValues.name
+      it[Contests.start_ts] = DATE_FORMATTER.parseDateTime(argValues.start_ts)
+      it[Contests.end_ts] = DATE_FORMATTER.parseDateTime(argValues.end_ts)
+      it[Contests.variants_id_json_array] = argValues.variants
     }
+    when (mode) {
+      ContestEditMode.INSERT -> Contests.insert {
+        prepareStmt(it)
+      }
+      ContestEditMode.UPDATE -> Contests.update {
+        prepareStmt(it)
+      }
+    }
+    http.ok()
   }
 }
 
@@ -105,26 +100,28 @@ data class ContestBuildArgs(var code: String) : RequestArgs()
 class ContestBuildHandler(
     private val queryManager: DbQueryManager,
     private val imageManager: (Contest) -> ContestImageManager
-) : RequestHandler<ContestBuildArgs>() {
+) : AdminHandler<ContestBuildArgs>() {
 
   override fun args(): ContestBuildArgs = ContestBuildArgs("")
 
-  override fun handle(http: HttpApi, argValues: ContestBuildArgs) = try {
-    val contest = queryManager.findContest(argValues.code)
-    val imageManager = imageManager(contest)
-    imageManager.createImage()
+  override fun handle(http: HttpApi, argValues: ContestBuildArgs) = withAdminUser(http) {
+    try {
+      val contest = queryManager.findContest(argValues.code)
+      val imageManager = imageManager(contest)
+      imageManager.createImage()
 
-    val errorStream = ByteArrayOutputStream()
-    when (imageManager.checkImage(errorStream)) {
-      ImageCheckResult.PASSED -> http.json(mapOf("status" to "OK"))
-      ImageCheckResult.ERROR -> http.error(500, errorStream.toString())
-      ImageCheckResult.FAILED -> http.json(mapOf("status" to "ERROR", "message" to errorStream.toString()))
-    }.also { errorStream.close() }
-  } catch (exception: MalformedDataException) {
-    exception.printStackTrace()
-    http.error(400, exception.message, exception)
-  } catch (exception: NoSuchContestException) {
-    exception.printStackTrace()
-    http.error(404, "No such contest")
+      val errorStream = ByteArrayOutputStream()
+      when (imageManager.checkImage(errorStream)) {
+        ImageCheckResult.PASSED -> http.json(mapOf("status" to "OK"))
+        ImageCheckResult.ERROR -> http.error(500, errorStream.toString())
+        ImageCheckResult.FAILED -> http.json(mapOf("status" to "ERROR", "message" to errorStream.toString()))
+      }.also { errorStream.close() }
+    } catch (exception: MalformedDataException) {
+      exception.printStackTrace()
+      http.error(400, exception.message, exception)
+    } catch (exception: NoSuchContestException) {
+      exception.printStackTrace()
+      http.error(404, "No such contest")
+    }
   }
 }
