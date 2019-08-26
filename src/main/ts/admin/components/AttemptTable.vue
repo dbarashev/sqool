@@ -7,7 +7,7 @@
         </tr>
         </thead>
         <tbody>
-        <tr v-for="attempt in attempts" v-if="attempt.status !== 'virgin'">
+        <tr v-for="attempt in attempts" v-if="attempt.status !== 'virgin'" @click="showReviewPage(attempt)">
             <td>{{ attempt.name }}</td>
             <td>
                 <div v-if="attempt.status === 'failure'">

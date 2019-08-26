@@ -11,6 +11,9 @@
         </AttemptTableByStudent>
         <AttemptTableByTask ref="attemptTableByTask">
         </AttemptTableByTask>
+
+        <ReviewPage ref="reviewPage">
+        </ReviewPage>
     </div>
 </template>
 

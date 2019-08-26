@@ -5,11 +5,12 @@ import AttemptToolbar from './AttemptToolbar';
 import AttemptTableByTask from './AttemptTableByTask';
 import AttemptTableByStudent from './AttemptTableByStudent';
 import {ContestDto} from '../Contest';
+import ReviewPage from "./ReviewPage";
 
 type VisibleComponent = 'contests' | 'attempts-by-task' | 'attempts-by-student';
 @Component({
   components: {
-    ContestTable, ContestToolbar,
+    ContestTable, ContestToolbar, ReviewPage,
     AttemptToolbar, AttemptTableByTask, AttemptTableByStudent,
   },
 })
@@ -20,13 +21,14 @@ export default class ContestMainWindow extends Vue {
     this.showContestTable();
   }
 
-  public hideAttemptTables() {
+  public hideChildren() {
     this.attemptTableByTask().hide();
     this.attemptTableByStudent().hide();
+    this.reviewPage().hide();
   }
 
   public showAttemptTableByTask(contest: ContestDto) {
-    this.hideAttemptTables();
+    this.hideChildren();
     this.visibleComponent = 'attempts-by-task';
     this.$nextTick(() => {
       this.attemptToolbar().show(contest);
@@ -35,7 +37,7 @@ export default class ContestMainWindow extends Vue {
   }
 
   public showAttemptTableByStudent(contest: ContestDto) {
-    this.hideAttemptTables();
+    this.hideChildren();
     this.visibleComponent = 'attempts-by-student';
     this.$nextTick(() => {
       this.attemptToolbar().show(contest);
@@ -44,8 +46,13 @@ export default class ContestMainWindow extends Vue {
   }
 
   public showContestTable() {
-    this.hideAttemptTables();
+    this.hideChildren();
     this.visibleComponent = 'contests';
+  }
+
+  public showReviewPage(userId: number, taskId: number, variantId: number) {
+    this.hideChildren();
+    this.reviewPage().show(userId, taskId, variantId);
   }
 
   @Provide()
@@ -71,5 +78,10 @@ export default class ContestMainWindow extends Vue {
   @Provide()
   public attemptTableByTask(): AttemptTableByTask {
     return this.$refs.attemptTableByTask as AttemptTableByTask;
+  }
+
+  @Provide()
+  public reviewPage(): ReviewPage {
+    return this.$refs.reviewPage as ReviewPage;
   }
 }

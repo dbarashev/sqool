@@ -18,29 +18,30 @@ private val JSON_MAPPER = ObjectMapper()
 
 object Attempts : Table("Contest.Attempt") {
   val task_id = integer("task_id")
+  val variant_id = integer("variant_id")
   val user_id = integer("user_id")
   val attempt_text = text("attempt_text")
 }
 
-data class SubmissionGetArgs(var user_id: String, var task_id: String, var reviewer_id: String) : RequestArgs()
+data class SubmissionGetArgs(var user_id: String, var task_id: String, var variant_id: String, var reviewer_id: String) : RequestArgs()
 
 class SubmissionGetHandler : RequestHandler<SubmissionGetArgs>() {
   override fun handle(http: HttpApi, argValues: SubmissionGetArgs): HttpResponse {
     return transaction {
       val attempts = Attempts.select {
-        ((Attempts.user_id eq argValues.user_id.toInt())
-            and
-            (Attempts.task_id eq argValues.task_id.toInt()))
+        (Attempts.user_id eq argValues.user_id.toInt()) and
+        (Attempts.task_id eq argValues.task_id.toInt()) and
+        (Attempts.variant_id eq argValues.variant_id.toInt())
       }.toList()
       when {
-        attempts.size > 1 -> http.error(500, "get more than one attempt by user_id and task_id")
+        attempts.size > 1 -> http.error(500, "get more than one attempt by user_id, task_id and variant_id")
         attempts.isNotEmpty() -> http.json(hashMapOf("attempt_text" to attempts.last()[Attempts.attempt_text]))
         else -> http.json(hashMapOf("attempt_text" to "[comment]: # (there was no attempt)"))
       }
     }
   }
 
-  override fun args(): SubmissionGetArgs = SubmissionGetArgs("", "", "")
+  override fun args(): SubmissionGetArgs = SubmissionGetArgs("", "", "", "")
 }
 
 object MyAttempts : Table("Contest.MyAttempts") {
