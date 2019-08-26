@@ -14,7 +14,7 @@ import java.sql.Types
 import java.util.Random
 
 data class ChallengeOffer(val taskId: Int, val description: String)
-data class UserEntity(var id: Int, var nick: String, var name: String, var passwd: String)
+data class UserEntity(var id: Int, var nick: String, var name: String, var passwd: String, var isAdmin: Boolean)
 data class TaskAttemptEntity(
     var taskEntity: TaskEntity,
     var userId: Int,
@@ -72,6 +72,7 @@ object UserTable : Table("Contest.ContestUser") {
   var nick = text("nick")
   var name = text("name")
   var passwd = text("passwd")
+  var isAdmin = bool("is_admin")
 }
 
 object TaskByAuthorView : Table("Contest.TasksByAuthor") {
@@ -197,6 +198,8 @@ class User(val entity: UserEntity, val storage: UserStorage) {
   val name: String
     get() = entity.name
   val id: Int get() = entity.id
+  val isAdmin: Boolean
+    get() = entity.isAdmin
 
   /**
    * Returns the list of all attempts made by this user.
@@ -354,7 +357,7 @@ class User(val entity: UserEntity, val storage: UserStorage) {
 
 class UserStorage(val txn: Transaction) {
   fun createUser(newName: String, newPassword: String): User? {
-    return procedure("SELECT id, nick, name, passwd FROM Contest.GetOrCreateContestUser(?,?,?)") {
+    return procedure("SELECT id, nick, name, passwd, is_admin FROM Contest.GetOrCreateContestUser(?,?,?)") {
       setString(1, newName)
       setString(2, newPassword)
       setBoolean(3, true)
@@ -364,7 +367,8 @@ class UserStorage(val txn: Transaction) {
               id = it.getInt("id"),
               name = it.getString("name"),
               nick = it.getString("nick"),
-              passwd = it.getString("passwd")), this@UserStorage)
+              passwd = it.getString("passwd"),
+              isAdmin = it.getBoolean("is_admin")), this@UserStorage)
         } else {
           null
         }
@@ -377,7 +381,8 @@ class UserStorage(val txn: Transaction) {
         id = userRow[UserTable.id],
         name = userRow[UserTable.name],
         nick = userRow[UserTable.nick],
-        passwd = userRow[UserTable.passwd]
+        passwd = userRow[UserTable.passwd],
+        isAdmin = userRow[UserTable.isAdmin]
     ), this@UserStorage)
   }
 

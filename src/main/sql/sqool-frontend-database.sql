@@ -21,7 +21,8 @@ CREATE TABLE Contest.ContestUser(
   id SERIAL PRIMARY KEY,
   name TEXT UNIQUE,
   nick TEXT,
-  passwd TEXT
+  passwd TEXT,
+  is_admin BOOLEAN DEFAULT FALSE
 );
 
 CREATE TABLE Contest.Task(
@@ -50,7 +51,7 @@ CREATE TABLE Contest.TaskResult(
 CREATE OR REPLACE VIEW Contest.TaskDto AS
 -- All tasks with non-empty results will have result_json looking like this:
 -- [{"name": "col1", "type": "INT"}, {"name": "col2", type: "TEXT"}]
-SELECT id, name, script_id,
+SELECT id, name, script_id, author_id,
   COALESCE(description, '') AS description,
   COALESCE(solution, '') AS solution,
   array_to_json(array_agg(json_object('{name, type}', ARRAY[col_name, col_type])))::TEXT AS result_json
@@ -59,7 +60,7 @@ GROUP BY T.id
 UNION ALL
 -- All tasks with empty results will have empty array in the result_json:
 -- []
-SELECT id, name, script_id,
+SELECT id, name, script_id, author_id,
   COALESCE(description, '') AS description,
   COALESCE(solution, '') AS solution,
   '[]' AS result_json
@@ -75,15 +76,15 @@ DECLARE
 BEGIN
   IF NEW.id IS NULL THEN
     WITH T AS (
-      INSERT INTO Contest.Task(name, real_name, description, solution, script_id)
-        VALUES (NEW.name, NEW.name, NEW.description, NEW.solution, NEW.script_id)
+      INSERT INTO Contest.Task(name, real_name, description, solution, script_id, author_id)
+        VALUES (NEW.name, NEW.name, NEW.description, NEW.solution, NEW.script_id, NEW.author_id)
         RETURNING id
     )
     SELECT id INTO new_task_id
     FROM T;
   ELSE
     UPDATE Contest.Task SET name = NEW.name, real_name = NEW.name, description = NEW.description,
-                            solution = NEW.solution, script_id = NEW.script_id
+                            solution = NEW.solution, script_id = NEW.script_id, author_id = NEW.author_id
     WHERE id = NEW.id;
     SELECT NEW.id INTO new_task_id;
   END IF;
@@ -376,22 +377,24 @@ $$ LANGUAGE plpgsql;
 -----------------------------------------------------------------------------------------------------------------------
 -- Returns existing of creates new user with the given name and password, generating nickname if requested
 CREATE OR REPLACE FUNCTION GetOrCreateContestUser(argName TEXT, argPass TEXT, generateNick BOOLEAN)
-RETURNS TABLE(id INT, nick TEXT, name TEXT, passwd TEXT, code INT) AS $$
+RETURNS TABLE(id INT, nick TEXT, name TEXT, passwd TEXT, is_admin BOOLEAN, code INT) AS $$
 DECLARE
   _id INT;
   _name TEXT;
   _passwd TEXT;
   _nick TEXT;
+  _is_admin BOOLEAN;
 BEGIN
-  SELECT ContestUser.id, ContestUser.name, ContestUser.nick, ContestUser.passwd INTO _id, _name, _nick, _passwd
+  SELECT ContestUser.id, ContestUser.name, ContestUser.nick, ContestUser.passwd, ContestUser.is_admin
+  INTO _id, _name, _nick, _passwd, _is_admin
   FROM ContestUser WHERE ContestUser.name=argName;
   IF FOUND THEN
     IF md5(argPass) <> _passwd THEN
-      RETURN QUERY SELECT NULL::INT, NULL::TEXT, NULL::TEXT, NULL::TEXT, 1;
+      RETURN QUERY SELECT NULL::INT, NULL::TEXT, NULL::TEXT, NULL::TEXT, NULL::BOOLEAN, 1;
       RETURN;
     END IF;
 
-    RETURN QUERY SELECT _id, _nick, _name, _passwd, 0;
+    RETURN QUERY SELECT _id, _nick, _name, _passwd, _is_admin, 0;
     RETURN;
   END IF;
 
@@ -405,8 +408,8 @@ BEGIN
   EXIT WHEN NOT EXISTS (SELECT * FROM ContestUser WHERE ContestUser.nick = _nick);
   END LOOP;
 
-  INSERT INTO ContestUser(name, nick, passwd) VALUES (argName, _nick, md5(argPass));
-  RETURN QUERY SELECT U.id, U.nick, U.name, U.passwd, 0 AS code FROM ContestUser U WHERE U.name = argName;
+  INSERT INTO ContestUser(name, nick, passwd, is_admin) VALUES (argName, _nick, md5(argPass), _is_admin);
+  RETURN QUERY SELECT U.id, U.nick, U.name, U.passwd, U,is_admin, 0 AS code FROM ContestUser U WHERE U.name = argName;
   RETURN;
 END;
 $$ LANGUAGE plpgsql;
@@ -629,7 +632,7 @@ WHERE C.name <> 'Empty' AND C.name <> 'Single variant';
 
 INSERT INTO Contest.VariantContest(variant_id, contest_code) VALUES (2, '6');
 
-INSERT INTO Contest.ContestUser(id, name, nick, passwd) VALUES (0, 'user', 'user', md5(''));
+INSERT INTO Contest.ContestUser(id, name, nick, passwd, is_admin) VALUES (0, 'user', 'user', md5(''), TRUE);
 
 INSERT INTO Contest.UserContest(user_id, contest_code, variant_id) VALUES
   (0, '1', NULL),
