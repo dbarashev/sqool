@@ -60,16 +60,14 @@ class ContestBuildHandlerTest {
       writer.flush()
       result
     }
-    val args = ContestBuildArgs(code)
-    handler.handle(httpMock, args)
+    handler.build(httpMock, code)
     verify(queryManagerMock).findContest(code)
     verify(lambdaMock).invoke(contestMock)
   }
 
   private fun makeTest(code: String, exception: Exception) {
     whenever(queryManagerMock.findContest(code)).doAnswer { throw exception }
-    val args = ContestBuildArgs(code)
-    handler.handle(httpMock, args)
+    handler.build(httpMock, code)
     verify(queryManagerMock).findContest(code)
   }
 }
