@@ -19,7 +19,7 @@ class ReviewGetHandler : AdminHandler<ReviewGetArgs>() {
     val solutionReview = SolutionReview.select {
       (SolutionReview.user_id eq argValues.user_id.toInt()) and
           (SolutionReview.task_id eq argValues.task_id.toInt()) and
-          (SolutionReview.reviewer_id eq reviewerId.toInt()) and
+          (SolutionReview.reviewer_id eq it.id) and
           (SolutionReview.variant_id eq argValues.variant_id.toInt())
     }.toList()
     when {
@@ -35,11 +35,11 @@ class ReviewGetHandler : AdminHandler<ReviewGetArgs>() {
 data class ReviewSaveArgs(var user_id: String, var task_id: String, var variant_id: String, var solution_review: String) : RequestArgs()
 
 class ReviewSaveHandler : AdminHandler<ReviewSaveArgs>() {
-  override fun handle(http: HttpApi, argValues: ReviewSaveArgs) = withAdminUser(http) {
+  override fun handle(http: HttpApi, argValues: ReviewSaveArgs) = withAdminUser(http) { admin ->
     val solutionReview = SolutionReview.select {
       (SolutionReview.user_id eq argValues.user_id.toInt()) and
       (SolutionReview.task_id eq argValues.task_id.toInt()) and
-      (SolutionReview.reviewer_id eq reviewerId.toInt()) and
+      (SolutionReview.reviewer_id eq admin.id) and
       (SolutionReview.variant_id eq argValues.variant_id.toInt())
     }.toList()
     if (solutionReview.isEmpty()) {
@@ -47,14 +47,14 @@ class ReviewSaveHandler : AdminHandler<ReviewSaveArgs>() {
         it[task_id] = argValues.task_id.toInt()
         it[variant_id] = argValues.variant_id.toInt()
         it[user_id] = argValues.user_id.toInt()
-        it[reviewer_id] = reviewerId.toInt()
+        it[reviewer_id] = admin.id
         it[solution_review] = argValues.solution_review
       }
     } else {
       SolutionReview.update({
         (SolutionReview.user_id eq argValues.user_id.toInt()) and
         (SolutionReview.task_id eq argValues.task_id.toInt()) and
-        (SolutionReview.reviewer_id eq reviewerId.toInt()) and
+        (SolutionReview.reviewer_id eq admin.id) and
         (SolutionReview.variant_id eq argValues.variant_id.toInt())
       }) {
         it[solution_review] = argValues.solution_review

@@ -18,6 +18,7 @@ object Tasks : Table("Contest.TaskDto") {
   val result_json = text("result_json")
   val solution = text("solution")
   val script_id = integer("script_id").nullable()
+  val author_id = integer("author_id")
 
   fun asJson(row: ResultRow): JsonNode {
     return JSON_MAPPER.createObjectNode().also {
@@ -27,6 +28,7 @@ object Tasks : Table("Contest.TaskDto") {
       it.put("solution", row[solution])
       it.put("result_json", row[result_json])
       it.put("script_id", row[script_id])
+      it.put("author_id", row[author_id])
     }
   }
 }
@@ -60,7 +62,7 @@ class TaskEditHandler : AdminHandler<TaskEditArgs>() {
   override fun args(): TaskEditArgs = TaskEditArgs(
       id = "", name = "", description = "", result = "", solution = "", script_id = "")
 
-  override fun handle(http: HttpApi, argValues: TaskEditArgs) = withAdminUser(http) {
+  override fun handle(http: HttpApi, argValues: TaskEditArgs) = withAdminUser(http) { admin ->
     val resultJson = buildResultJson(argValues.result)
     when (Strings.emptyToNull(argValues.id)) {
       null -> {
@@ -70,6 +72,7 @@ class TaskEditHandler : AdminHandler<TaskEditArgs>() {
           it[result_json] = resultJson
           it[solution] = argValues.solution
           it[script_id] = argValues.script_id.toIntOrNull()
+          it[author_id] = admin.id
         }
         http.ok()
       }

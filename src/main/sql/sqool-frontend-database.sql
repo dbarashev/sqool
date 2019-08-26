@@ -84,7 +84,7 @@ BEGIN
     FROM T;
   ELSE
     UPDATE Contest.Task SET name = NEW.name, real_name = NEW.name, description = NEW.description,
-                            solution = NEW.solution, script_id = NEW.script_id, author_id = NEW.author_id
+                            solution = NEW.solution, script_id = NEW.script_id
     WHERE id = NEW.id;
     SELECT NEW.id INTO new_task_id;
   END IF;
@@ -485,8 +485,7 @@ SELECT  T.id AS task_id,
              ELSE json_agg(json_object('{name, type}', ARRAY[col_name, col_type]))::TEXT
         END AS signature,
         T.author_id,
-        --U.nick AS author_nick,
-        '' AS author_nick,
+        U.nick AS author_nick,
         A.attempt_id,
         A.user_id,
         A.variant_id,
@@ -498,13 +497,12 @@ SELECT  T.id AS task_id,
         D.error_msg,
         D.result_set
 FROM Contest.Task T
--- TODO: will be uncommented when admin dashboard support task author
---JOIN Contest.ContestUser U ON T.author_id = U.id
+JOIN Contest.ContestUser U ON T.author_id = U.id
 JOIN Contest.Attempt A ON A.task_id = T.id
 JOIN Contest.ContestUser S ON A.user_id = S.id
 LEFT JOIN Contest.GradingDetails D ON A.attempt_id = D.attempt_id
 LEFT JOIN Contest.TaskResult TR ON TR.task_id = T.id
-GROUP BY T.id, TR.task_id, A.user_id, A.task_id, A.variant_id, S.id, D.error_msg, D.result_set;
+GROUP BY T.id, TR.task_id, A.user_id, A.task_id, A.variant_id, S.id, D.error_msg, D.result_set, U.id;
 
 CREATE OR REPLACE VIEW AttemptsByContest AS
 SELECT C.contest_code, A.*
@@ -642,12 +640,12 @@ INSERT INTO Contest.UserContest(user_id, contest_code, variant_id) VALUES
   (0, '7', NULL),
   (0, '8', NULL);
 
-INSERT INTO Contest.Task(id, name) VALUES
-  (1, 'Solved'),
-  (2, 'Failed'),
-  (3, 'Testing'),
-  (4, 'Virgin'),
-  (5, 'From 5 variant');
+INSERT INTO Contest.Task(id, name, author_id) VALUES
+  (1, 'Solved', 0),
+  (2, 'Failed', 0),
+  (3, 'Testing', 0),
+  (4, 'Virgin', 0),
+  (5, 'From 5 variant', 0);
 
 INSERT INTO Contest.TaskVariant(task_id, variant_id) VALUES
   (1, 1), (2, 1), (3, 1), (4, 1), (5, 5), (1, 2), (2, 2), (3, 2), (4, 2);
