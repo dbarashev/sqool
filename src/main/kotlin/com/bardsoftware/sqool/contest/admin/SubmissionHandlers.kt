@@ -1,16 +1,13 @@
 package com.bardsoftware.sqool.contest.admin
 
 import com.bardsoftware.sqool.contest.HttpApi
-import com.bardsoftware.sqool.contest.HttpResponse
 import com.bardsoftware.sqool.contest.RequestArgs
-import com.bardsoftware.sqool.contest.RequestHandler
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.select
-import org.jetbrains.exposed.sql.transactions.transaction
 import org.ocpsoft.prettytime.PrettyTime
 import java.util.*
 
@@ -25,19 +22,17 @@ object Attempts : Table("Contest.Attempt") {
 
 data class SubmissionGetArgs(var user_id: String, var task_id: String, var variant_id: String, var reviewer_id: String) : RequestArgs()
 
-class SubmissionGetHandler : RequestHandler<SubmissionGetArgs>() {
-  override fun handle(http: HttpApi, argValues: SubmissionGetArgs): HttpResponse {
-    return transaction {
-      val attempts = Attempts.select {
-        (Attempts.user_id eq argValues.user_id.toInt()) and
-        (Attempts.task_id eq argValues.task_id.toInt()) and
-        (Attempts.variant_id eq argValues.variant_id.toInt())
-      }.toList()
-      when {
-        attempts.size > 1 -> http.error(500, "get more than one attempt by user_id, task_id and variant_id")
-        attempts.isNotEmpty() -> http.json(hashMapOf("attempt_text" to attempts.last()[Attempts.attempt_text]))
-        else -> http.json(hashMapOf("attempt_text" to "[comment]: # (there was no attempt)"))
-      }
+class SubmissionGetHandler : AdminHandler<SubmissionGetArgs>() {
+  override fun handle(http: HttpApi, argValues: SubmissionGetArgs) = withAdminUser(http) {
+    val attempts = Attempts.select {
+      (Attempts.user_id eq argValues.user_id.toInt()) and
+          (Attempts.task_id eq argValues.task_id.toInt()) and
+          (Attempts.variant_id eq argValues.variant_id.toInt())
+    }.toList()
+    when {
+      attempts.size > 1 -> http.error(500, "get more than one attempt by user_id, task_id and variant_id")
+      attempts.isNotEmpty() -> http.json(hashMapOf("attempt_text" to attempts.last()[Attempts.attempt_text]))
+      else -> http.json(hashMapOf("attempt_text" to "[comment]: # (there was no attempt)"))
     }
   }
 
@@ -69,13 +64,11 @@ object MyAttempts : Table("Contest.MyAttempts") {
 
 data class SubmissionListArgs(var task_id: String) : RequestArgs()
 
-class SubmissionListHandler : RequestHandler<SubmissionListArgs>() {
-  override fun handle(http: HttpApi, argValues: SubmissionListArgs): HttpResponse {
-    return transaction {
-      http.json(MyAttempts.select {
-        ((MyAttempts.task_id eq argValues.task_id.toInt()))
-      }.map(MyAttempts::asJson).toList())
-    }
+class SubmissionListHandler : AdminHandler<SubmissionListArgs>() {
+  override fun handle(http: HttpApi, argValues: SubmissionListArgs) = withAdminUser(http) {
+    http.json(MyAttempts.select {
+      ((MyAttempts.task_id eq argValues.task_id.toInt()))
+    }.map(MyAttempts::asJson).toList())
   }
 
   override fun args(): SubmissionListArgs = SubmissionListArgs("")
@@ -127,17 +120,14 @@ object AttemptsByContest : Table("Contest.AttemptsByContest") {
 
 data class UserSubmissionsByContestArgs(var contestCode: String, var userId: String) : RequestArgs()
 
-class UserSubmissionsByContestHandler : RequestHandler<UserSubmissionsByContestArgs>() {
+class UserSubmissionsByContestHandler : AdminHandler<UserSubmissionsByContestArgs>() {
   override fun args() = UserSubmissionsByContestArgs("", "")
 
-  override fun handle(http: HttpApi, argValues: UserSubmissionsByContestArgs): HttpResponse {
-    val attempts = transaction {
-      AttemptsByContest.select {
-        (AttemptsByContest.contestCode eq argValues.contestCode) and
-            (AttemptsByContest.attemptUserId eq argValues.userId.toInt())
-      }.map(AttemptsByContest::asJson).toList()
-    }
-    return http.json(attempts)
+  override fun handle(http: HttpApi, argValues: UserSubmissionsByContestArgs) = withAdminUser(http) {
+    val attempts = AttemptsByContest.select {
+      (AttemptsByContest.contestCode eq argValues.contestCode) and (AttemptsByContest.attemptUserId eq argValues.userId.toInt())
+    }.map(AttemptsByContest::asJson).toList()
+    http.json(attempts)
   }
 }
 
@@ -161,36 +151,32 @@ object TaskSubmissionsStats : Table("Contest.TaskSubmissionsStats") {
 
 data class TaskSubmissionsStatsByContestArgs(var contestCode: String) : RequestArgs()
 
-class TaskSubmissionsStatsByContestHandler : RequestHandler<TaskSubmissionsStatsByContestArgs>() {
+class TaskSubmissionsStatsByContestHandler : AdminHandler<TaskSubmissionsStatsByContestArgs>() {
   override fun args() = TaskSubmissionsStatsByContestArgs("")
 
-  override fun handle(http: HttpApi, argValues: TaskSubmissionsStatsByContestArgs): HttpResponse {
-    val attempts = transaction {
-      TaskSubmissionsStats.select { TaskSubmissionsStats.contestCode eq argValues.contestCode }
-          .map(TaskSubmissionsStats::asJson)
-          .toList()
-    }
-    return http.json(attempts)
+  override fun handle(http: HttpApi, argValues: TaskSubmissionsStatsByContestArgs) = withAdminUser(http) {
+    val attempts = TaskSubmissionsStats.select { TaskSubmissionsStats.contestCode eq argValues.contestCode }
+        .map(TaskSubmissionsStats::asJson)
+        .toList()
+    http.json(attempts)
   }
 }
 
 data class ContestUsersArgs(var contestCode: String) : RequestArgs()
 
-class ContestUsersHandler : RequestHandler<ContestUsersArgs>() {
+class ContestUsersHandler : AdminHandler<ContestUsersArgs>() {
   override fun args() = ContestUsersArgs("")
 
-  override fun handle(http: HttpApi, argValues: ContestUsersArgs): HttpResponse {
-    val users = transaction {
-      AttemptsByContest.slice(AttemptsByContest.contestCode, AttemptsByContest.attemptUserId, AttemptsByContest.attemptUserName)
-          .select { AttemptsByContest.contestCode eq argValues.contestCode }
-          .withDistinct()
-          .map {
-            mapOf(
-                "user_id" to it[AttemptsByContest.attemptUserId],
-                "user_name" to it[AttemptsByContest.attemptUserName]
-            )
-          }.toList()
-    }
-    return http.json(users)
+  override fun handle(http: HttpApi, argValues: ContestUsersArgs) = withAdminUser(http) {
+    val users = AttemptsByContest.slice(AttemptsByContest.contestCode, AttemptsByContest.attemptUserId, AttemptsByContest.attemptUserName)
+        .select { AttemptsByContest.contestCode eq argValues.contestCode }
+        .withDistinct()
+        .map {
+          mapOf(
+              "user_id" to it[AttemptsByContest.attemptUserId],
+              "user_name" to it[AttemptsByContest.attemptUserName]
+          )
+        }.toList()
+    http.json(users)
   }
 }

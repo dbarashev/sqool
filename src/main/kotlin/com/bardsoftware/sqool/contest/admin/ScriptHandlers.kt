@@ -1,13 +1,10 @@
 package com.bardsoftware.sqool.contest.admin
 
 import com.bardsoftware.sqool.contest.HttpApi
-import com.bardsoftware.sqool.contest.HttpResponse
 import com.bardsoftware.sqool.contest.RequestArgs
-import com.bardsoftware.sqool.contest.RequestHandler
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.transactions.transaction
 
 private val JSON_MAPPER = ObjectMapper()
 
@@ -28,38 +25,34 @@ object Scripts : Table("Contest.ScriptDto") {
   }
 }
 
-class ScriptAllHandler : RequestHandler<RequestArgs>() {
+class ScriptAllHandler : AdminHandler<RequestArgs>() {
   override fun args(): RequestArgs = RequestArgs()
 
-  override fun handle(http: HttpApi, argValues: RequestArgs): HttpResponse {
-    return transaction {
-      http.json(Scripts.selectAll().map(Scripts::asJson).toList())
-    }
+  override fun handle(http: HttpApi, argValues: RequestArgs) = withAdminUser(http) {
+    http.json(Scripts.selectAll().map(Scripts::asJson).toList())
   }
 }
 
 data class ScriptEditArgs(var id: String, var description: String, var body: String) : RequestArgs()
 
-class ScriptEditHandler : RequestHandler<ScriptEditArgs>() {
+class ScriptEditHandler : AdminHandler<ScriptEditArgs>() {
   override fun args(): ScriptEditArgs = ScriptEditArgs(id = "", description = "", body = "")
 
-  override fun handle(http: HttpApi, argValues: ScriptEditArgs): HttpResponse {
-    return transaction {
-      when (argValues.id) {
-        "" -> {
-          Scripts.insert {
-            it[description] = argValues.description
-            it[body] = argValues.body
-          }
-          http.ok()
+  override fun handle(http: HttpApi, argValues: ScriptEditArgs) = withAdminUser(http) {
+    when (argValues.id) {
+      "" -> {
+        Scripts.insert {
+          it[description] = argValues.description
+          it[body] = argValues.body
         }
-        else -> {
-          Scripts.update(where = { Scripts.id eq argValues.id.toInt() }) {
-            it[description] = argValues.description
-            it[body] = argValues.body
-          }
-          http.ok()
+        http.ok()
+      }
+      else -> {
+        Scripts.update(where = { Scripts.id eq argValues.id.toInt() }) {
+          it[description] = argValues.description
+          it[body] = argValues.body
         }
+        http.ok()
       }
     }
   }

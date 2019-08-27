@@ -198,10 +198,10 @@ fun main(args: Array<String>) {
 
   val adminScriptAllHandler = ScriptAllHandler()
   val adminScriptEditHandler = ScriptEditHandler()
-  val adminTaskAllHandler = TaskAllHandler(flags)
-  val adminTaskEditHandler = TaskEditHandler(flags)
-  val adminVariantEditHandler = VariantEditHandler(flags)
-  val adminVariantAllHandler = VariantAllHandler(flags)
+  val adminTaskAllHandler = TaskAllHandler()
+  val adminTaskEditHandler = TaskEditHandler()
+  val adminVariantEditHandler = VariantEditHandler()
+  val adminVariantAllHandler = VariantAllHandler()
   val adminSubmissionGetHandler = SubmissionGetHandler()
   val adminSubmissionListHandler = SubmissionListHandler()
   val adminReviewGetHandler = AdminReviewGetHandler()
@@ -274,7 +274,7 @@ fun main(args: Array<String>) {
       ))
 
       GET("/" TEMPLATE "index.ftl")
-      GET("/dashboard" TEMPLATE "dashboard.ftl")
+      GET("/dashboard" BY AdminDashboardPageHandler())
       GET("/admin/submission/get" BY adminSubmissionGetHandler ARGS mapOf(
           "task_id" to SubmissionGetArgs::task_id,
           "variant_id" to SubmissionGetArgs::variant_id,
