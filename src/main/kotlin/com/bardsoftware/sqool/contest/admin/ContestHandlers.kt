@@ -105,25 +105,23 @@ class ContestBuildHandler(
   override fun args(): ContestBuildArgs = ContestBuildArgs("")
 
   override fun handle(http: HttpApi, argValues: ContestBuildArgs) = withAdminUser(http) {
-    build(http, argValues.code)
-  }
+    try {
+      val contest = queryManager.findContest(argValues.code)
+      val imageManager = imageManager(contest)
+      imageManager.createImage()
 
-  fun build(http: HttpApi, contestCode: String) = try {
-    val contest = queryManager.findContest(contestCode)
-    val imageManager = imageManager(contest)
-    imageManager.createImage()
-
-    val errorStream = ByteArrayOutputStream()
-    when (imageManager.checkImage(errorStream)) {
-      ImageCheckResult.PASSED -> http.json(mapOf("status" to "OK"))
-      ImageCheckResult.ERROR -> http.error(500, errorStream.toString())
-      ImageCheckResult.FAILED -> http.json(mapOf("status" to "ERROR", "message" to errorStream.toString()))
-    }.also { errorStream.close() }
-  } catch (exception: MalformedDataException) {
-    exception.printStackTrace()
-    http.error(400, exception.message, exception)
-  } catch (exception: NoSuchContestException) {
-    exception.printStackTrace()
-    http.error(404, "No such contest")
+      val errorStream = ByteArrayOutputStream()
+      when (imageManager.checkImage(errorStream)) {
+        ImageCheckResult.PASSED -> http.json(mapOf("status" to "OK"))
+        ImageCheckResult.ERROR -> http.error(500, errorStream.toString())
+        ImageCheckResult.FAILED -> http.json(mapOf("status" to "ERROR", "message" to errorStream.toString()))
+      }.also { errorStream.close() }
+    } catch (exception: MalformedDataException) {
+      exception.printStackTrace()
+      http.error(400, exception.message, exception)
+    } catch (exception: NoSuchContestException) {
+      exception.printStackTrace()
+      http.error(404, "No such contest")
+    }
   }
 }
