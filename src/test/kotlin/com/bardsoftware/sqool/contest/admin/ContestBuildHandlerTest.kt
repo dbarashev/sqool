@@ -3,56 +3,86 @@ package com.bardsoftware.sqool.contest.admin
 import com.bardsoftware.sqool.codegen.Contest
 import com.bardsoftware.sqool.codegen.docker.ContestImageManager
 import com.bardsoftware.sqool.codegen.docker.ImageCheckResult
+import com.bardsoftware.sqool.contest.ChainedHttpApi
 import com.bardsoftware.sqool.contest.Http
+import com.bardsoftware.sqool.contest.HttpApi
+import com.bardsoftware.sqool.contest.storage.User
+import com.bardsoftware.sqool.contest.storage.UserStorage
 import com.nhaarman.mockito_kotlin.*
 import org.junit.jupiter.api.Test
 import java.io.OutputStream
 import java.io.PrintWriter
 
+private const val USER_NAME = "user"
+
 class ContestBuildHandlerTest {
-  private val httpMock = mock<Http>()
   private val contestMock = mock<Contest>()
   private val queryManagerMock = mock<DbQueryManager>()
   private val imageManagerMock = mock<ContestImageManager>()
   private val lambdaMock = mock<(Contest) -> ContestImageManager> {
     on { invoke(contestMock) } doReturn imageManagerMock
   }
-  private val handler = ContestBuildHandler(queryManagerMock, lambdaMock)
 
   @Test
   fun testHandleNotExistingContest() {
-    makeTest("not_existing", NoSuchContestException())
-    verify(httpMock).error(404, "No such contest", null)
-    verify(httpMock, never()).ok()
-    verify(httpMock, never()).json(any())
+    val http = makeAdminUserTest("not_existing", NoSuchContestException())
+    verify(http).error(404, "No such contest", null)
+    verify(http, never()).ok()
+    verify(http, never()).json(any())
   }
 
   @Test
   fun testHandleCorrectContest() {
-    makeTest("correct", "", ImageCheckResult.PASSED)
-    verify(httpMock, never()).error(any(), any(), anyOrNull())
-    verify(httpMock, never()).ok()
-    verify(httpMock).json(mapOf("status" to "OK"))
+    val http = makeAdminUserTest("correct", "", ImageCheckResult.PASSED)
+    verify(http, never()).error(any(), any(), anyOrNull())
+    verify(http, never()).ok()
+    verify(http).json(mapOf("status" to "OK"))
   }
 
   @Test
   fun testHandleInvalidContest() {
-    makeTest("invalid", "error", ImageCheckResult.FAILED)
-    verify(httpMock, never()).error(any(), any(), anyOrNull())
-    verify(httpMock, never()).ok()
-    verify(httpMock).json(mapOf("status" to "ERROR", "message" to "error"))
+    val http = makeAdminUserTest("invalid", "error", ImageCheckResult.FAILED)
+    verify(http, never()).error(any(), any(), anyOrNull())
+    verify(http, never()).ok()
+    verify(http).json(mapOf("status" to "ERROR", "message" to "error"))
   }
 
   @Test
   fun testHandleMalformedDataContest() {
     val exception = MalformedDataException("malformed")
-    makeTest("malformed", exception)
-    verify(httpMock).error(400, exception.message, exception)
-    verify(httpMock, never()).ok()
-    verify(httpMock, never()).json(any())
+    val http = makeAdminUserTest("malformed", exception)
+    verify(http).error(400, exception.message, exception)
+    verify(http, never()).ok()
+    verify(http, never()).json(any())
   }
 
-  private fun makeTest(code: String, message: String, result: ImageCheckResult) {
+  @Test
+  fun testUnauthenticatedUser() {
+    val httpMock = mockHttp(null)
+    val handler = getContestBuildHandler(true)
+    handler.handle(httpMock, ContestBuildArgs("code"))
+    verify(httpMock).redirect("/login")
+  }
+
+  @Test
+  fun testNonAdminUser() {
+    val httpMock = mockHttp(USER_NAME)
+    val handler = getContestBuildHandler(false)
+    handler.handle(httpMock, ContestBuildArgs("code"))
+    verify(httpMock).error(403)
+  }
+
+  @Test
+  fun testNotExistingUser() {
+    val httpMock = mockHttp(USER_NAME)
+    val handler = getContestBuildHandler(null)
+    handler.handle(httpMock, ContestBuildArgs("code"))
+    verify(httpMock).redirect("/login")
+  }
+
+  private fun makeAdminUserTest(code: String, message: String, result: ImageCheckResult): Http {
+    val handler = getContestBuildHandler(true)
+    val httpMock = mockHttp(USER_NAME)
     whenever(queryManagerMock.findContest(code)).thenReturn(contestMock)
     whenever(imageManagerMock.checkImage(any())).doAnswer {
       val writer = PrintWriter(it.getArgument<OutputStream>(0))
@@ -60,14 +90,50 @@ class ContestBuildHandlerTest {
       writer.flush()
       result
     }
-    handler.build(httpMock, code)
+    handler.handle(httpMock, ContestBuildArgs(code))
     verify(queryManagerMock).findContest(code)
     verify(lambdaMock).invoke(contestMock)
+    return httpMock
   }
 
-  private fun makeTest(code: String, exception: Exception) {
+  private fun makeAdminUserTest(code: String, exception: Exception): Http {
+    val handler = getContestBuildHandler(true)
+    val httpMock = mockHttp(USER_NAME)
     whenever(queryManagerMock.findContest(code)).doAnswer { throw exception }
-    handler.build(httpMock, code)
+    handler.handle(httpMock, ContestBuildArgs(code))
     verify(queryManagerMock).findContest(code)
+    return httpMock
+  }
+
+  private fun mockHttp(user: String?): Http {
+    val mock = mock<Http> {
+      on { session("name") } doReturn user
+    }
+    whenever(mock.chain(any())).doAnswer {
+      val body = it.getArgument<HttpApi.() -> Unit>(0)
+      val chainedApi = ChainedHttpApi(mock)
+      chainedApi.body()
+      return@doAnswer { chainedApi.lastResult }
+    }
+    return mock
+  }
+
+  /**
+   * Created [ContestBuildHandler] parameterized with [CodeExecutor].
+   * The [CodeExecutor] wraps [UserStorage] mock.
+   * If [isAdmin] isn't null the [UserStorage] mock returns [User] mock on [UserStorage.findUser], otherwise it returns null.
+   * The [User] mock has specified [isAdmin] flag.
+   */
+  private fun getContestBuildHandler(isAdmin: Boolean?): ContestBuildHandler {
+    val userMock = isAdmin?.let {
+      mock<User> { on { it.isAdmin } doReturn isAdmin }
+    }
+    val userStorageMock = mock<UserStorage> {
+      on { findUser(USER_NAME) } doReturn userMock
+    }
+    val codeExecutor: CodeExecutor = { code ->
+      userStorageMock.code()
+    }
+    return ContestBuildHandler(queryManagerMock, lambdaMock, codeExecutor)
   }
 }
