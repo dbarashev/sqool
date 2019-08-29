@@ -4,13 +4,16 @@ import com.bardsoftware.sqool.contest.*
 import com.bardsoftware.sqool.contest.storage.User
 import com.bardsoftware.sqool.contest.storage.UserStorage
 
-abstract class AdminHandler<T : RequestArgs> : RequestHandler<T>()  {
+typealias CodeExecutor = (code: UserStorage.() -> HttpResponse) -> HttpResponse
+private val PROD_CODE_EXECUTOR: CodeExecutor = UserStorage.Companion::exec
+
+abstract class AdminHandler<T : RequestArgs>(private val codeExecutor: CodeExecutor = PROD_CODE_EXECUTOR) : RequestHandler<T>()  {
   protected fun withAdminUser(http: HttpApi, handle: (User) -> HttpResponse): HttpResponse {
     val userName = http.session("name") ?: return redirectToLogin(http)
-    return UserStorage.exec {
-      val user = findUser(userName) ?: return@exec redirectToLogin(http)
+    return codeExecutor {
+      val user = findUser(userName) ?: return@codeExecutor redirectToLogin(http)
       if (!user.isAdmin) {
-        return@exec http.error(403)
+        return@codeExecutor http.error(403)
       }
       handle(user)
     }

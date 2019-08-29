@@ -97,10 +97,21 @@ class ContestEditHandler(private val mode: ContestEditMode) : AdminHandler<Conte
 
 data class ContestBuildArgs(var code: String) : RequestArgs()
 
-class ContestBuildHandler(
-    private val queryManager: DbQueryManager,
-    private val imageManager: (Contest) -> ContestImageManager
-) : AdminHandler<ContestBuildArgs>() {
+class ContestBuildHandler : AdminHandler<ContestBuildArgs> {
+  private val queryManager: DbQueryManager
+  private val imageManager: (Contest) -> ContestImageManager
+
+  constructor(queryManager: DbQueryManager, imageManager: (Contest) -> ContestImageManager) {
+    this.queryManager = queryManager
+    this.imageManager = imageManager
+  }
+
+  constructor(
+      queryManager: DbQueryManager, imageManager: (Contest) -> ContestImageManager, codeExecutor: CodeExecutor
+  ) : super(codeExecutor) {
+    this.queryManager = queryManager
+    this.imageManager = imageManager
+  }
 
   override fun args(): ContestBuildArgs = ContestBuildArgs("")
 

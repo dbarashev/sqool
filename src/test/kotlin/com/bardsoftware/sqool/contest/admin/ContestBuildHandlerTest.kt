@@ -6,14 +6,9 @@ import com.bardsoftware.sqool.codegen.docker.ImageCheckResult
 import com.bardsoftware.sqool.contest.ChainedHttpApi
 import com.bardsoftware.sqool.contest.Http
 import com.bardsoftware.sqool.contest.HttpApi
-import com.bardsoftware.sqool.contest.HttpResponse
 import com.bardsoftware.sqool.contest.storage.User
 import com.bardsoftware.sqool.contest.storage.UserStorage
 import com.nhaarman.mockito_kotlin.*
-import io.mockk.every
-import io.mockk.mockkObject
-import io.mockk.slot
-import io.mockk.unmockkObject
 import org.junit.jupiter.api.Test
 import java.io.OutputStream
 import java.io.PrintWriter
@@ -27,7 +22,6 @@ class ContestBuildHandlerTest {
   private val lambdaMock = mock<(Contest) -> ContestImageManager> {
     on { invoke(contestMock) } doReturn imageManagerMock
   }
-  private val handler = ContestBuildHandler(queryManagerMock, lambdaMock)
 
   @Test
   fun testHandleNotExistingContest() {
@@ -65,6 +59,7 @@ class ContestBuildHandlerTest {
   @Test
   fun testUnauthenticatedUser() {
     val httpMock = mockHttp(null)
+    val handler = getContestBuildHandler(true)
     handler.handle(httpMock, ContestBuildArgs("code"))
     verify(httpMock).redirect("/login")
   }
@@ -72,7 +67,7 @@ class ContestBuildHandlerTest {
   @Test
   fun testNonAdminUser() {
     val httpMock = mockHttp(USER_NAME)
-    mockUserStorageObject(mockUserStorage(false))
+    val handler = getContestBuildHandler(false)
     handler.handle(httpMock, ContestBuildArgs("code"))
     verify(httpMock).error(403)
   }
@@ -80,13 +75,13 @@ class ContestBuildHandlerTest {
   @Test
   fun testNotExistingUser() {
     val httpMock = mockHttp(USER_NAME)
-    mockUserStorageObject(mockUserStorage(null))
+    val handler = getContestBuildHandler(null)
     handler.handle(httpMock, ContestBuildArgs("code"))
     verify(httpMock).redirect("/login")
   }
 
   private fun makeAdminUserTest(code: String, message: String, result: ImageCheckResult): Http {
-    mockUserStorageObject(mockUserStorage(true))
+    val handler = getContestBuildHandler(true)
     val httpMock = mockHttp(USER_NAME)
     whenever(queryManagerMock.findContest(code)).thenReturn(contestMock)
     whenever(imageManagerMock.checkImage(any())).doAnswer {
@@ -102,7 +97,7 @@ class ContestBuildHandlerTest {
   }
 
   private fun makeAdminUserTest(code: String, exception: Exception): Http {
-    mockUserStorageObject(mockUserStorage(true))
+    val handler = getContestBuildHandler(true)
     val httpMock = mockHttp(USER_NAME)
     whenever(queryManagerMock.findContest(code)).doAnswer { throw exception }
     handler.handle(httpMock, ContestBuildArgs(code))
@@ -123,22 +118,22 @@ class ContestBuildHandlerTest {
     return mock
   }
 
-  private fun mockUserStorage(isAdmin: Boolean?): UserStorage {
+  /**
+   * Created [ContestBuildHandler] parameterized with [CodeExecutor].
+   * The [CodeExecutor] wraps [UserStorage] mock.
+   * If [isAdmin] isn't null the [UserStorage] mock returns [User] mock on [UserStorage.findUser], otherwise it returns null.
+   * The [User] mock has specified [isAdmin] flag.
+   */
+  private fun getContestBuildHandler(isAdmin: Boolean?): ContestBuildHandler {
     val userMock = isAdmin?.let {
       mock<User> { on { it.isAdmin } doReturn isAdmin }
     }
-    return mock {
+    val userStorageMock = mock<UserStorage> {
       on { findUser(USER_NAME) } doReturn userMock
     }
-  }
-
-  private fun mockUserStorageObject(userStorage: UserStorage) {
-    unmockkObject(UserStorage.Companion)
-    val codeSlot = slot<UserStorage.() -> HttpResponse>()
-    mockkObject(UserStorage.Companion)
-    every { UserStorage.exec(code = capture(codeSlot)) } answers {
-      val code = codeSlot.captured
-      userStorage.code()
+    val codeExecutor: CodeExecutor = { code ->
+      userStorageMock.code()
     }
+    return ContestBuildHandler(queryManagerMock, lambdaMock, codeExecutor)
   }
 }
