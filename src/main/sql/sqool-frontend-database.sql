@@ -22,7 +22,7 @@ CREATE TABLE Contest.ContestUser(
   name TEXT UNIQUE,
   nick TEXT,
   passwd TEXT,
-  is_admin BOOLEAN DEFAULT FALSE
+  is_admin BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 CREATE TABLE Contest.Task(
@@ -408,8 +408,8 @@ BEGIN
   EXIT WHEN NOT EXISTS (SELECT * FROM ContestUser WHERE ContestUser.nick = _nick);
   END LOOP;
 
-  INSERT INTO ContestUser(name, nick, passwd, is_admin) VALUES (argName, _nick, md5(argPass), _is_admin);
-  RETURN QUERY SELECT U.id, U.nick, U.name, U.passwd, U,is_admin, 0 AS code FROM ContestUser U WHERE U.name = argName;
+  INSERT INTO ContestUser(name, nick, passwd, is_admin) VALUES (argName, _nick, md5(argPass), COALESCE(_is_admin, FALSE));
+  RETURN QUERY SELECT U.id, U.nick, U.name, U.passwd, U.is_admin, 0 AS code FROM ContestUser U WHERE U.name = argName;
   RETURN;
 END;
 $$ LANGUAGE plpgsql;
