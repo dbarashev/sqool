@@ -2,6 +2,7 @@ package com.bardsoftware.sqool.contest.storage
 
 import com.bardsoftware.sqool.contest.admin.Contests
 import com.bardsoftware.sqool.contest.admin.DbQueryManager
+import com.bardsoftware.sqool.contest.admin.SolutionReview
 import com.bardsoftware.sqool.grader.AssessmentPubSubResp
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -318,16 +319,28 @@ class User(val entity: UserEntity, val storage: UserStorage) {
     }
   }
 
+  fun getAssignedVariant(contestCode: String): Int? = transaction {
+    val variant = AvailableContests.select { (AvailableContests.user_id eq this@User.id) and (AvailableContests.contest_code eq contestCode) }
+        .map { it[AvailableContests.assigned_variant_id] }
+        .toList()
+    when {
+      variant.size > 1 -> throw Exception("Get more than one available contest by (user_id, contest_code)")
+      variant.isNotEmpty() -> variant.first()
+      else -> throw NoSuchAvailableContestException()
+    }
+  }
+
   /**
    * Records that student submitted a new solution which was sent to the assesment service and
    * is being tested now. Removes previously saved assessment details, if any, and sets attempt
    * status to "testing"
    */
-  fun recordAttempt(taskId: Int, attemptId: String): Boolean {
-    return storage.procedure("SELECT Contest.StartAttemptTesting(?, ?, ?)") {
+  fun recordAttempt(taskId: Int, variantId: Int, attemptId: String): Boolean {
+    return storage.procedure("SELECT Contest.StartAttemptTesting(?, ?, ?, ?)") {
       setInt(1, this@User.id)
       setInt(2, taskId)
-      setString(3, attemptId)
+      setInt(3, variantId)
+      setString(4, attemptId)
       execute()
     }
   }
@@ -434,3 +447,4 @@ class UserStorage(val txn: Transaction) {
   }
 }
 
+class NoSuchAvailableContestException : Exception()
