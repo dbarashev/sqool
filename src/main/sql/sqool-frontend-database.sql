@@ -300,7 +300,7 @@ CREATE TABLE Contest.Attempt(
   attempt_text TEXT,
   count INT DEFAULT 0,
   testing_start_ts TIMESTAMP,
-  FOREIGN KEY(task_id, variant_id) REFERENCES TaskVariant(task_id, variant_id),
+  FOREIGN KEY(task_id, variant_id) REFERENCES TaskVariant(task_id, variant_id) ON UPDATE CASCADE ON DELETE CASCADE,
   PRIMARY KEY(task_id, user_id, variant_id)
 );
 CREATE TABLE Contest.GradingDetails(
@@ -316,7 +316,7 @@ CREATE TABLE Contest.SolutionReview (
   reviewer_id INT,
   solution_review TEXT,
   PRIMARY KEY(task_id, variant_id, user_id, reviewer_id),
-  FOREIGN KEY(task_id, variant_id, user_id) REFERENCES Contest.Attempt(task_id, variant_id, user_id)
+  FOREIGN KEY(task_id, variant_id, user_id) REFERENCES Contest.Attempt(task_id, variant_id, user_id)  ON UPDATE CASCADE ON DELETE CASCADE
 );
 
 ------------------------------------------------------------------------------------------------
