@@ -37,7 +37,7 @@ dependencies {
 	compile "org.jetbrains.kotlin:kotlin-reflect:${kotlinVersion}"
 
 	compile "com.xenomachina:kotlin-argparser:2.+"
-	
+
 	compile group: 'com.spotify', name: 'docker-client', version: '8.+'
 
 	compile 'org.ocpsoft.prettytime:prettytime:4.0.1.Final'
@@ -108,9 +108,9 @@ task buildClient(type: Exec) {
 		println("Building client")
 		commandLine = 'npm'
 		if (project.buildMode == "development") {
-			args = ['run', 'build', '--', '--mode', project.buildMode, "--dest", "$buildDir/resources/main/public/js"]
+			args = ['run', 'build', '--', '--mode', project.buildMode, "--dest", "src/main/resources/public/js"]
 		} else {
-			args = ['run', 'build', '--', '--mode', project.buildMode]
+			args = ['run', 'build', '--', '--mode', project.buildMode, "--dest", "src/main/resources/"]
 		}
 	}
 	doLast {
@@ -136,7 +136,11 @@ test {
 }
 
 jib {
+	from {
+		image = 'gcr.io/distroless/java:debug'
+	}
 	to.image = 'dbarashev/sqool-frontend'
+
 }
 
 task docker {
