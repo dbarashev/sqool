@@ -14,6 +14,7 @@ class StaticCodeTester(
     private val flags: Flags
 ) {
   fun test(errorStream: PrintWriter): ImageCheckResult {
+    println("Testing $image $contest ")
     val (result, output) = runPsql()
     return if (result.statusCode() == 0L) {
       val errors = output.lines()

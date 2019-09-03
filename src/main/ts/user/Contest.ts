@@ -13,7 +13,7 @@ export class Contest {
   constructor(readonly contestCode: string,
               readonly variantPolicy: VariantPolicy,
               readonly variants: VariantOption[],
-              readonly chosenVariant?: VariantOption) {}
+              public chosenVariant?: VariantOption) {}
 
   public refreshAttempts(): JQuery.jqXHR {
     return $.ajax({
@@ -32,14 +32,18 @@ export class Contest {
     });
   }
 
-  public acceptVariant(variantId: number): JQuery.jqXHR {
-    return $.ajax({
+  public acceptVariant(variant: VariantOption): JQuery.jqXHR {
+    const result = $.ajax({
       url: '/contest/accept',
       method: 'POST',
       data: {
         contest_code: this.contestCode,
-        variant_id: variantId,
+        variant_id: variant.id,
       },
     });
+    result.done(() => {
+      this.chosenVariant = variant;
+    });
+    return result;
   }
 }

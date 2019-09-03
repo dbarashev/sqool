@@ -14,12 +14,12 @@ enum class ImageCheckResult {
 }
 
 class ContestImageManager(private val contest: Contest, flags: Flags) {
-  private val dynamicCodeTester = DynamicCodeTester(contest.code, contest.name, contest.variants, flags)
-  private val staticCodeTester = StaticCodeTester(contest.code, contest.name, flags)
+  private val dynamicCodeTester = DynamicCodeTester(contest.code, contest.code, contest.variants, flags)
+  private val staticCodeTester = StaticCodeTester(contest.code, contest.code, flags)
 
   fun createImage() {
     val root = createTempDir()
-    val contestDir = File(root, "$CONTEST_DIRECTORY/${contest.name}")
+    val contestDir = File(root, "$CONTEST_DIRECTORY/${contest.code}")
     contestDir.mkdirs()
 
     val schemas = contest.variants.map { it.schemas }.flatten().toSet()
@@ -31,7 +31,7 @@ class ContestImageManager(private val contest: Contest, flags: Flags) {
       val variantDir = File(contestDir, variant.name)
       variantDir.mkdir()
       File(variantDir, "static.sql").writeText(
-          variant.generateStaticCode("$CONTEST_DIRECTORY/${contest.name}/schema")
+          variant.generateStaticCode("$CONTEST_DIRECTORY/${contest.code}/schema")
       )
       variant.tasks.forEach {
         val dynamicCode = it.generateDynamicCode(variant.name)
@@ -39,7 +39,7 @@ class ContestImageManager(private val contest: Contest, flags: Flags) {
       }
     }
 
-    val initCode = contest.variants.joinToString("\n") { "\\i '$CONTEST_DIRECTORY/${contest.name}/${it.name}/static.sql'" }
+    val initCode = contest.variants.joinToString("\n") { "\\i '$CONTEST_DIRECTORY/${contest.code}/${it.name}/static.sql'" }
     File(contestDir, "init.sql").writeText(initCode)
 
     createDockerfile(root, ".", "/")
