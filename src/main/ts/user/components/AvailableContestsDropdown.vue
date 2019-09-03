@@ -45,7 +45,7 @@ export default class AvailableContestsDropdown extends Vue {
   }
 
   public onContestChange(contestOption: ContestOption) {
-    const contest = new Contest(contestOption.code, contestOption.variantPolicy, contestOption.variants);
+    const contest = new Contest(contestOption.code, contestOption.variantPolicy, contestOption.variants, contestOption.chosenVariant);
     if (contestOption.chosenVariant) {
       this.loadTasks(contest);
     } else {

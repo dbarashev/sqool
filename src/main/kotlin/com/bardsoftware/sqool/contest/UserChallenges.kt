@@ -1,6 +1,5 @@
 package com.bardsoftware.sqool.contest
 
-import com.bardsoftware.sqool.contest.storage.NoSuchAvailableContestException
 import com.bardsoftware.sqool.contest.storage.UserStorage
 import com.bardsoftware.sqool.grader.AssessmentPubSubResp
 import javax.servlet.http.HttpServletResponse
@@ -34,38 +33,39 @@ class ChallengeHandler {
     }
   }
 
-  fun handleSubmissionPage(http: HttpApi, contestId: String): HttpResponse {
-    val userName = http.session("name") ?: return http.redirect("/login")
-    val taskId = http.formValue("id")?.toInt() ?: return http.error(HttpServletResponse.SC_BAD_REQUEST)
-    return UserStorage.exec {
-      val user = findUser(userName) ?: return@exec http.error(HttpServletResponse.SC_FORBIDDEN)
-      val task = findTask(taskId) ?: return@exec http.error(HttpServletResponse.SC_NOT_FOUND)
-      task.entity.name = "${task.entity.name} ${user.id}"
-      http.render("task-submit.ftl", mapOf(
-          "task" to task.entity,
-          "user" to user.entity,
-          "contestId" to contestId
-      ))
-    }
-  }
+//  fun handleSubmissionPage(http: HttpApi, contestId: String): HttpResponse {
+//    val userName = http.session("name") ?: return http.redirect("/login")
+//    val taskId = http.formValue("id")?.toInt() ?: return http.error(HttpServletResponse.SC_BAD_REQUEST)
+//    return UserStorage.exec {
+//      val user = findUser(userName) ?: return@exec http.error(HttpServletResponse.SC_FORBIDDEN)
+//      val task = findTask(taskId) ?: return@exec http.error(HttpServletResponse.SC_NOT_FOUND)
+//      task.entity.name = "${task.entity.name} ${user.id}"
+//      http.render("task-submit.ftl", mapOf(
+//          "task" to task.entity,
+//          "user" to user.entity,
+//          "contestId" to contestId
+//      ))
+//    }
+//  }
 
-  fun handleSubmit(http: Http, assessor: AssessorApi): HttpResponse {
-    val userName = http.session("name") ?: return http.redirect("/login")
-    val taskId = http.formValue("task-id")?.toInt() ?: return http.error(HttpServletResponse.SC_BAD_REQUEST)
-    val solution = http.formValue("solution") ?: return http.error(HttpServletResponse.SC_BAD_REQUEST)
-    val contestId = http.formValue("contest-id") ?: "test-contest"
-    println("User: $userName Contest:$contestId Task: $taskId Solution:\n$solution")
-
-    assessor.submit(contestId, taskId, solution) {
-      println("Submitted task $it")
-      UserStorage.exec {
-        val user = findUser(userName) ?: return@exec
-        val variantId = user.getAssignedVariant(contestId) ?: return@exec
-        user.recordAttempt(taskId, variantId, it)
-      }
-    }
-    return http.redirect("/me?awaitTesting=true")
-  }
+//  fun handleSubmit(http: Http, assessor: AssessorApi): HttpResponse {
+//    val userName = http.session("name") ?: return http.redirect("/login")
+//    val taskId = http.formValue("task-id")?.toInt() ?: return http.error(HttpServletResponse.SC_BAD_REQUEST)
+//    val solution = http.formValue("solution") ?: return http.error(HttpServletResponse.SC_BAD_REQUEST)
+//    val contestId = http.formValue("contest-id") ?: "test-contest"
+//
+//    println("User: $userName Contest:$contestId Task: $taskId Solution:\n$solution")
+//
+//    assessor.submit(contestId, taskId, solution) {
+//      println("Submitted task $it")
+//      UserStorage.exec {
+//        val user = findUser(userName) ?: return@exec
+//        val variantId = user.getAssignedVariant(contestId) ?: return@exec
+//        user.recordAttempt(taskId, variantId, it)
+//      }
+//    }
+//    return http.redirect("/me?awaitTesting=true")
+//  }
 
   fun handleAttemptStatus(http: HttpApi): HttpResponse {
     val attemptId = http.formValue("attempt-id") ?: return http.error(HttpServletResponse.SC_BAD_REQUEST)

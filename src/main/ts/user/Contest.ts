@@ -12,7 +12,8 @@ export class Contest {
 
   constructor(readonly contestCode: string,
               readonly variantPolicy: VariantPolicy,
-              readonly variants: VariantOption[]) {}
+              readonly variants: VariantOption[],
+              readonly chosenVariant?: VariantOption) {}
 
   public refreshAttempts(): JQuery.jqXHR {
     return $.ajax({

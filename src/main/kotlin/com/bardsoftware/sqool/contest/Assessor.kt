@@ -22,15 +22,15 @@ private val MAPPER = ObjectMapper()
  * @author dbarashev@bardsoftware.com
  */
 interface AssessorApi {
-  fun submit(contestId: String, taskId: Int, solution: String, consumer: (String) -> Unit)
+  fun submit(contestCode: String, variantName: String, taskName: String, solution: String, consumer: (String) -> Unit)
 }
 
 class AssessorApiVoid : AssessorApi {
-  override fun submit(contestId: String, taskId: Int, solution: String, consumer: (String) -> Unit) {
+  override fun submit(contestCode: String, variantName: String, taskName: String, solution: String, consumer: (String) -> Unit) {
     println("""
-      Submitting solution of task $taskId in contest $contestId
+      Submitting solution of task $taskName in variant $variantName of contest $contestCode
       This is an assessor stub. It will not do anything""".trimIndent())
-    consumer("${taskId}_${System.currentTimeMillis().toString(16)}")
+    consumer("${taskName}_${System.currentTimeMillis().toString(16)}")
   }
 }
 
@@ -53,13 +53,15 @@ class ResultMessageReceiver(val responseConsumer: (AssessmentPubSubResp) -> Unit
   }
 }
 
-class AssessorPubSub(val topicId: String, private val responseConsumer: (AssessmentPubSubResp) -> Unit) : AssessorApi {
+class AssessorPubSub(private val topicId: String,
+                     private val subscriptionId: String,
+                     private val responseConsumer: (AssessmentPubSubResp) -> Unit) : AssessorApi {
   private val executor = Executors.newSingleThreadExecutor()
   private val timeoutScheduler = Executors.newScheduledThreadPool(1)
   private val receiver = ResultMessageReceiver(responseConsumer)
 
   init {
-    val subscriber = PubSubSubscriber("contestador", receiver)
+    val subscriber = PubSubSubscriber(subscriptionId, receiver)
     val onShutdown = CompletableFuture<Any>()
     Runtime.getRuntime().addShutdownHook(Thread(Runnable {
       onShutdown.complete(null)
@@ -67,9 +69,9 @@ class AssessorPubSub(val topicId: String, private val responseConsumer: (Assessm
     subscriber.listen(onShutdown)
   }
 
-  override fun submit(contestId: String, taskId: Int, solution: String, consumer: (String) -> Unit) {
+  override fun submit(contestCode: String, variantName: String, taskName: String, solution: String, consumer: (String) -> Unit) {
     try {
-      val id = TaskId(course = contestId, module = "cw2", task = "task$taskId")
+      val id = TaskId(course = contestCode, module = variantName, task = taskName)
       val pubsubTask = AssessmentPubSubTask(id = id, submission = solution)
       val data = MAPPER.writeValueAsBytes(pubsubTask)
       val message = PubsubMessage.newBuilder().setData(ByteString.copyFrom(data)).build()

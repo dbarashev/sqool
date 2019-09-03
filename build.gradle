@@ -37,7 +37,7 @@ dependencies {
 	compile "org.jetbrains.kotlin:kotlin-reflect:${kotlinVersion}"
 
 	compile "com.xenomachina:kotlin-argparser:2.+"
-	
+
 	compile group: 'com.spotify', name: 'docker-client', version: '8.+'
 
 	compile 'org.ocpsoft.prettytime:prettytime:4.0.1.Final'
@@ -108,7 +108,7 @@ task buildClient(type: Exec) {
 		println("Building client")
 		commandLine = 'npm'
 		if (project.buildMode == "development") {
-			args = ['run', 'build', '--', '--mode', project.buildMode, "--dest", "$buildDir/resources/main/public/js"]
+			args = ['run', 'build', '--', '--mode', project.buildMode, "--dest", "src/main/resources/public/js"]
 		} else {
 			args = ['run', 'build', '--', '--mode', project.buildMode]
 		}
@@ -137,6 +137,11 @@ test {
 
 jib {
 	to.image = 'dbarashev/sqool-frontend'
+	from.image = 'gcr.io/distroless/java:debug'
+	container {
+		environment = ["GOOGLE_APPLICATION_CREDENTIALS": "/var/run/sqool/dbms-class-2017-eb9a6787a012.json"]
+		args = ["--pub", "dbms2019-submissions", "--sub", "dbms2019-frontend"]
+	}
 }
 
 task docker {

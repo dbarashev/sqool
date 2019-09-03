@@ -67,8 +67,11 @@ export default class AttemptTable extends Vue {
         method: 'POST',
         data: {
           'task-id': attempt.taskEntity.id,
+          'task-name': attempt.taskEntity.name,
           'solution': solution,
           'contest-id': this.contest.contestCode,
+          'variant-id': this.contest.chosenVariant ? this.contest.chosenVariant.id : '',
+          'variant-name': this.contest.chosenVariant ? this.contest.chosenVariant.name : ''
         },
       };
     } else {
