@@ -2,7 +2,6 @@ package com.bardsoftware.sqool.contest.storage
 
 import com.bardsoftware.sqool.contest.admin.Contests
 import com.bardsoftware.sqool.contest.admin.DbQueryManager
-import com.bardsoftware.sqool.contest.admin.SolutionReview
 import com.bardsoftware.sqool.grader.AssessmentPubSubResp
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -323,10 +322,10 @@ class User(val entity: UserEntity, val storage: UserStorage) {
     val variant = AvailableContests.select { (AvailableContests.user_id eq this@User.id) and (AvailableContests.contest_code eq contestCode) }
         .map { it[AvailableContests.assigned_variant_id] }
         .toList()
-    when {
-      variant.size > 1 -> throw Exception("Get more than one available contest by (user_id, contest_code)")
-      variant.isNotEmpty() -> variant.first()
-      else -> throw NoSuchAvailableContestException()
+    when (variant.size) {
+      0 -> throw NoSuchAvailableContestException()
+      1 -> variant.first()
+      else -> throw Exception("Get more than one available contest by (user_id, contest_code)")
     }
   }
 
