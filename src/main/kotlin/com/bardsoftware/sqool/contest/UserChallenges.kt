@@ -1,5 +1,6 @@
 package com.bardsoftware.sqool.contest
 
+import com.bardsoftware.sqool.contest.storage.NoSuchAvailableContestException
 import com.bardsoftware.sqool.contest.storage.UserStorage
 import com.bardsoftware.sqool.grader.AssessmentPubSubResp
 import javax.servlet.http.HttpServletResponse
@@ -59,7 +60,8 @@ class ChallengeHandler {
       println("Submitted task $it")
       UserStorage.exec {
         val user = findUser(userName) ?: return@exec
-        user.recordAttempt(taskId, it)
+        val variantId = user.getAssignedVariant(contestId) ?: return@exec
+        user.recordAttempt(taskId, variantId, it)
       }
     }
     return http.redirect("/me?awaitTesting=true")

@@ -300,7 +300,7 @@ CREATE TABLE Contest.Attempt(
   attempt_text TEXT,
   count INT DEFAULT 0,
   testing_start_ts TIMESTAMP,
-  FOREIGN KEY(task_id, variant_id) REFERENCES TaskVariant(task_id, variant_id),
+  FOREIGN KEY(task_id, variant_id) REFERENCES TaskVariant(task_id, variant_id) ON UPDATE CASCADE ON DELETE CASCADE,
   PRIMARY KEY(task_id, user_id, variant_id)
 );
 CREATE TABLE Contest.GradingDetails(
@@ -316,7 +316,7 @@ CREATE TABLE Contest.SolutionReview (
   reviewer_id INT,
   solution_review TEXT,
   PRIMARY KEY(task_id, variant_id, user_id, reviewer_id),
-  FOREIGN KEY(task_id, variant_id, user_id) REFERENCES Contest.Attempt(task_id, variant_id, user_id)
+  FOREIGN KEY(task_id, variant_id, user_id) REFERENCES Contest.Attempt(task_id, variant_id, user_id)  ON UPDATE CASCADE ON DELETE CASCADE
 );
 
 ------------------------------------------------------------------------------------------------
@@ -446,16 +446,16 @@ $$ LANGUAGE plpgsql;
 -----------------------------------------------------------------------------------------------------------------------
 -- Changes the status of the given _task_id to "testing" for the given user and records attempt identifier which
 -- is opaque value.
-CREATE OR REPLACE FUNCTION StartAttemptTesting(_user_id INT, _task_id INT, _attempt_id TEXT)
+CREATE OR REPLACE FUNCTION StartAttemptTesting(_user_id INT, _task_id INT, _variant_id INT, _attempt_id TEXT)
 RETURNS VOID AS $$
   DELETE FROM Contest.GradingDetails WHERE attempt_id IN (
     SELECT attempt_id
     FROM Contest.Attempt
-    WHERE user_id = _user_id AND task_id = _task_id
+    WHERE user_id = _user_id AND task_id = _task_id AND variant_id = _variant_id
   );
 
   UPDATE Contest.Attempt SET status = 'testing', testing_start_ts = NOW(), attempt_id = _attempt_id
-  WHERE user_id = _user_id AND task_id = _task_id;
+  WHERE user_id = _user_id AND task_id = _task_id AND variant_id = _variant_id;
 $$ LANGUAGE SQL;
 
 -----------------------------------------------------------------------------------------------------------------------
@@ -617,48 +617,48 @@ INSERT INTO Contest.Contest(code, name, variant_choice) VALUES
   ('8', 'Choose variant', 'ANY');
 
 INSERT INTO Contest.Variant(id, name) VALUES
-  (1, 'Variant 1'),
-  (2, 'Variant 2'),
-  (3, 'Variant 3'),
-  (4, 'Variant 4'),
-  (5, 'Variant 5');
+  (0, 'Variant 1'),
+  (-1, 'Variant 2'),
+  (-2, 'Variant 3'),
+  (-3, 'Variant 4'),
+  (-4, 'Variant 5');
 
 INSERT INTO Contest.VariantContest(variant_id, contest_code)
 SELECT V.id AS variant_id, C.code AS contest_code
 FROM Contest.Contest C CROSS JOIN Contest.Variant V
 WHERE C.name <> 'Empty' AND C.name <> 'Single variant';
 
-INSERT INTO Contest.VariantContest(variant_id, contest_code) VALUES (2, '6');
+INSERT INTO Contest.VariantContest(variant_id, contest_code) VALUES (-1, '6');
 
 INSERT INTO Contest.ContestUser(id, name, nick, passwd, is_admin) VALUES (0, 'user', 'user', md5(''), TRUE);
 
 INSERT INTO Contest.UserContest(user_id, contest_code, variant_id) VALUES
   (0, '1', NULL),
-  (0, '3', 2),
+  (0, '3', -1),
   (0, '5', NULL),
   (0, '6', NULL),
   (0, '7', NULL),
   (0, '8', NULL);
 
 INSERT INTO Contest.Task(id, name, author_id) VALUES
-  (1, 'Solved', 0),
-  (2, 'Failed', 0),
-  (3, 'Testing', 0),
-  (4, 'Virgin', 0),
-  (5, 'From 5 variant', 0);
+  (0, 'Solved', 0),
+  (-1, 'Failed', 0),
+  (-2, 'Testing', 0),
+  (-3, 'Virgin', 0),
+  (-4, 'From 5 variant', 0);
 
 INSERT INTO Contest.TaskVariant(task_id, variant_id) VALUES
-  (1, 1), (2, 1), (3, 1), (4, 1), (5, 5), (1, 2), (2, 2), (3, 2), (4, 2);
+  (0, 0), (-1, 0), (-2, 0), (-3, 0), (-4, -4), (0, -1), (-1, -1), (-2, -1), (-3, -1);
 
 INSERT INTO Contest.Attempt(task_id, user_id, variant_id, attempt_id, status, count) VALUES
-  (1, 0, 2, 1, 'success', 1),
-  (2, 0, 2, 2, 'failure', 1),
-  (3, 0, 2, 3, 'testing', 1),
-  (4, 0, 2, 4, 'virgin', 0);
+  (0, 0, -1, '1', 'success', 1),
+  (-1, 0, -1, '2', 'failure', 1),
+  (-2, 0, -1, '3', 'testing', 1),
+  (-3, 0, -1, '4', 'virgin', 0);
 
 INSERT INTO Contest.GradingDetails(attempt_id, error_msg, result_set) VALUES
   (2, E'Some error message\nSome error message', '[["col1", "col2", "col3"], {"col1": 42, "col2": "q"}, {"col1": -1, "col2": "t", "col3": 1}]');
 
-INSERT INTO Contest.SolutionReview(task_id, variant_id, user_id, solution_review, reviewer_id) VALUES (1, 2, 0, 'review', 1);
+INSERT INTO Contest.SolutionReview(task_id, variant_id, user_id, solution_review, reviewer_id) VALUES (0, -1, 0, 'review', 1);
 
 SELECT AcceptVariant(0, 2);
