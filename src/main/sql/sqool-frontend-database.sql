@@ -409,11 +409,10 @@ BEGIN
   END LOOP;
 
   WITH T AS (
-      INSERT INTO ContestUser (name, nick, passwd, is_admin) VALUES (argName, _nick, md5(argPass), COALESCE(_is_admin, FALSE)) RETURNING id
+      INSERT INTO ContestUser (name, nick, passwd, is_admin) VALUES (argName, _nick, md5(argPass), COALESCE(_is_admin, FALSE)) RETURNING ContestUser.id
   )
-  SELECT id INTO _id FROM T;
-
-  INSERT INTO UserContest(user_id, contest_code) SELECT _id, code FROM Contest;
+  SELECT T.id INTO _id FROM T;
+  INSERT INTO UserContest(user_id, contest_code) SELECT _id, Contest.code FROM Contest;
   RETURN QUERY SELECT U.id, U.nick, U.name, U.passwd, U.is_admin, 0 AS code FROM ContestUser U WHERE U.name = argName;
   RETURN;
 END;
