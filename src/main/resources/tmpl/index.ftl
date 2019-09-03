@@ -7,8 +7,8 @@
 <body>
 <div class="container-fluid">
     <h1 class="row text-center">
-        Марсофлотский контест
+        Контест-сервер курса Базы Данных
     </h1>
-    <p class="row text-center"><a href="/login" class="btn btn-info">Принять участие!</a></p>
+    <p class="row text-center"><a href="/login" class="btn btn-info">Вход</a></p>
 </div>
 </body></html>

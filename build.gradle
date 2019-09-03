@@ -110,7 +110,7 @@ task buildClient(type: Exec) {
 		if (project.buildMode == "development") {
 			args = ['run', 'build', '--', '--mode', project.buildMode, "--dest", "src/main/resources/public/js"]
 		} else {
-			args = ['run', 'build', '--', '--mode', project.buildMode]
+			args = ['run', 'build', '--', '--mode', project.buildMode, "--dest", "src/main/resources/"]
 		}
 	}
 	doLast {
@@ -141,6 +141,11 @@ jib {
 	container {
 		environment = ["GOOGLE_APPLICATION_CREDENTIALS": "/var/run/sqool/dbms-class-2017-eb9a6787a012.json"]
 		args = ["--pub", "dbms2019-submissions", "--sub", "dbms2019-frontend"]
+	}
+	extraDirectory {
+		permissions = [
+				'/workspace': '777',
+		]
 	}
 }
 
