@@ -140,7 +140,11 @@ jib {
 		image = 'gcr.io/distroless/java:debug'
 	}
 	to.image = 'dbarashev/sqool-frontend'
-
+	extraDirectory {
+		permissions = [
+				'/workspace': '777',
+		]
+	}
 }
 
 task docker {

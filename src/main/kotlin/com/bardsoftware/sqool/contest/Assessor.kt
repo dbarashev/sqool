@@ -22,11 +22,11 @@ private val MAPPER = ObjectMapper()
  * @author dbarashev@bardsoftware.com
  */
 interface AssessorApi {
-  fun submit(contestId: String, taskId: Int, solution: String, consumer: (String) -> Unit)
+  fun submit(contestId: String, taskId: String, solution: String, consumer: (String) -> Unit)
 }
 
 class AssessorApiVoid : AssessorApi {
-  override fun submit(contestId: String, taskId: Int, solution: String, consumer: (String) -> Unit) {
+  override fun submit(contestId: String, taskId: String, solution: String, consumer: (String) -> Unit) {
     println("""
       Submitting solution of task $taskId in contest $contestId
       This is an assessor stub. It will not do anything""".trimIndent())
@@ -59,7 +59,7 @@ class AssessorPubSub(val topicId: String, private val responseConsumer: (Assessm
   private val receiver = ResultMessageReceiver(responseConsumer)
 
   init {
-    val subscriber = PubSubSubscriber("contestador", receiver)
+    val subscriber = PubSubSubscriber("dbms2019-frontend", receiver)
     val onShutdown = CompletableFuture<Any>()
     Runtime.getRuntime().addShutdownHook(Thread(Runnable {
       onShutdown.complete(null)
@@ -67,9 +67,9 @@ class AssessorPubSub(val topicId: String, private val responseConsumer: (Assessm
     subscriber.listen(onShutdown)
   }
 
-  override fun submit(contestId: String, taskId: Int, solution: String, consumer: (String) -> Unit) {
+  override fun submit(contestId: String, taskId: String, solution: String, consumer: (String) -> Unit) {
     try {
-      val id = TaskId(course = contestId, module = "cw2", task = "task$taskId")
+      val id = TaskId(course = contestId, module = "Variant_A", task = taskId)
       val pubsubTask = AssessmentPubSubTask(id = id, submission = solution)
       val data = MAPPER.writeValueAsBytes(pubsubTask)
       val message = PubsubMessage.newBuilder().setData(ByteString.copyFrom(data)).build()

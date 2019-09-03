@@ -55,7 +55,11 @@ class ChallengeHandler {
     val contestId = http.formValue("contest-id") ?: "test-contest"
     println("User: $userName Contest:$contestId Task: $taskId Solution:\n$solution")
 
-    assessor.submit(contestId, taskId, solution) {
+    val task = UserStorage.exec {
+      findTask(taskId)
+    } ?: return http.error(400, "Task $taskId not found")
+
+    assessor.submit(contestId, task.entity.name, solution) {
       println("Submitted task $it")
       UserStorage.exec {
         val user = findUser(userName) ?: return@exec

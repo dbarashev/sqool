@@ -2,8 +2,6 @@ package com.bardsoftware.sqool.contest
 
 import com.bardsoftware.sqool.codegen.docker.ContestImageManager
 import com.bardsoftware.sqool.contest.admin.*
-import com.bardsoftware.sqool.contest.admin.ReviewGetArgs as AdminReviewGetArgs
-import com.bardsoftware.sqool.contest.admin.ReviewGetHandler as AdminReviewGetHandler
 import com.google.common.io.ByteStreams
 import com.google.common.net.HttpHeaders
 import com.google.common.net.MediaType
@@ -22,6 +20,8 @@ import java.util.logging.Level
 import java.util.logging.Logger
 import javax.servlet.MultipartConfigElement
 import kotlin.reflect.KClass
+import com.bardsoftware.sqool.contest.admin.ReviewGetArgs as AdminReviewGetArgs
+import com.bardsoftware.sqool.contest.admin.ReviewGetHandler as AdminReviewGetHandler
 
 typealias SessionProvider = (create: Boolean) -> Session?
 
@@ -186,7 +186,7 @@ fun main(args: Array<String>) {
   val assessor = if (flags.taskQueue == "") {
     AssessorApiVoid()
   } else {
-    AssessorPubSub("assessment-tasks") {
+    AssessorPubSub(flags.taskQueue) {
       ChallengeHandler().handleAssessmentResponse(it)
     }
   }
