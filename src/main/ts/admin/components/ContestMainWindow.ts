@@ -50,9 +50,9 @@ export default class ContestMainWindow extends Vue {
     this.visibleComponent = 'contests';
   }
 
-  public showReviewPage(userId: number, taskId: number, variantId: number) {
+  public showReviewPage(userId: number, taskId: number, variantId: number, contestCode: string) {
     this.hideChildren();
-    this.reviewPage().show(userId, taskId, variantId);
+    this.reviewPage().show(userId, taskId, variantId, contestCode);
   }
 
   @Provide()

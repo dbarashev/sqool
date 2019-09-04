@@ -61,7 +61,7 @@ class ChallengeHandler {
       UserStorage.exec {
         val user = findUser(userName) ?: return@exec
         val variantId = user.getAssignedVariant(contestId) ?: return@exec
-        user.recordAttempt(taskId, variantId, it)
+        user.recordAttempt(taskId, variantId, contestId, it)
       }
     }
     return http.redirect("/me?awaitTesting=true")

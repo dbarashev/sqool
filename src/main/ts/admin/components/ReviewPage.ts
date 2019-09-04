@@ -12,6 +12,7 @@ export default class ReviewPage extends Vue {
   public taskId = -1;
   public userId = -1;
   public variantId = -1;
+  public contestCode = "";
 
   public getAttempt() {
     const markdown = this.$refs.taskMarkdown as TaskMarkdown;
@@ -21,6 +22,7 @@ export default class ReviewPage extends Vue {
       data: {
         task_id: this.taskId,
         variant_id: this.variantId,
+        contest_code: this.contestCode,
         user_id: this.userId,
       },
     }).done((attempt) => {
@@ -39,6 +41,7 @@ export default class ReviewPage extends Vue {
       data: {
         task_id: this.taskId,
         variant_id: this.variantId,
+        contest_code: this.contestCode,
         user_id: this.userId,
       },
     }).done((review) => {
@@ -57,6 +60,7 @@ export default class ReviewPage extends Vue {
       data: {
         task_id: this.taskId,
         variant_id: this.variantId,
+        contest_code: this.contestCode,
         user_id: this.userId,
         solution_review: markdown.textValue,
       },
@@ -70,10 +74,11 @@ export default class ReviewPage extends Vue {
     this.$el.setAttribute('hidden', 'true');
   }
 
-  public show(userId: number, taskId: number, variantId: number) {
+  public show(userId: number, taskId: number, variantId: number, contestCode: string) {
     this.userId = userId;
     this.taskId = taskId;
     this.variantId = variantId;
+    this.contestCode = contestCode;
     this.getLastReview();
     this.$el.removeAttribute('hidden');
   }

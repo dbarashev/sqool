@@ -50,6 +50,6 @@ export default class TaskMainWindow extends Vue {
 
   public showReviewPage(userId: number, taskId: number) {
     this.hideChildren();
-    this.reviewPage().show(userId, taskId, -1);
+    this.reviewPage().show(userId, taskId, -1, "");
   }
 }

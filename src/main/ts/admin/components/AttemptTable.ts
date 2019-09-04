@@ -27,6 +27,6 @@ export default class AttemptTable extends Vue {
   }
 
   public showReviewPage(attempt: Attempt) {
-    this.contestMainWindow().showReviewPage(this.userId, attempt.task_id, attempt.variant_id);
+    this.contestMainWindow().showReviewPage(this.userId, attempt.task_id, attempt.variant_id, this.contestCode);
   }
 }

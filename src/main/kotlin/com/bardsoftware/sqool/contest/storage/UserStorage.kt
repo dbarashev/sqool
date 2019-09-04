@@ -334,12 +334,13 @@ class User(val entity: UserEntity, val storage: UserStorage) {
    * is being tested now. Removes previously saved assessment details, if any, and sets attempt
    * status to "testing"
    */
-  fun recordAttempt(taskId: Int, variantId: Int, attemptId: String): Boolean {
-    return storage.procedure("SELECT Contest.StartAttemptTesting(?, ?, ?, ?)") {
+  fun recordAttempt(taskId: Int, variantId: Int, contestCode: String, attemptId: String): Boolean {
+    return storage.procedure("SELECT Contest.StartAttemptTesting(?, ?, ?, ?, ?)") {
       setInt(1, this@User.id)
       setInt(2, taskId)
       setInt(3, variantId)
-      setString(4, attemptId)
+      setString(4, contestCode)
+      setString(5, attemptId)
       execute()
     }
   }

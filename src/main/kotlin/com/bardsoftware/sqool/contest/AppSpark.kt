@@ -278,6 +278,7 @@ fun main(args: Array<String>) {
       GET("/admin/submission/get" BY adminSubmissionGetHandler ARGS mapOf(
           "task_id" to SubmissionGetArgs::task_id,
           "variant_id" to SubmissionGetArgs::variant_id,
+          "contest_code" to SubmissionGetArgs::contest_code,
           "user_id" to SubmissionGetArgs::user_id,
           "reviewer_id" to SubmissionGetArgs::reviewer_id
       ))
@@ -298,11 +299,13 @@ fun main(args: Array<String>) {
       GET("/admin/review/get" BY adminReviewGetHandler ARGS mapOf(
           "task_id" to AdminReviewGetArgs::task_id,
           "variant_id" to AdminReviewGetArgs::variant_id,
+          "contest_code" to AdminReviewGetArgs::contest_code,
           "user_id" to AdminReviewGetArgs::user_id
       ))
       POST("/admin/review/save" BY adminReviewSaveHandler ARGS mapOf(
           "task_id" to ReviewSaveArgs::task_id,
           "variant_id" to ReviewSaveArgs::variant_id,
+          "contest_code" to ReviewSaveArgs::contest_code,
           "user_id" to ReviewSaveArgs::user_id,
           "solution_review" to ReviewSaveArgs::solution_review
       ))

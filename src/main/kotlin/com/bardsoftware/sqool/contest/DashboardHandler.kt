@@ -106,7 +106,8 @@ class ReviewGetHandler : DashboardHandler<ReviewGetArgs>() {
     val reviewRow = SolutionReview.select {
       (SolutionReview.user_id eq user.id) and
       (SolutionReview.task_id eq argValues.task_id.toInt()) and
-      (SolutionReview.variant_id eq assignedVariant)
+      (SolutionReview.variant_id eq assignedVariant) and
+      (SolutionReview.contest_code eq argValues.contest_code)
     }.toList()
     val reviews = reviewRow.joinToString("\n\n") { row -> row[SolutionReview.solution_review] }
     http.json(reviews)
