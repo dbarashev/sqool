@@ -42,6 +42,7 @@ export default class AvailableContestsDropdown extends Vue {
 
   public mounted() {
     this.refresh();
+    this.loadRecentContest();
   }
 
   public onContestChange(contestOption: ContestOption) {
@@ -56,6 +57,16 @@ export default class AvailableContestsDropdown extends Vue {
       };
       this.variantChooser().show(contest, onVariantChoice, this.onFailure);
     }
+  }
+
+  public loadRecentContest() {
+    $.ajax({
+      url: '/contest/recent',
+    }).done((contest: ContestOption | null) => {
+      if (contest) {
+        this.onContestChange(contest);
+      }
+    })
   }
 
   private loadTasks = (contest: Contest) => {

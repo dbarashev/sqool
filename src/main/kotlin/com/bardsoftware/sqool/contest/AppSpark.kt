@@ -320,6 +320,7 @@ fun main(args: Array<String>) {
           "task_id" to ReviewGetArgs::task_id
       ))
       GET("/contest/available/all" BY availableContestAllHandler)
+      GET("/contest/recent" BY ContestRecentHandler())
       GET("/contest/attempts" BY ContestAttemptsHandler() ARGS mapOf(
           "contest_code" to ContestAttemptsArgs::contest_code
       ))

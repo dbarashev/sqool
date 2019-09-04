@@ -51,6 +51,14 @@ class AvailableContestAllHandler : DashboardHandler<RequestArgs>() {
   }
 }
 
+class ContestRecentHandler : DashboardHandler<RequestArgs>() {
+  override fun args() = RequestArgs()
+
+  override fun handle(http: HttpApi, argValues: RequestArgs) = withUser(http) { user ->
+    user.recentContest()?.let { http.json(it) } ?: http.ok()
+  }
+}
+
 data class ContestAcceptArgs(var contest_code: String, var variant_id: String) : RequestArgs()
 
 class ContestAcceptHandler : DashboardHandler<ContestAcceptArgs>() {
@@ -89,7 +97,7 @@ class ContestAttemptsHandler : DashboardHandler<ContestAttemptsArgs>() {
   override fun handle(http: HttpApi, argValues: ContestAttemptsArgs) = withUserContest(http, argValues.contest_code) { user, rowUserContest ->
     val assignedVariant = rowUserContest[AvailableContests.assigned_variant_id]
     if (assignedVariant != null) {
-      return@withUserContest http.json(user.getVariantAttempts(assignedVariant))
+      return@withUserContest http.json(user.getVariantAttempts(assignedVariant, argValues.contest_code))
     }
     http.error(400, "No variant chosen")
   }
