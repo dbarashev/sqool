@@ -122,7 +122,7 @@ private class CodeTester(
 
   init {
     with(flags) {
-      dataSource.serverName = postgresQaContainer
+      dataSource.serverName = postgresQaContainer.ifEmpty { postgresAddress }
       dataSource.portNumber = postgresPort.toInt()
       dataSource.user = postgresUser
       dataSource.password = postgresPassword
