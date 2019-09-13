@@ -45,9 +45,10 @@ class StaticCodeTester(
 
     val hostConfig = HostConfig.builder()
         .volumesFrom(sqlContainer.id())
-        .networkMode("host")
+        .links("${flags.postgresQaContainer}:postgres")
         .build()
-    val postgresUri = with(flags) { "postgres://$postgresUser:$postgresPassword@$postgresAddress:$postgresPort" }
+    val postgresUri = with(flags) { "postgres://$postgresUser:$postgresPassword@postgres:$postgresPort"
+    }
     val command = listOf("bash", "-c", "psql $postgresUri -f '/workspace/$contest/init.sql'")
     docker.pull("postgres:10")
     val containerConfig = ContainerConfig.builder()
