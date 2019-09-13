@@ -45,7 +45,7 @@ class ContestImageManagerTest {
         "/workspace", "/workspace/hse2019", "/workspace/hse2019/cw1", "/workspace/hse2019/init.sql",
         "/workspace/hse2019/schema", "/workspace/hse2019/cw1/Task3-dynamic.sql", "/workspace/hse2019/cw1/static.sql"
     )
-    checkFileStructure(expectedFolders)
+    checkFileStructure("hse2019", expectedFolders)
   }
 
   @Test
@@ -69,7 +69,7 @@ class ContestImageManagerTest {
         "/workspace/hse2019/cw1/Task1-dynamic.sql", "/workspace/hse2019/cw1/Task2-dynamic.sql",
         "/workspace/hse2019/cw2/Task1-dynamic.sql"
     )
-    checkFileStructure(expectedFolders)
+    checkFileStructure("hse2019", expectedFolders)
   }
 
   @Test
@@ -231,8 +231,8 @@ class ContestImageManagerTest {
     assertEquals(ImageCheckResult.FAILED, result)
   }
 
-  private fun checkFileStructure(expectedFolders: List<String>) {
-    val process = Runtime.getRuntime().exec("docker run --rm contest-image find /workspace")
+  private fun checkFileStructure(imageName: String, expectedFolders: List<String>) {
+    val process = Runtime.getRuntime().exec("docker run --rm $imageName find /workspace")
     val folders = process.inputStream.bufferedReader()
         .use { it.readText() }
         .lines()
