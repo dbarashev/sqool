@@ -44,14 +44,14 @@ class StaticCodeTester(
     val sqlContainer = docker.createContainer(sqlContainerConfig)
 
     var hostConfigBuilder = HostConfig.builder().volumesFrom(sqlContainer.id())
-    if (flags.postgresQaContainer != "") {
-      hostConfigBuilder = hostConfigBuilder.links("${flags.postgresQaContainer}:postgres")
+    hostConfigBuilder = if (flags.postgresQaContainer.isNullOrEmpty()) {
+      hostConfigBuilder.networkMode("host")
     } else {
-      hostConfigBuilder = hostConfigBuilder.networkMode("host")
+      hostConfigBuilder.links("${flags.postgresQaContainer}:postgres")
     }
     val hostConfig = hostConfigBuilder.build()
     val postgresUri = with(flags) {
-      if (postgresQaContainer == "") {
+      if (postgresQaContainer.isNullOrEmpty()) {
         "postgres://$postgresUser:$postgresPassword@$postgresAddress:$postgresPort"
       } else {
         "postgres://$postgresUser:$postgresPassword@postgres:$postgresPort"
