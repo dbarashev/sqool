@@ -50,12 +50,14 @@ class StaticCodeTester(
       hostConfigBuilder.links("${flags.postgresQaContainer}:postgres")
     }
     val hostConfig = hostConfigBuilder.build()
+
+    val pgAddress = if (flags.postgresQaContainer.isNullOrEmpty()) {
+      flags.postgresAddress
+    } else {
+      "postgres"
+    }
     val postgresUri = with(flags) {
-      if (postgresQaContainer.isNullOrEmpty()) {
-        "postgres://$postgresUser:$postgresPassword@$postgresAddress:$postgresPort"
-      } else {
-        "postgres://$postgresUser:$postgresPassword@postgres:$postgresPort"
-      }
+      "postgres://$postgresUser:$postgresPassword@$pgAddress:$postgresPort"
     }
     val command = listOf("bash", "-c", "psql $postgresUri -f '/workspace/$contest/init.sql'")
     docker.pull("postgres:10")

@@ -189,7 +189,7 @@ fun main(args: Array<String>) {
     jdbcUrl = "jdbc:postgresql://${flags.postgresAddress}:${flags.postgresPort}/${flags.postgresDatabase.ifEmpty { flags.postgresUser }}"
   }
   Database.connect(dataSource)
-  val assessor = if (flags.pubTasksTopic == "") {
+  val assessor = if (flags.pubTasksTopic.isBlank()) {
     AssessorApiVoid()
   } else {
     AssessorPubSub(flags.pubTasksTopic, flags.subResultsSubscription) {
