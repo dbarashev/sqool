@@ -13,8 +13,9 @@ import com.bardsoftware.sqool.contest.Flags
 import com.nhaarman.mockito_kotlin.doReturn
 import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.whenever
-import org.junit.jupiter.api.*
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
 import java.io.ByteArrayOutputStream
 
 class ContestImageManagerTest {
@@ -36,7 +37,7 @@ class ContestImageManagerTest {
     val spec = TaskResultColumn("id", SqlDataType.INT)
     val task = SingleColumnTask("Task3", "SELECT 11;", spec)
     val variant = Variant("cw1", listOf(task), emptyList())
-    val contest = Contest("contest-image", "hse2019", listOf(variant))
+    val contest = Contest(name = "contest-image", code = "hse2019", variants = listOf(variant))
     val imageManager = ContestImageManager(contest, flags)
     imageManager.createImage()
 
@@ -44,7 +45,7 @@ class ContestImageManagerTest {
         "/workspace", "/workspace/hse2019", "/workspace/hse2019/cw1", "/workspace/hse2019/init.sql",
         "/workspace/hse2019/schema", "/workspace/hse2019/cw1/Task3-dynamic.sql", "/workspace/hse2019/cw1/static.sql"
     )
-    checkFileStructure(expectedFolders)
+    checkFileStructure("hse2019", expectedFolders)
   }
 
   @Test
@@ -57,7 +58,7 @@ class ContestImageManagerTest {
 
     val secondVariantTasks = listOf(ScalarValueTask("Task1", "", SqlDataType.INT))
     val secondVariant = Variant("cw2", secondVariantTasks, listOf(mockSchema("Second", "")))
-    val contest = Contest("contest-image", "hse2019", listOf(firstVariant, secondVariant))
+    val contest = Contest(name = "contest-image", code = "hse2019", variants = listOf(firstVariant, secondVariant))
     val imageManager = ContestImageManager(contest, flags)
     imageManager.createImage()
 
@@ -68,7 +69,7 @@ class ContestImageManagerTest {
         "/workspace/hse2019/cw1/Task1-dynamic.sql", "/workspace/hse2019/cw1/Task2-dynamic.sql",
         "/workspace/hse2019/cw2/Task1-dynamic.sql"
     )
-    checkFileStructure(expectedFolders)
+    checkFileStructure("hse2019", expectedFolders)
   }
 
   @Test
@@ -77,7 +78,7 @@ class ContestImageManagerTest {
     val task = SingleColumnTask("Task3", "SELECT 11 LIMIT 0;", spec)
     val schema = mockSchema("schema3", "CREATE TABLE Contest(code TEXT NOT NULL PRIMARY KEY);")
     val variants = listOf(Variant("cw3", listOf(task), listOf(schema)))
-    val contest = Contest("contest-image", "hse2019", variants)
+    val contest = Contest(name = "contest-image", code = "hse2019", variants = variants)
     val imageManager = ContestImageManager(contest, flags)
     imageManager.createImage()
     val result = imageManager.checkImage(outputStream)
@@ -117,7 +118,7 @@ class ContestImageManagerTest {
     val secondVariant = Variant("cw5", listOf(task), listOf(schema))
 
     val variants = listOf(firstVariant, secondVariant)
-    val contest = Contest("contest-image", "hse2019", variants)
+    val contest = Contest(name = "contest-image", code = "hse2019", variants = variants)
     val imageManager = ContestImageManager(contest, flags)
     imageManager.createImage()
     val result = imageManager.checkImage(outputStream)
@@ -139,7 +140,7 @@ class ContestImageManagerTest {
     val task = SingleColumnTask("Task3", "SELECTY 11", spec)
     val schema = mockSchema("schema3", "CREATE TABLE Contest(code TEX NOT NULL PRIMARY KEY);")
     val variants = listOf(Variant("cw2", listOf(task), listOf(schema)))
-    val contest = Contest("contest-image", "hse2019", variants)
+    val contest = Contest(name = "My HSE Contest", code = "hse2019", variants = variants)
     val imageManager = ContestImageManager(contest, flags)
     imageManager.createImage()
     val result = imageManager.checkImage(outputStream)
@@ -184,7 +185,7 @@ class ContestImageManagerTest {
     val secondVariant = Variant("cw52", listOf(task), emptyList())
 
     val variants = listOf(firstVariant, secondVariant)
-    val contest = Contest("contest-image", "hse2019", variants)
+    val contest = Contest(name = "contest-image", code = "hse2019", variants = variants)
     val imageManager = ContestImageManager(contest, flags)
     imageManager.createImage()
     val result = imageManager.checkImage(outputStream)
@@ -230,8 +231,8 @@ class ContestImageManagerTest {
     assertEquals(ImageCheckResult.FAILED, result)
   }
 
-  private fun checkFileStructure(expectedFolders: List<String>) {
-    val process = Runtime.getRuntime().exec("docker run --rm contest-image find /workspace")
+  private fun checkFileStructure(imageName: String, expectedFolders: List<String>) {
+    val process = Runtime.getRuntime().exec("docker run --rm $imageName find /workspace")
     val folders = process.inputStream.bufferedReader()
         .use { it.readText() }
         .lines()

@@ -14,6 +14,7 @@ class StaticCodeTester(
     private val flags: Flags
 ) {
   fun test(errorStream: PrintWriter): ImageCheckResult {
+    println("Testing $image $contest ")
     val (result, output) = runPsql()
     return if (result.statusCode() == 0L) {
       val errors = output.lines()
@@ -42,11 +43,22 @@ class StaticCodeTester(
         .build()
     val sqlContainer = docker.createContainer(sqlContainerConfig)
 
-    val hostConfig = HostConfig.builder()
-        .volumesFrom(sqlContainer.id())
-        .networkMode("host")
-        .build()
-    val postgresUri = with(flags) { "postgres://$postgresUser:$postgresPassword@$postgresAddress:$postgresPort" }
+    var hostConfigBuilder = HostConfig.builder().volumesFrom(sqlContainer.id())
+    hostConfigBuilder = if (flags.postgresQaContainer.isNullOrEmpty()) {
+      hostConfigBuilder.networkMode("host")
+    } else {
+      hostConfigBuilder.links("${flags.postgresQaContainer}:postgres")
+    }
+    val hostConfig = hostConfigBuilder.build()
+
+    val pgAddress = if (flags.postgresQaContainer.isNullOrEmpty()) {
+      flags.postgresAddress
+    } else {
+      "postgres"
+    }
+    val postgresUri = with(flags) {
+      "postgres://$postgresUser:$postgresPassword@$pgAddress:$postgresPort"
+    }
     val command = listOf("bash", "-c", "psql $postgresUri -f '/workspace/$contest/init.sql'")
     docker.pull("postgres:10")
     val containerConfig = ContainerConfig.builder()

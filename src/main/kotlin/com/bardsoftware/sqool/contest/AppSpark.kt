@@ -2,8 +2,6 @@ package com.bardsoftware.sqool.contest
 
 import com.bardsoftware.sqool.codegen.docker.ContestImageManager
 import com.bardsoftware.sqool.contest.admin.*
-import com.bardsoftware.sqool.contest.admin.ReviewGetArgs as AdminReviewGetArgs
-import com.bardsoftware.sqool.contest.admin.ReviewGetHandler as AdminReviewGetHandler
 import com.google.common.io.ByteStreams
 import com.google.common.net.HttpHeaders
 import com.google.common.net.MediaType
@@ -17,11 +15,14 @@ import spark.Response
 import spark.Session
 import spark.kotlin.ignite
 import spark.template.freemarker.FreeMarkerEngine
+import java.io.File
 import java.util.*
 import java.util.logging.Level
 import java.util.logging.Logger
 import javax.servlet.MultipartConfigElement
 import kotlin.reflect.KClass
+import com.bardsoftware.sqool.contest.admin.ReviewGetArgs as AdminReviewGetArgs
+import com.bardsoftware.sqool.contest.admin.ReviewGetHandler as AdminReviewGetHandler
 
 typealias SessionProvider = (create: Boolean) -> Session?
 
@@ -177,16 +178,21 @@ class Http(
  */
 fun main(args: Array<String>) {
   val flags = Flags(ArgParser(args, ArgParser.Mode.POSIX))
+  if (flags.pubTasksTopic.isNotEmpty() || flags.subResultsSubscription.isNotEmpty()) {
+    if (!File(System.getenv("GOOGLE_APPLICATION_CREDENTIALS")).exists()) {
+      throw IllegalStateException("Please set GOOGLE_APPLICATION_CREDENTIALS if you want to use PubSub")
+    }
+  }
   val dataSource = HikariDataSource().apply {
     username = flags.postgresUser
     password = flags.postgresPassword
     jdbcUrl = "jdbc:postgresql://${flags.postgresAddress}:${flags.postgresPort}/${flags.postgresDatabase.ifEmpty { flags.postgresUser }}"
   }
   Database.connect(dataSource)
-  val assessor = if (flags.taskQueue == "") {
+  val assessor = if (flags.pubTasksTopic.isBlank()) {
     AssessorApiVoid()
   } else {
-    AssessorPubSub("assessment-tasks") {
+    AssessorPubSub(flags.pubTasksTopic, flags.subResultsSubscription) {
       ChallengeHandler().handleAssessmentResponse(it)
     }
   }
@@ -324,6 +330,14 @@ fun main(args: Array<String>) {
           "contest_code" to ContestAcceptArgs::contest_code,
           "variant_id" to ContestAcceptArgs::variant_id
       ))
+      POST("/submit.do" BY SubmitDoHandler(assessor) ARGS mapOf(
+          "contest-id" to SubmitDoArgs::contestCode,
+          "task-id" to SubmitDoArgs::taskId,
+          "task-name" to SubmitDoArgs::taskName,
+          "variant-id" to SubmitDoArgs::variantId,
+          "variant-name" to SubmitDoArgs::variantName,
+          "solution" to SubmitDoArgs::submissionText
+      ))
     }
     get("/login") {
       freemarker.render(ModelAndView(emptyMap<String, String>(), "login.ftl"))
@@ -352,13 +366,13 @@ fun main(args: Array<String>) {
       challengeHandler.handleDoTry(Http(request, response, { session() }, freemarker))()
     }
 
-    get("/submit") {
-      challengeHandler.handleSubmissionPage(Http(request, response, { session() }, freemarker), flags.contestId)()
-    }
+//    get("/submit") {
+//      challengeHandler.handleSubmissionPage(Http(request, response, { session() }, freemarker), flags.contestId)()
+//    }
 
-    post("/submit.do") {
-      challengeHandler.handleSubmit(Http(request, response, { session() }, freemarker), assessor)()
-    }
+//    post("/submit.do") {
+//      challengeHandler.handleSubmit(Http(request, response, { session() }, freemarker), assessor)()
+//    }
 
     get("/getAttemptStatus") {
       challengeHandler.handleAttemptStatus(Http(request, response, { session() }, freemarker))()

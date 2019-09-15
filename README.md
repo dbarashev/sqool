@@ -30,7 +30,7 @@ docker run --rm --link sqool-frontend_postgres:postgres -v $(pwd):/workspace pos
 * Run SQooL Frontend server. Default values of command line arguments point to PostgreSQL running on localhost:5432 with
 user `postgres` and no password:
 ```
-/opt/gradle-5.0/bin/gradle run --args='--contest au'
+/opt/gradle-5.0/bin/gradle run
 ```
 
 If your PostgreSQL setup is different, pass appropriate values to command line arguments.
