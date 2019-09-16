@@ -12,7 +12,11 @@
                     <form>
                         <div class="form-group text-left">
                             <label class="bmd-label-static" for="error-message">Сообщение об ошибке</label>
-                            <pre id="error-message">{{ attempt.errorMsg }}</pre>
+                            <div id="error-message">
+                                <div v-for="line in errorLines()">
+                                    {{ line }}
+                                </div>
+                            </div>
                         </div>
                         <div class="form-group">
                             <div class="text-left">

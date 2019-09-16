@@ -264,6 +264,7 @@ class User(val entity: UserEntity, val storage: UserStorage) {
    */
   fun getVariantAttempts(variantId: Int): List<TaskAttemptEntity> = transaction {
     AttemptView.select { (AttemptView.attemptUserId eq this@User.id) and (AttemptView.variantId eq variantId) }
+        .orderBy(AttemptView.name)
         .map(TaskAttemptEntity.Factory::fromRow)
   }
 
@@ -334,12 +335,13 @@ class User(val entity: UserEntity, val storage: UserStorage) {
    * is being tested now. Removes previously saved assessment details, if any, and sets attempt
    * status to "testing"
    */
-  fun recordAttempt(taskId: Int, variantId: Int, attemptId: String): Boolean {
-    return storage.procedure("SELECT Contest.StartAttemptTesting(?, ?, ?, ?)") {
+  fun recordAttempt(taskId: Int, variantId: Int, attemptId: String, attemptText: String): Boolean {
+    return storage.procedure("SELECT Contest.StartAttemptTesting(?, ?, ?, ?, ?)") {
       setInt(1, this@User.id)
       setInt(2, taskId)
       setInt(3, variantId)
       setString(4, attemptId)
+      setString(5, attemptText)
       execute()
     }
   }
