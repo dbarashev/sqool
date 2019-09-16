@@ -454,15 +454,15 @@ $$ LANGUAGE plpgsql;
 -----------------------------------------------------------------------------------------------------------------------
 -- Changes the status of the given _task_id to "testing" for the given user and records attempt identifier which
 -- is opaque value.
-CREATE OR REPLACE FUNCTION StartAttemptTesting(_user_id INT, _task_id INT, _variant_id INT, _contest_code TEXT, _attempt_id TEXT)
+CREATE OR REPLACE FUNCTION StartAttemptTesting(_user_id INT, _task_id INT, _variant_id INT, _contest_code TEXT, _attempt_id TEXT, _attempt_text TEXT)
 RETURNS VOID AS $$
   DELETE FROM Contest.GradingDetails WHERE attempt_id IN (
     SELECT attempt_id
     FROM Contest.Attempt
     WHERE user_id = _user_id AND task_id = _task_id AND variant_id = _variant_id AND contest_code = _contest_code
   );
-
-  UPDATE Contest.Attempt SET status = 'testing', testing_start_ts = NOW(), attempt_id = _attempt_id
+  
+  UPDATE Contest.Attempt SET status = 'testing', testing_start_ts = NOW(), attempt_id = _attempt_id, attempt_text = _attempt_text
   WHERE user_id = _user_id AND task_id = _task_id AND variant_id = _variant_id AND contest_code = _contest_code;
 $$ LANGUAGE SQL;
 
@@ -485,12 +485,13 @@ $$ LANGUAGE SQL;
 -- View which provides data on user submissions
 CREATE OR REPLACE VIEW MyAttempts AS
 SELECT  T.id AS task_id,
+        T.script_id AS schema_id,
         T.name,
         T.difficulty,
         T.score,
         T.description,
         CASE WHEN TR.task_id IS NULL THEN '[]'
-             ELSE json_agg(json_object('{name, type}', ARRAY[col_name, col_type]))::TEXT
+             ELSE json_agg(json_object('{name, type, num}', ARRAY[col_name, col_type, col_num::TEXT]))::TEXT
         END AS signature,
         T.author_id,
         U.nick AS author_nick,

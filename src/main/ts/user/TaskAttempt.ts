@@ -17,16 +17,20 @@ export class Task {
       readonly description: string | null,
       readonly score: number,
       readonly difficulty: number,
+      readonly schemaId: number
   ) {}
 }
 
 export function getTaskSignature(task: Task): string {
-  return (task.signatureJson === null || task.signatureJson.trim() === '')
-      ? ''
-      : JSON.parse(task.signatureJson).map((column: ColumnSpec) => `${column.name} ${column.type}`).join(', ');
+  if (task.signatureJson === null || task.signatureJson.trim() === '') {
+    return '';
+  }
+  const columns: ColumnSpec[] = JSON.parse(task.signatureJson);
+  columns.sort((left: ColumnSpec, right: ColumnSpec): number => parseInt(left.num, 10) - parseInt(right.num, 10));
+  return columns.map((column: ColumnSpec) => `${column.name} ${column.type}`).join(', ');
 }
 
 class ColumnSpec {
-  constructor(readonly name: string, readonly type: string) {}
+  constructor(readonly name: string, readonly type: string, readonly num: string) {}
 }
 
