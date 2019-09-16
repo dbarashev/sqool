@@ -59,7 +59,7 @@ export default class AvailableContestsDropdown extends Vue {
     }
   }
 
-  public loadRecentContest() {
+  private loadRecentContest() {
     $.ajax({
       url: '/contest/recent',
     }).done((contest: ContestOption | null) => {

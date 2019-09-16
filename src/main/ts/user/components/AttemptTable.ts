@@ -39,8 +39,7 @@ export default class AttemptTable extends Vue {
       const review = $.ajax({
         url: '/review/get',
         data: {
-          contest_code: this.contest.contestCode,
-          task_id: attempt.taskEntity.id
+          attempt_id: attempt.attemptId,
         },
       });
       this.taskAttemptProperties().show(attempt, review).then((solution) => {

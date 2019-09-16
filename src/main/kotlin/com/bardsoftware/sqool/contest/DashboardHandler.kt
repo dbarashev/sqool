@@ -6,6 +6,7 @@ import com.bardsoftware.sqool.contest.storage.AvailableContests
 import com.bardsoftware.sqool.contest.storage.User
 import com.bardsoftware.sqool.contest.storage.UserStorage
 import org.jetbrains.exposed.sql.ResultRow
+import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.select
 
@@ -103,21 +104,22 @@ class ContestAttemptsHandler : DashboardHandler<ContestAttemptsArgs>() {
   }
 }
 
-data class ReviewGetArgs(var contest_code: String, var task_id: String) : RequestArgs()
+object ReviewByUser : Table("Contest.ReviewByUser") {
+  val attempt_id = text("attempt_id")
+  val user_id = integer("user_id")
+  val solution_review = text("solution_review")
+}
+
+data class ReviewGetArgs(var attempt_id: String) : RequestArgs()
 
 class ReviewGetHandler : DashboardHandler<ReviewGetArgs>() {
-  override fun args() = ReviewGetArgs("", "")
+  override fun args() = ReviewGetArgs("")
 
-  override fun handle(http: HttpApi, argValues: ReviewGetArgs) = withUserContest(http, argValues.contest_code) { user, rowUserContest ->
-    val assignedVariant = rowUserContest[AvailableContests.assigned_variant_id]
-        ?: return@withUserContest http.error(400, "No variant chosen")
-    val reviewRow = SolutionReview.select {
-      (SolutionReview.user_id eq user.id) and
-      (SolutionReview.task_id eq argValues.task_id.toInt()) and
-      (SolutionReview.variant_id eq assignedVariant) and
-      (SolutionReview.contest_code eq argValues.contest_code)
+  override fun handle(http: HttpApi, argValues: ReviewGetArgs) = withUser(http) { user ->
+    val reviewRow = ReviewByUser.select {
+      (ReviewByUser.user_id eq user.id) and (ReviewByUser.attempt_id eq argValues.attempt_id)
     }.toList()
-    val reviews = reviewRow.joinToString("\n\n") { row -> row[SolutionReview.solution_review] }
+    val reviews = reviewRow.joinToString("\n\n") { row -> row[ReviewByUser.solution_review] }
     http.json(reviews)
   }
 }

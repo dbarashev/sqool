@@ -305,22 +305,22 @@ CREATE TABLE Contest.Attempt(
   PRIMARY KEY(task_id, user_id, variant_id, contest_code)
 );
 CREATE TABLE Contest.GradingDetails(
-  attempt_id TEXT REFERENCES Contest.Attempt(attempt_id) ON UPDATE CASCADE ON DELETE CASCADE,
+  attempt_id TEXT NOT NULL REFERENCES Contest.Attempt(attempt_id) ON UPDATE CASCADE ON DELETE CASCADE,
   error_msg TEXT,
   result_set TEXT
 );
 
 CREATE TABLE Contest.SolutionReview (
-  task_id INT REFERENCES Contest.Task ON UPDATE CASCADE ON DELETE CASCADE,
-  variant_id INT REFERENCES Contest.Variant ON UPDATE CASCADE ON DELETE CASCADE,
-  contest_code TEXT REFERENCES Contest.Contest ON UPDATE CASCADE ON DELETE CASCADE,
-  user_id INT REFERENCES Contest.ContestUser,
+  attempt_id TEXT NOT NULL REFERENCES Contest.Attempt(attempt_id) ON UPDATE CASCADE ON DELETE CASCADE,
   reviewer_id INT REFERENCES Contest.ContestUser,
   solution_review TEXT,
-  PRIMARY KEY(task_id, variant_id, contest_code, user_id, reviewer_id),
-  FOREIGN KEY(task_id, variant_id, contest_code, user_id) REFERENCES Contest.Attempt(task_id, variant_id, contest_code, user_id)
-    ON UPDATE CASCADE ON DELETE CASCADE
+  PRIMARY KEY(attempt_id, reviewer_id)
 );
+
+CREATE OR REPLACE VIEW ReviewByUser AS
+SELECT S.attempt_id, S.solution_review, A.user_id
+FROM Contest.SolutionReview S
+JOIN Contest.Attempt A ON S.attempt_id = A.attempt_id;
 
 ------------------------------------------------------------------------------------------------
 -- This function generates a nickname from a random combination of first name (adjective)
@@ -440,7 +440,8 @@ CREATE OR REPLACE FUNCTION AcceptVariant(_user_id INT, _variant_id INT, _contest
 RETURNS VOID AS $$
 BEGIN
   INSERT INTO Contest.Attempt(user_id, task_id, variant_id, contest_code, status)
-  SELECT _user_id, task_id, _variant_id, _contest_code, 'virgin' FROM Contest.TaskVariant
+  SELECT _user_id, task_id, _variant_id, _contest_code, 'virgin'
+  FROM Contest.TaskVariant
   WHERE variant_id = _variant_id
   ON CONFLICT DO NOTHING;
 END;
@@ -657,6 +658,6 @@ INSERT INTO Contest.Attempt(task_id, user_id, variant_id, contest_code, attempt_
 INSERT INTO Contest.GradingDetails(attempt_id, error_msg, result_set) VALUES
   (2, E'Some error message\nSome error message', '[["col1", "col2", "col3"], {"col1": 42, "col2": "q"}, {"col1": -1, "col2": "t", "col3": 1}]');
 
-INSERT INTO Contest.SolutionReview(task_id, variant_id, contest_code, user_id, solution_review, reviewer_id) VALUES (0, -1, '3', 0, 'review', 0);
+INSERT INTO Contest.SolutionReview(attempt_id, solution_review, reviewer_id) VALUES ('1', 'review', 0);
 
 SELECT AcceptVariant(0, 2, '3');

@@ -5,7 +5,7 @@ import {Task, TaskAttempt} from '../TaskAttempt';
 export default class FailureDetailsModal extends Vue {
   private columnNames: any[] = [];
   private rows: any[] = [];
-  private attempt = new TaskAttempt(new Task(-1, '', null, null, -1, -1), 0, null, null, null);
+  private attempt = new TaskAttempt(null, new Task(-1, '', null, null, -1, -1), 0, null, null, null);
 
   public show(attempt: TaskAttempt) {
     $('#failure-details').modal();

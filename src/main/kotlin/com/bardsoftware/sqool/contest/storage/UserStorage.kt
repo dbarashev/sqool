@@ -11,6 +11,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.DateTime
 import java.math.BigDecimal
 import java.sql.PreparedStatement
+import java.sql.ResultSet
 import java.sql.Types
 import java.util.Random
 
@@ -192,12 +193,26 @@ data class Contest(
       val contestName = attemptRow[AvailableContests.contest_name]
       val chosenVariantId = attemptRow[AvailableContests.assigned_variant_id]
 
-      val variants = ObjectMapper().readValue(attemptRow[AvailableContests.variants_json_array], object : TypeReference<List<Variant>>() {})
+      val variants = parseVariantsArray(attemptRow[AvailableContests.variants_json_array])
       val chosenVariant = chosenVariantId?.let { id ->
         variants.find { it.id == id }
       }
       return Contest(contestCode, contestName, attemptRow[AvailableContests.variant_choice].name, variants, chosenVariant)
     }
+
+    fun fromResultSet(resultSet: ResultSet): Contest {
+      val contestCode = resultSet.getString("contest_code")
+      val contestName = resultSet.getString("contest_name")
+      val chosenVariantId = resultSet.getInt("assigned_variant_id")
+      val variantChoice = resultSet.getString("variant_choice")
+
+      val variants = parseVariantsArray(resultSet.getString("variants_json_array"))
+      val chosenVariant = if (chosenVariantId == 0) null else variants.find { it.id == chosenVariantId }
+      return Contest(contestCode, contestName, variantChoice, variants, chosenVariant)
+    }
+
+    private fun parseVariantsArray(array: String): List<Variant> =
+        ObjectMapper().readValue(array, object : TypeReference<List<Variant>>() {})
   }
 }
 
@@ -255,15 +270,27 @@ class User(val entity: UserEntity, val storage: UserStorage) {
    * Returns the last contest that the user submitted to, or null if the user has never made any submits.
    */
   fun recentContest(): Contest? = transaction {
-    val contestRow = MyAttempts.select { MyAttempts.attemptUserId eq entity.id }
-        .andWhere { MyAttempts.testingStartTs.neq<DateTime?>(null) }
-        .maxWith(Comparator { r1, r2 -> r1[MyAttempts.testingStartTs]!!.compareTo(r2[MyAttempts.testingStartTs]!!) })
-        ?: return@transaction null
-    val contest = AvailableContests.select {
-      (AvailableContests.user_id eq entity.id) and (AvailableContests.contest_code eq contestRow[MyAttempts.contestCode])
-    }.map(Contest.Factory::fromRow).toList()
+    val query = """
+      SELECT C.* FROM AvailableContests C 
+      JOIN MyAttempts A USING(user_id, contest_code)
+      WHERE A.user_id = ? 
+      AND testing_start_ts = (
+        SELECT MAX(testing_start_ts) FROM MyAttempts WHERE user_id = ?
+      )
+      """.trimIndent()
+    val contest = mutableListOf<Contest>()
+    storage.procedure(query) {
+      setInt(1, id)
+      setInt(2, id)
+      executeQuery().use {
+        while(it.next()) {
+          contest.add(Contest.fromResultSet(it))
+        }
+      }
+    }
+
     when (contest.size) {
-      0 -> throw Exception("Attempt row references to not existing contest")
+      0 -> null
       1 -> contest.first()
       else -> throw Exception("Get more than one available contest by (user_id, contest_code)")
     }

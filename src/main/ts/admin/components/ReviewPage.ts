@@ -9,10 +9,7 @@ import AlertDialog from "../../components/AlertDialog";
 })
 export default class ReviewPage extends Vue {
   @Inject() private readonly alertDialog!: () => AlertDialog;
-  public taskId = -1;
-  public userId = -1;
-  public variantId = -1;
-  public contestCode = "";
+  public attemptId = "";
 
   public getAttempt() {
     const markdown = this.$refs.taskMarkdown as TaskMarkdown;
@@ -20,10 +17,7 @@ export default class ReviewPage extends Vue {
       url: '/admin/submission/get',
       method: 'GET',
       data: {
-        task_id: this.taskId,
-        variant_id: this.variantId,
-        contest_code: this.contestCode,
-        user_id: this.userId,
+        attempt_id: this.attemptId,
       },
     }).done((attempt) => {
       markdown.textValue = attempt.attempt_text;
@@ -39,10 +33,7 @@ export default class ReviewPage extends Vue {
       url: '/admin/review/get',
       method: 'GET',
       data: {
-        task_id: this.taskId,
-        variant_id: this.variantId,
-        contest_code: this.contestCode,
-        user_id: this.userId,
+        attempt_id: this.attemptId,
       },
     }).done((review) => {
       markdown.textValue = review.review_text;
@@ -58,10 +49,7 @@ export default class ReviewPage extends Vue {
       url: '/admin/review/save',
       method: 'POST',
       data: {
-        task_id: this.taskId,
-        variant_id: this.variantId,
-        contest_code: this.contestCode,
-        user_id: this.userId,
+        attempt_id: this.attemptId,
         solution_review: markdown.textValue,
       },
     }).fail((xhr) => {
@@ -74,11 +62,8 @@ export default class ReviewPage extends Vue {
     this.$el.setAttribute('hidden', 'true');
   }
 
-  public show(userId: number, taskId: number, variantId: number, contestCode: string) {
-    this.userId = userId;
-    this.taskId = taskId;
-    this.variantId = variantId;
-    this.contestCode = contestCode;
+  public show(attemptId: string) {
+    this.attemptId = attemptId;
     this.getLastReview();
     this.$el.removeAttribute('hidden');
   }
