@@ -30,8 +30,10 @@ export default class AttemptTable extends Vue {
         return 'Опять нет';
       case 3:
         return 'Да что ж такое!';
-      default:
+      case 5:
         return 'Это фиаско, друг!';
+      default:
+        return `Никогда такого не было, и вот опять! И уже в ${count}-й раз.`;
     }
   }
 

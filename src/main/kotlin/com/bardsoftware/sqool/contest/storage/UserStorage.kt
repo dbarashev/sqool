@@ -34,7 +34,8 @@ data class TaskAttemptEntity(
             description = attemptRow[AttemptView.description],
             signatureJson = attemptRow[AttemptView.signature],
             difficulty = attemptRow[AttemptView.difficulty],
-            authorName = attemptRow[AttemptView.author]
+            authorName = attemptRow[AttemptView.author],
+            schemaId = attemptRow[AttemptView.schemaId]
         ),
         userId = attemptRow[AttemptView.attemptUserId],
         status = attemptRow[AttemptView.status],
@@ -55,7 +56,8 @@ data class TaskEntity(
     var description: String?,
     var score: Int,
     var difficulty: Int,
-    var authorName: String
+    var authorName: String,
+    var schemaId: Int?
 )
 
 data class AuthorChallengeEntity(
@@ -95,6 +97,7 @@ object TaskTable : Table("Contest.Task") {
   var score = integer("score")
   var difficulty = integer("difficulty")
   var authorId = integer("author_id")
+  var schemaId = integer("schema_id").nullable()
 }
 
 /**
@@ -102,6 +105,7 @@ object TaskTable : Table("Contest.Task") {
  */
 object AttemptView : Table("Contest.MyAttempts") {
   var taskId = integer("task_id")
+  var schemaId = integer("schema_id")
   var name = text("name")
   var description = text("description")
   var signature = text("signature")
@@ -264,6 +268,7 @@ class User(val entity: UserEntity, val storage: UserStorage) {
    */
   fun getVariantAttempts(variantId: Int): List<TaskAttemptEntity> = transaction {
     AttemptView.select { (AttemptView.attemptUserId eq this@User.id) and (AttemptView.variantId eq variantId) }
+        .orderBy(AttemptView.name)
         .map(TaskAttemptEntity.Factory::fromRow)
   }
 
@@ -334,12 +339,13 @@ class User(val entity: UserEntity, val storage: UserStorage) {
    * is being tested now. Removes previously saved assessment details, if any, and sets attempt
    * status to "testing"
    */
-  fun recordAttempt(taskId: Int, variantId: Int, attemptId: String): Boolean {
-    return storage.procedure("SELECT Contest.StartAttemptTesting(?, ?, ?, ?)") {
+  fun recordAttempt(taskId: Int, variantId: Int, attemptId: String, attemptText: String): Boolean {
+    return storage.procedure("SELECT Contest.StartAttemptTesting(?, ?, ?, ?, ?)") {
       setInt(1, this@User.id)
       setInt(2, taskId)
       setInt(3, variantId)
       setString(4, attemptId)
+      setString(5, attemptText)
       execute()
     }
   }
@@ -415,7 +421,8 @@ class UserStorage(val txn: Transaction) {
           signatureJson = taskRow[TaskTable.signature],
           score = taskRow[TaskTable.score],
           difficulty = taskRow[TaskTable.difficulty],
-          authorName = ""
+          authorName = "",
+          schemaId = taskRow[TaskTable.schemaId]
       ))
     }.firstOrNull()
   }

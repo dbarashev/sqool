@@ -49,6 +49,7 @@ interface HttpApi {
   fun <T : Any> json(model: Any, view: KClass<T>): HttpResponse
   fun binaryBase64(bytes: ByteArray): HttpResponse
   fun binaryRaw(bytes: ByteArray): HttpResponse
+  fun text(body: String): HttpResponse
 
   fun redirect(location: String): HttpResponse
   fun error(status: Int, message: String? = null, cause: Throwable? = null): HttpResponse
@@ -117,6 +118,10 @@ class ChainedHttpApi(val delegate: HttpApi) : HttpApi {
 
   override fun binaryRaw(bytes: ByteArray): HttpResponse {
     return delegate.binaryRaw(bytes).also { chained.add(it) }
+  }
+
+  override fun text(body: String): HttpResponse {
+    return delegate.text(body).also { chained.add(it) }
   }
 
   override fun render(template: String, model: Any): HttpResponse {

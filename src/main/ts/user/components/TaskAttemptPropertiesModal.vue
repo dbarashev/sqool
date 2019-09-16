@@ -34,6 +34,10 @@
                                     <label class="bmd-label-static" for="task-result">Результат</label>
                                     <div id="task-result"><code>{{ taskSignature }}</code></div>
                                 </div>
+                                <div class="form-group text-left" v-if="hasSchema">
+                                    <label class="bmd-label-static" for="task-result">Схема БД</label>
+                                    <div id="task-schema"><a v-bind:href="schemaBodyUrl" target="_blank">Открыть схему</a></div>
+                                </div>
                             </form>
                         </div>
                         <div class="tab-pane fade" id="solution" role="tabpanel" aria-labelledby="solution-tab">

@@ -17,7 +17,7 @@ class SubmitDoHandler(private val assessor: AssessorApi) : DashboardHandler<Subm
       assessor.submit(argValues.contestCode, argValues.variantName, argValues.taskName, argValues.submissionText) {attemptId ->
         println("User $user submitted assessor task $attemptId")
         withUser(http) {
-            it.recordAttempt(argValues.taskId.toInt(), argValues.variantId.toInt(), attemptId)
+            it.recordAttempt(argValues.taskId.toInt(), argValues.variantId.toInt(), attemptId, argValues.submissionText)
           http.ok()
         }
       }

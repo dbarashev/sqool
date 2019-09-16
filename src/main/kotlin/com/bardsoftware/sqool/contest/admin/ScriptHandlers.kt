@@ -1,10 +1,13 @@
 package com.bardsoftware.sqool.contest.admin
 
 import com.bardsoftware.sqool.contest.HttpApi
+import com.bardsoftware.sqool.contest.HttpResponse
 import com.bardsoftware.sqool.contest.RequestArgs
+import com.bardsoftware.sqool.contest.RequestHandler
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.transactions.transaction
 
 private val JSON_MAPPER = ObjectMapper()
 
@@ -54,6 +57,20 @@ class ScriptEditHandler : AdminHandler<ScriptEditArgs>() {
         }
         http.ok()
       }
+    }
+  }
+}
+
+data class ScriptBodyArgs(var id: String) : RequestArgs()
+
+class ScriptBodyHandler : RequestHandler<ScriptBodyArgs>() {
+  override fun args(): ScriptBodyArgs = ScriptBodyArgs(id = "")
+
+  override fun handle(http: HttpApi, argValues: ScriptBodyArgs): HttpResponse {
+    return transaction {
+      val scriptRow = Scripts.select(where = {Scripts.id eq argValues.id.toInt()}).firstOrNull() ?: return@transaction http.error(404)
+      println("id=${argValues.id} brow=$scriptRow body=${scriptRow[Scripts.body]}")
+      http.text(scriptRow[Scripts.body])
     }
   }
 }

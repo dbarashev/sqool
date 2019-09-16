@@ -127,6 +127,16 @@ class Http(
     }
   }
 
+  override fun text(body: String): HttpResponse {
+    return {
+      response.type(MediaType.PLAIN_TEXT_UTF_8.toString())
+      response.raw().outputStream.use {
+        ByteStreams.copy(body.byteInputStream(Charsets.UTF_8), it)
+      }
+      response.status(200)
+    }
+  }
+
   override fun session(name: String, value: String?) {
     if (value != null) {
       session(true)!!.attribute(name, value)
@@ -329,6 +339,9 @@ fun main(args: Array<String>) {
       POST("/contest/accept" BY ContestAcceptHandler() ARGS mapOf(
           "contest_code" to ContestAcceptArgs::contest_code,
           "variant_id" to ContestAcceptArgs::variant_id
+      ))
+      GET("/script/body" BY ScriptBodyHandler() ARGS mapOf(
+          "id" to ScriptBodyArgs::id
       ))
       POST("/submit.do" BY SubmitDoHandler(assessor) ARGS mapOf(
           "contest-id" to SubmitDoArgs::contestCode,
