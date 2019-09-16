@@ -58,4 +58,4 @@ INSERT INTO Contest.GradingDetails(attempt_id, error_msg, result_set) VALUES
 
 INSERT INTO Contest.SolutionReview(attempt_id, solution_review, reviewer_id) VALUES ('1', 'review', 0);
 
-SELECT AcceptVariant(0, 2, '3');
+SELECT Contest.AcceptVariant(0, 2, '3');

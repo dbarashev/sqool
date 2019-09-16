@@ -6,7 +6,6 @@ ALTER TABLE Contest.Attempt ADD COLUMN contest_code TEXT REFERENCES Contest.Cont
 ALTER TABLE Contest.Attempt DROP CONSTRAINT Attempt_pkey CASCADE;
 UPDATE Contest.Attempt SET contest_code = 'labs_20190904' WHERE variant_id = 1;
 UPDATE Contest.Attempt SET contest_code = 'labs_20190911' WHERE variant_id = 2;
-UPDATE Contest.Attempt SET contest_code = '1' WHERE contest_code IS NULL;
 ALTER TABLE Contest.Attempt ADD PRIMARY KEY (task_id, user_id, variant_id, contest_code);
 
 CREATE OR REPLACE VIEW MyAttempts AS
