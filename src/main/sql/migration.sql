@@ -1,4 +1,4 @@
-ALTER TABLE Contest.GradingDetails ALTER COLUMN Contest.GradingDetails SET NOT NULL;
+ALTER TABLE Contest.GradingDetails ALTER COLUMN attempt_id SET NOT NULL;
 
 ALTER TABLE Contest.Attempt ADD COLUMN contest_code TEXT REFERENCES Contest.Contest ON UPDATE CASCADE ON DELETE CASCADE;
 ALTER TABLE Contest.Attempt DROP CONSTRAINT Attempt_pkey CASCADE;
@@ -39,6 +39,11 @@ JOIN Contest.ContestUser S ON A.user_id = S.id
 LEFT JOIN Contest.GradingDetails D ON A.attempt_id = D.attempt_id
 LEFT JOIN Contest.TaskResult TR ON TR.task_id = T.id
 GROUP BY T.id, TR.task_id, A.user_id, A.task_id, A.variant_id, A.contest_code, S.id, D.error_msg, D.result_set, U.id;
+
+CREATE OR REPLACE VIEW AttemptsByContest AS
+SELECT C.contest_code, A.*
+FROM Contest.VariantContest C
+JOIN Contest.MyAttempts A ON C.variant_id = A.variant_id;
 
 CREATE OR REPLACE VIEW TaskSubmissionsStats AS
 SELECT T.id AS task_id, T.name AS task_name, A.contest_code, SUM(CASE WHEN A.status = 'success' THEN 1 ELSE 0 END) AS solved,
