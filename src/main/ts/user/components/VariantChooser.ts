@@ -40,7 +40,7 @@ export default class VariantChooser extends Vue {
 
   public acceptSelected() {
     if (this.contest && this.selectedVariantOption) {
-      this.contest.acceptVariant(this.selectedVariantOption.id)
+      this.contest.acceptVariant(this.selectedVariantOption)
           .done(() => this.onVariantChoice!(this.contest!))
           .fail(this.onFailure!);
     }

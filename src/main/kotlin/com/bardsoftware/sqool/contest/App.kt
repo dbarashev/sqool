@@ -12,8 +12,9 @@ class Flags(parser: ArgParser) {
   val postgresPort by parser.storing("--pg-port", help = "").default("5432")
   val postgresDatabase by parser.storing("--pg-database", help = "").default("")
   val postgresPassword by parser.storing("--pg-password", help = "").default("")
-  val contestId by parser.storing("--contest", help = "").default("")
-  val taskQueue by parser.storing("--queue", help = "").default("")
+  val postgresQaContainer by parser.storing("--pg-qa-container", help = "Postgres container which is used for contest image QA check.").default("")
+  val pubTasksTopic by parser.storing("--pub", help = "").default("")
+  val subResultsSubscription by parser.storing("--sub", help = "").default("")
 }
 
 val freemarkerConfig = Configuration(Configuration.getVersion()).apply {

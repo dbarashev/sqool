@@ -12,6 +12,7 @@ export default class AttemptTable extends Vue {
   @Inject() private readonly failureDetails!: () => FailureDetailsModal;
   // This can't be undefined because it is used in Vue template
   private contest: Contest | null = null;
+  private reloader: number = 0;
 
   public setContest(contest: Contest) {
     this.contest = contest;
@@ -34,6 +35,28 @@ export default class AttemptTable extends Vue {
     }
   }
 
+  private refresh() {
+    if (this.contest) {
+      this.contest.refreshAttempts()
+          .done(() => {
+            if (this.contest) {
+              const hasTesting = this.contest.attempts.some((attempt) => attempt.status === 'testing');
+              if (!hasTesting) {
+                window.clearInterval(this.reloader);
+              }
+            }
+          })
+          .fail((xhr) => {
+            const title = 'Не удалось обновить вариант:';
+            this.alertDialog().show(title, xhr.statusText);
+          });
+    }
+  }
+  private startPolling() {
+    const self = this;
+    // tslint:disable-next-line:only-arrow-functions
+    this.reloader = window.setInterval(function() { self.refresh(); }, 5000);
+  }
   private showTaskAttempt(attempt: TaskAttempt) {
     if (this.contest) {
       const review = $.ajax({
@@ -43,14 +66,12 @@ export default class AttemptTable extends Vue {
         },
       });
       this.taskAttemptProperties().show(attempt, review).then((solution) => {
+        if (this.reloader) {
+          window.clearInterval(this.reloader);
+        }
         return $.ajax('/submit.do', this.buildSubmissionPayload(attempt, solution));
       }).done(() => {
-        if (this.contest) {
-          this.contest.refreshAttempts().fail((xhr) => {
-            const title = 'Не удалось обновить вариант:';
-            this.alertDialog().show(title, xhr.statusText);
-          });
-        }
+        this.startPolling();
       }).fail((xhr) => {
         const title = 'Не удалось проверить решение:';
         this.alertDialog().show(title, xhr.statusText);
@@ -66,8 +87,11 @@ export default class AttemptTable extends Vue {
         method: 'POST',
         data: {
           'task-id': attempt.taskEntity.id,
+          'task-name': attempt.taskEntity.name,
           'solution': solution,
           'contest-id': this.contest.contestCode,
+          'variant-id': this.contest.chosenVariant ? this.contest.chosenVariant.id : '',
+          'variant-name': this.contest.chosenVariant ? this.contest.chosenVariant.name : '',
         },
       };
     } else {
