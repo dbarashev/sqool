@@ -16,6 +16,7 @@ export class Task {
       readonly description: string | null,
       readonly score: number,
       readonly difficulty: number,
+      readonly schemaId: number
   ) {}
 }
 

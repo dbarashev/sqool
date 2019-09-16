@@ -7,15 +7,19 @@ import Showdown from 'showdown';
 export default class TaskAttemptPropertiesModal extends Vue {
   @Inject() private readonly alertDialog!: () => AlertDialog;
   private converter = new Showdown.Converter();
-  private attempt = new TaskAttempt(new Task(-1, '', null, null, -1, -1), 0, null, null, null);
+  private attempt = new TaskAttempt(new Task(-1, '', null, null, -1, -1, -1), 0, null, null, null);
   private review = '';
   private taskSolution = '';
   private taskSignature = '';
+  private hasSchema = false;
+  private schemaBodyUrl = '';
   private deferred: JQueryDeferred<string> = $.Deferred<string>();
 
   public show(attempt: TaskAttempt, ajaxReview: JQuery.jqXHR): JQueryDeferred<string> {
     $('#task-attempt').modal();
     this.attempt = attempt;
+    this.hasSchema = attempt.taskEntity.schemaId != null;
+    this.schemaBodyUrl = this.hasSchema ? `/script/body?id=${attempt.taskEntity.schemaId}` : '';
     this.review = '';
     this.handleReview(ajaxReview);
     this.taskSignature = getTaskSignature(attempt.taskEntity);

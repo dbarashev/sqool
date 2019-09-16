@@ -34,7 +34,8 @@ data class TaskAttemptEntity(
             description = attemptRow[AttemptView.description],
             signatureJson = attemptRow[AttemptView.signature],
             difficulty = attemptRow[AttemptView.difficulty],
-            authorName = attemptRow[AttemptView.author]
+            authorName = attemptRow[AttemptView.author],
+            schemaId = attemptRow[AttemptView.schemaId]
         ),
         userId = attemptRow[AttemptView.attemptUserId],
         status = attemptRow[AttemptView.status],
@@ -55,7 +56,8 @@ data class TaskEntity(
     var description: String?,
     var score: Int,
     var difficulty: Int,
-    var authorName: String
+    var authorName: String,
+    var schemaId: Int?
 )
 
 data class AuthorChallengeEntity(
@@ -95,6 +97,7 @@ object TaskTable : Table("Contest.Task") {
   var score = integer("score")
   var difficulty = integer("difficulty")
   var authorId = integer("author_id")
+  var schemaId = integer("schema_id").nullable()
 }
 
 /**
@@ -102,6 +105,7 @@ object TaskTable : Table("Contest.Task") {
  */
 object AttemptView : Table("Contest.MyAttempts") {
   var taskId = integer("task_id")
+  var schemaId = integer("schema_id")
   var name = text("name")
   var description = text("description")
   var signature = text("signature")
@@ -417,7 +421,8 @@ class UserStorage(val txn: Transaction) {
           signatureJson = taskRow[TaskTable.signature],
           score = taskRow[TaskTable.score],
           difficulty = taskRow[TaskTable.difficulty],
-          authorName = ""
+          authorName = "",
+          schemaId = taskRow[TaskTable.schemaId]
       ))
     }.firstOrNull()
   }

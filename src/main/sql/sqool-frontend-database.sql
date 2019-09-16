@@ -481,6 +481,7 @@ $$ LANGUAGE SQL;
 -- View which provides data on user submissions
 CREATE OR REPLACE VIEW MyAttempts AS
 SELECT  T.id AS task_id,
+        T.script_id AS schema_id,
         T.name,
         T.difficulty,
         T.score,
