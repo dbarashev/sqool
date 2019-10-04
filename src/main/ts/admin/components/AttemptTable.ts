@@ -27,6 +27,11 @@ export default class AttemptTable extends Vue {
   }
 
   public showReviewPage(attempt: Attempt) {
-    this.contestMainWindow().showReviewPage(this.userId, attempt.task_id, attempt.variant_id);
+    if (attempt.attempt_id) {
+      this.contestMainWindow().showReviewPage(attempt.attempt_id);
+    } else {
+      const title = 'По этой задаче нет попыток';
+      this.alertDialog().show(title);
+    }
   }
 }

@@ -12,7 +12,7 @@
             </tr>
             </thead>
             <tbody>
-            <tr v-for="t in solutions" @click="showReviewPage(t.user_id)">
+            <tr v-for="t in solutions" @click="showReviewPage(t.attempt_id)">
                 <td>{{ t.user_name }}</td>
                 <td>{{ t.nick }}</td>
                 <td>{{ t.status }}</td>

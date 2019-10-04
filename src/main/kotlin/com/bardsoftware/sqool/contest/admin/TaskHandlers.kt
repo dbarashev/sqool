@@ -38,13 +38,12 @@ object Tasks : Table("Contest.TaskDto") {
  */
 
 class TaskAllHandler : AdminHandler<RequestArgs>() {
+  override fun args() = RequestArgs()
+
   override fun handle(http: HttpApi, argValues: RequestArgs) = withAdminUser(http) {
-    http.json(Tasks.selectAll().map(Tasks::asJson).toList())
+    http.json(Tasks.selectAll().orderBy(Tasks.name).map(Tasks::asJson).toList())
   }
 
-  override fun args(): RequestArgs {
-    return RequestArgs()
-  }
 }
 
 class TaskValidationException(msg: String) : Exception(msg)

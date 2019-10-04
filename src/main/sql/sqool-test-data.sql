@@ -47,15 +47,15 @@ INSERT INTO Contest.Task(id, name, author_id) VALUES
 INSERT INTO Contest.TaskVariant(task_id, variant_id) VALUES
   (0, 0), (-1, 0), (-2, 0), (-3, 0), (-4, -4), (0, -1), (-1, -1), (-2, -1), (-3, -1);
 
-INSERT INTO Contest.Attempt(task_id, user_id, variant_id, attempt_id, status, count) VALUES
-  (0, 0, -1, '1', 'success', 1),
-  (-1, 0, -1, '2', 'failure', 1),
-  (-2, 0, -1, '3', 'testing', 1),
-  (-3, 0, -1, '4', 'virgin', 0);
+INSERT INTO Contest.Attempt(task_id, user_id, variant_id, contest_code, attempt_id, status, count) VALUES
+  (0, 0, -1, '3', '1', 'success', 1),
+  (-1, 0, -1, '3', '2', 'failure', 1),
+  (-2, 0, -1, '3', '3', 'testing', 1),
+  (-3, 0, -1, '3', '4', 'virgin', 0);
 
 INSERT INTO Contest.GradingDetails(attempt_id, error_msg, result_set) VALUES
   (2, E'Some error message\nSome error message', '[["col1", "col2", "col3"], {"col1": 42, "col2": "q"}, {"col1": -1, "col2": "t", "col3": 1}]');
 
-INSERT INTO Contest.SolutionReview(task_id, variant_id, user_id, solution_review, reviewer_id) VALUES (0, -1, 0, 'review', 1);
+INSERT INTO Contest.SolutionReview(attempt_id, solution_review, reviewer_id) VALUES ('1', 'review', 0);
 
-SELECT AcceptVariant(0, 2);
+SELECT Contest.AcceptVariant(0, 2, '3');

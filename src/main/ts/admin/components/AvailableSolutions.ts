@@ -1,6 +1,7 @@
 import {Component, Inject, Vue} from 'vue-property-decorator';
 import {TaskDto} from '../Task';
 import TaskMainWindow from './TaskMainWindow';
+import AlertDialog from "../../components/AlertDialog";
 
 
 @Component
@@ -10,6 +11,7 @@ export default class AvailableSolutions extends Vue {
 
   @Inject()
   private readonly taskMainWindow!: () => TaskMainWindow;
+  @Inject() private readonly alertDialog!: () => AlertDialog;
 
   public refresh() {
     if (this.taskMainWindow().taskTable().getActiveTask() == null) {
@@ -28,8 +30,13 @@ export default class AvailableSolutions extends Vue {
     });
   }
 
-  public showReviewPage(userId: number) {
-    this.taskMainWindow().showReviewPage(userId, this.taskId);
+  public showReviewPage(attemptId: string | null) {
+    if (attemptId) {
+      this.taskMainWindow().showReviewPage(attemptId);
+    } else {
+      const title = 'По этой задаче нет попыток';
+      this.alertDialog().show(title);
+    }
   }
 
   public hide() {

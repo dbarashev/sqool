@@ -1,5 +1,6 @@
 export class TaskAttempt {
   constructor(
+      readonly attemptId: string | null,
       readonly taskEntity: Task,
       readonly count: number,
       readonly status: string | null,

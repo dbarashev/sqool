@@ -2,6 +2,7 @@ package com.bardsoftware.sqool.contest.storage
 
 import com.bardsoftware.sqool.contest.admin.Contests
 import com.bardsoftware.sqool.contest.admin.DbQueryManager
+import com.bardsoftware.sqool.contest.admin.MyAttempts
 import com.bardsoftware.sqool.grader.AssessmentPubSubResp
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -10,6 +11,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.DateTime
 import java.math.BigDecimal
 import java.sql.PreparedStatement
+import java.sql.ResultSet
 import java.sql.Types
 import java.util.Random
 
@@ -112,6 +114,7 @@ object AttemptView : Table("Contest.MyAttempts") {
   var difficulty = integer("difficulty")
   var score = integer("score")
   var variantId = integer("variant_id")
+  var contestCode = text("contest_code")
   var author = text("author_nick")
   var author_id = integer("author_id")
   var attemptId = text("attempt_id").nullable()
@@ -187,7 +190,35 @@ data class Contest(
     val variantPolicy: String,
     val variants: List<Variant>,
     val chosenVariant: Variant?
-)
+) {
+  companion object Factory {
+    fun fromRow(attemptRow: ResultRow): Contest {
+      val contestCode = attemptRow[AvailableContests.contest_code]
+      val contestName = attemptRow[AvailableContests.contest_name]
+      val chosenVariantId = attemptRow[AvailableContests.assigned_variant_id]
+
+      val variants = parseVariantsArray(attemptRow[AvailableContests.variants_json_array])
+      val chosenVariant = chosenVariantId?.let { id ->
+        variants.find { it.id == id }
+      }
+      return Contest(contestCode, contestName, attemptRow[AvailableContests.variant_choice].name, variants, chosenVariant)
+    }
+
+    fun fromResultSet(resultSet: ResultSet): Contest {
+      val contestCode = resultSet.getString("contest_code")
+      val contestName = resultSet.getString("contest_name")
+      val chosenVariantId = resultSet.getInt("assigned_variant_id")
+      val variantChoice = resultSet.getString("variant_choice")
+
+      val variants = parseVariantsArray(resultSet.getString("variants_json_array"))
+      val chosenVariant = if (chosenVariantId == 0) null else variants.find { it.id == chosenVariantId }
+      return Contest(contestCode, contestName, variantChoice, variants, chosenVariant)
+    }
+
+    private fun parseVariantsArray(array: String): List<Variant> =
+        ObjectMapper().readValue(array, object : TypeReference<List<Variant>>() {})
+  }
+}
 
 data class Variant(val id: Int = -1, val name: String = "")
 
@@ -236,19 +267,38 @@ class User(val entity: UserEntity, val storage: UserStorage) {
    * Returns the list of all contests available to this user
    */
   fun availableContests(): List<Contest> = transaction {
-    AvailableContests.select { AvailableContests.user_id eq entity.id }
-          .map { c ->
-            val contestCode = c[AvailableContests.contest_code]
-            val contestName = c[AvailableContests.contest_name]
-            val chosenVariantId = c[AvailableContests.assigned_variant_id]
+    AvailableContests.select { AvailableContests.user_id eq entity.id }.map(Contest.Factory::fromRow).toList()
+  }
 
-            val variants = ObjectMapper().readValue(c[AvailableContests.variants_json_array], object : TypeReference<List<Variant>>() {})
-            val chosenVariant = chosenVariantId?.let { id ->
-              variants.find { it.id == id }
-            }
-            Contest(contestCode, contestName, c[AvailableContests.variant_choice].name, variants, chosenVariant)
-          }.toList()
+  /**
+   * Returns the last contest that the user submitted to, or null if the user has never made any submits.
+   */
+  fun recentContest(): Contest? = transaction {
+    val query = """
+      SELECT C.* FROM AvailableContests C 
+      JOIN MyAttempts A USING(user_id, contest_code)
+      WHERE A.user_id = ? 
+      AND testing_start_ts = (
+        SELECT MAX(testing_start_ts) FROM MyAttempts WHERE user_id = ?
+      )
+      """.trimIndent()
+    val contest = mutableListOf<Contest>()
+    storage.procedure(query) {
+      setInt(1, id)
+      setInt(2, id)
+      executeQuery().use {
+        while(it.next()) {
+          contest.add(Contest.fromResultSet(it))
+        }
+      }
     }
+
+    when (contest.size) {
+      0 -> null
+      1 -> contest.first()
+      else -> throw Exception("Get more than one available contest by (user_id, contest_code)")
+    }
+  }
 
   /**
    * Assigns the given variant from the given contest to this user and adds attempts for all
@@ -264,12 +314,12 @@ class User(val entity: UserEntity, val storage: UserStorage) {
   }
 
   /**
-   * Returns all attempts made by this user for tasks from the given variant.
+   * Returns all attempts made by this user for tasks from the given variant from given contest.
    */
-  fun getVariantAttempts(variantId: Int): List<TaskAttemptEntity> = transaction {
-    AttemptView.select { (AttemptView.attemptUserId eq this@User.id) and (AttemptView.variantId eq variantId) }
-        .orderBy(AttemptView.name)
-        .map(TaskAttemptEntity.Factory::fromRow)
+  fun getVariantAttempts(variantId: Int, contestCode: String): List<TaskAttemptEntity> = transaction {
+    AttemptView.select {
+      (AttemptView.attemptUserId eq this@User.id) and (AttemptView.variantId eq variantId) and (AttemptView.contestCode eq contestCode)
+    }.orderBy(AttemptView.name).map(TaskAttemptEntity.Factory::fromRow)
   }
 
   /**
@@ -339,13 +389,14 @@ class User(val entity: UserEntity, val storage: UserStorage) {
    * is being tested now. Removes previously saved assessment details, if any, and sets attempt
    * status to "testing"
    */
-  fun recordAttempt(taskId: Int, variantId: Int, attemptId: String, attemptText: String): Boolean {
+  fun recordAttempt(taskId: Int, variantId: Int, contestCode: String, attemptId: String, attemptText: String): Boolean {
     return storage.procedure("SELECT Contest.StartAttemptTesting(?, ?, ?, ?, ?)") {
       setInt(1, this@User.id)
       setInt(2, taskId)
       setInt(3, variantId)
-      setString(4, attemptId)
-      setString(5, attemptText)
+      setString(4, contestCode)
+      setString(5, attemptId)
+      setString(6, attemptText)
       execute()
     }
   }

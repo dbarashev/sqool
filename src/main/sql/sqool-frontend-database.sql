@@ -280,7 +280,7 @@ BEGIN
   INSERT INTO Contest.UserContest(user_id, contest_code, variant_id) VALUES (_user_id, _contest_code, _variant_id)
   ON CONFLICT (user_id, contest_code)
   DO UPDATE SET variant_id = _variant_id;
-  PERFORM AcceptVariant(_user_id, _variant_id);
+  PERFORM AcceptVariant(_user_id, _variant_id, _contest_code);
 END;
 $$ LANGUAGE plpgsql;
 
@@ -294,6 +294,7 @@ CREATE TYPE AttemptStatus AS ENUM('success', 'failure', 'testing', 'virgin');
 CREATE TABLE Contest.Attempt(
   task_id INT REFERENCES Contest.Task ON UPDATE CASCADE ON DELETE CASCADE,
   variant_id INT REFERENCES Contest.Variant ON UPDATE CASCADE ON DELETE CASCADE,
+  contest_code TEXT REFERENCES Contest.Contest ON UPDATE CASCADE ON DELETE CASCADE,
   user_id INT REFERENCES Contest.ContestUser,
   attempt_id TEXT UNIQUE,
   status AttemptStatus DEFAULT 'failure',
@@ -301,23 +302,25 @@ CREATE TABLE Contest.Attempt(
   count INT DEFAULT 0,
   testing_start_ts TIMESTAMP,
   FOREIGN KEY(task_id, variant_id) REFERENCES TaskVariant(task_id, variant_id) ON UPDATE CASCADE ON DELETE CASCADE,
-  PRIMARY KEY(task_id, user_id, variant_id)
+  PRIMARY KEY(task_id, user_id, variant_id, contest_code)
 );
 CREATE TABLE Contest.GradingDetails(
-  attempt_id TEXT REFERENCES Contest.Attempt(attempt_id) ON UPDATE CASCADE ON DELETE CASCADE,
+  attempt_id TEXT NOT NULL REFERENCES Contest.Attempt(attempt_id) ON UPDATE CASCADE ON DELETE CASCADE,
   error_msg TEXT,
   result_set TEXT
 );
 
 CREATE TABLE Contest.SolutionReview (
-  task_id INT REFERENCES Contest.Task ON UPDATE CASCADE ON DELETE CASCADE,
-  variant_id INT REFERENCES Contest.Variant ON UPDATE CASCADE ON DELETE CASCADE,
-  user_id INT REFERENCES Contest.ContestUser,
-  reviewer_id INT,
+  attempt_id TEXT NOT NULL REFERENCES Contest.Attempt(attempt_id) ON UPDATE CASCADE ON DELETE CASCADE,
+  reviewer_id INT REFERENCES Contest.ContestUser,
   solution_review TEXT,
-  PRIMARY KEY(task_id, variant_id, user_id, reviewer_id),
-  FOREIGN KEY(task_id, variant_id, user_id) REFERENCES Contest.Attempt(task_id, variant_id, user_id)  ON UPDATE CASCADE ON DELETE CASCADE
+  PRIMARY KEY(attempt_id, reviewer_id)
 );
+
+CREATE OR REPLACE VIEW ReviewByUser AS
+SELECT S.attempt_id, S.solution_review, A.user_id
+FROM Contest.SolutionReview S
+JOIN Contest.Attempt A ON S.attempt_id = A.attempt_id;
 
 ------------------------------------------------------------------------------------------------
 -- This function generates a nickname from a random combination of first name (adjective)
@@ -437,11 +440,12 @@ RETURNS VOID AS $$
   INSERT INTO Contest.Attempt(user_id, task_id, status) VALUES (_user_id, _task_id, 'virgin');
 $$ LANGUAGE SQL;
 
-CREATE OR REPLACE FUNCTION AcceptVariant(_user_id INT, _variant_id INT)
+CREATE OR REPLACE FUNCTION AcceptVariant(_user_id INT, _variant_id INT, _contest_code TEXT)
 RETURNS VOID AS $$
 BEGIN
-  INSERT INTO Contest.Attempt(user_id, task_id, variant_id, status)
-  SELECT _user_id, task_id, _variant_id, 'virgin' FROM Contest.TaskVariant
+  INSERT INTO Contest.Attempt(user_id, task_id, variant_id, contest_code, status)
+  SELECT _user_id, task_id, _variant_id, _contest_code, 'virgin'
+  FROM Contest.TaskVariant
   WHERE variant_id = _variant_id
   ON CONFLICT DO NOTHING;
 END;
@@ -450,16 +454,16 @@ $$ LANGUAGE plpgsql;
 -----------------------------------------------------------------------------------------------------------------------
 -- Changes the status of the given _task_id to "testing" for the given user and records attempt identifier which
 -- is opaque value.
-CREATE OR REPLACE FUNCTION StartAttemptTesting(_user_id INT, _task_id INT, _variant_id INT, _attempt_id TEXT, _attempt_text TEXT)
+CREATE OR REPLACE FUNCTION StartAttemptTesting(_user_id INT, _task_id INT, _variant_id INT, _contest_code TEXT, _attempt_id TEXT, _attempt_text TEXT)
 RETURNS VOID AS $$
   DELETE FROM Contest.GradingDetails WHERE attempt_id IN (
     SELECT attempt_id
     FROM Contest.Attempt
-    WHERE user_id = _user_id AND task_id = _task_id AND variant_id = _variant_id
+    WHERE user_id = _user_id AND task_id = _task_id AND variant_id = _variant_id AND contest_code = _contest_code
   );
-
+  
   UPDATE Contest.Attempt SET status = 'testing', testing_start_ts = NOW(), attempt_id = _attempt_id, attempt_text = _attempt_text
-  WHERE user_id = _user_id AND task_id = _task_id AND variant_id = _variant_id;
+  WHERE user_id = _user_id AND task_id = _task_id AND variant_id = _variant_id AND contest_code = _contest_code;
 $$ LANGUAGE SQL;
 
 -----------------------------------------------------------------------------------------------------------------------
@@ -494,6 +498,7 @@ SELECT  T.id AS task_id,
         A.attempt_id,
         A.user_id,
         A.variant_id,
+        A.contest_code,
         S.nick AS user_nick,
         S.name AS user_name,
         A.status::TEXT,
@@ -507,20 +512,14 @@ JOIN Contest.Attempt A ON A.task_id = T.id
 JOIN Contest.ContestUser S ON A.user_id = S.id
 LEFT JOIN Contest.GradingDetails D ON A.attempt_id = D.attempt_id
 LEFT JOIN Contest.TaskResult TR ON TR.task_id = T.id
-GROUP BY T.id, TR.task_id, A.user_id, A.task_id, A.variant_id, S.id, D.error_msg, D.result_set, U.id;
-
-CREATE OR REPLACE VIEW AttemptsByContest AS
-SELECT C.contest_code, A.*
-FROM Contest.VariantContest C
-JOIN Contest.MyAttempts A ON C.variant_id = A.variant_id;
+GROUP BY T.id, TR.task_id, A.user_id, A.task_id, A.variant_id, A.contest_code, S.id, D.error_msg, D.result_set, U.id;
 
 CREATE OR REPLACE VIEW TaskSubmissionsStats AS
-SELECT T.id AS task_id, T.name AS task_name, C.contest_code, SUM(CASE WHEN A.status = 'success' THEN 1 ELSE 0 END) AS solved,
+SELECT T.id AS task_id, T.name AS task_name, A.contest_code, SUM(CASE WHEN A.status = 'success' THEN 1 ELSE 0 END) AS solved,
        SUM(CASE WHEN A.count > 0 THEN 1 ELSE 0 END) AS attempted
 FROM Contest.Attempt A
 JOIN Contest.Task T ON A.task_id = T.id
-JOIN Contest.VariantContest C ON C.variant_id = A.variant_id
-GROUP BY T.id, C.contest_code;
+GROUP BY T.id, A.contest_code;
 
 /**********************************************************************************************************************
  * Administrative procedures and views

@@ -292,10 +292,7 @@ fun main(args: Array<String>) {
       GET("/" TEMPLATE "index.ftl")
       GET("/dashboard" BY AdminDashboardPageHandler())
       GET("/admin/submission/get" BY adminSubmissionGetHandler ARGS mapOf(
-          "task_id" to SubmissionGetArgs::task_id,
-          "variant_id" to SubmissionGetArgs::variant_id,
-          "user_id" to SubmissionGetArgs::user_id,
-          "reviewer_id" to SubmissionGetArgs::reviewer_id
+          "attempt_id" to SubmissionGetArgs::attempt_id
       ))
       GET("/admin/submission/list" BY adminSubmissionListHandler ARGS mapOf(
           "task_id" to SubmissionListArgs::task_id
@@ -312,14 +309,10 @@ fun main(args: Array<String>) {
       ))
 
       GET("/admin/review/get" BY adminReviewGetHandler ARGS mapOf(
-          "task_id" to AdminReviewGetArgs::task_id,
-          "variant_id" to AdminReviewGetArgs::variant_id,
-          "user_id" to AdminReviewGetArgs::user_id
+          "attempt_id" to AdminReviewGetArgs::attempt_id
       ))
       POST("/admin/review/save" BY adminReviewSaveHandler ARGS mapOf(
-          "task_id" to ReviewSaveArgs::task_id,
-          "variant_id" to ReviewSaveArgs::variant_id,
-          "user_id" to ReviewSaveArgs::user_id,
+          "attempt_id" to ReviewSaveArgs::attempt_id,
           "solution_review" to ReviewSaveArgs::solution_review
       ))
       GET("/auth/dev" BY authDevHandler ARGS mapOf(
@@ -329,10 +322,10 @@ fun main(args: Array<String>) {
       GET("/me2" BY DashboardPageHandler())
       GET("/logout" BY LogoutHandler())
       GET("/review/get" BY ReviewGetHandler() ARGS mapOf(
-          "contest_code" to ReviewGetArgs::contest_code,
-          "task_id" to ReviewGetArgs::task_id
+          "attempt_id" to ReviewGetArgs::attempt_id
       ))
       GET("/contest/available/all" BY availableContestAllHandler)
+      GET("/contest/recent" BY ContestRecentHandler())
       GET("/contest/attempts" BY ContestAttemptsHandler() ARGS mapOf(
           "contest_code" to ContestAttemptsArgs::contest_code
       ))
