@@ -31,3 +31,10 @@
 <script lang="ts" src="./ScriptTable.ts">
 </script>
 
+<style lang="scss">
+    pre {
+        white-space: pre-wrap;
+        word-wrap: break-word;
+    }
+</style>
+

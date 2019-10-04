@@ -4,12 +4,14 @@ ALTER TABLE Contest.GradingDetails ALTER COLUMN attempt_id SET NOT NULL;
 
 ALTER TABLE Contest.Attempt ADD COLUMN contest_code TEXT REFERENCES Contest.Contest ON UPDATE CASCADE ON DELETE CASCADE;
 ALTER TABLE Contest.Attempt DROP CONSTRAINT Attempt_pkey CASCADE;
-UPDATE Contest.Attempt SET contest_code = 'labs_20190904' WHERE variant_id = 1;
-UPDATE Contest.Attempt SET contest_code = 'labs_20190911' WHERE variant_id = 2;
+with T as (select distinct contest_code,variant_id from usercontest where variant_id is not null)
+update Attempt set contest_code=T.contest_code FROM T WHERE T.variant_id=Attempt.variant_id;
 ALTER TABLE Contest.Attempt ADD PRIMARY KEY (task_id, user_id, variant_id, contest_code);
 
+DROP VIEW MyAttempts CASCADE;
 CREATE OR REPLACE VIEW MyAttempts AS
 SELECT  T.id AS task_id,
+        T.script_id AS schema_id,
         T.name,
         T.difficulty,
         T.score,
