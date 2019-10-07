@@ -1,6 +1,12 @@
 import {Component, Inject, Vue} from 'vue-property-decorator';
 import TaskMarkdown from './TaskMarkdown';
-import AlertDialog from "../../components/AlertDialog";
+import AlertDialog from '../../components/AlertDialog';
+import {ContestDto} from '../Contest';
+import ContestMainWindow from './ContestMainWindow';
+
+interface Review {
+  review_text: string;
+}
 
 @Component({
   components: {
@@ -8,8 +14,11 @@ import AlertDialog from "../../components/AlertDialog";
   },
 })
 export default class ReviewPage extends Vue {
+
+  public attemptId = '';
   @Inject() private readonly alertDialog!: () => AlertDialog;
-  public attemptId = "";
+  @Inject() private readonly contestMainWindow!: () => ContestMainWindow;
+  private contest?: ContestDto;
 
   public getAttempt() {
     const markdown = this.$refs.taskMarkdown as TaskMarkdown;
@@ -35,7 +44,7 @@ export default class ReviewPage extends Vue {
       data: {
         attempt_id: this.attemptId,
       },
-    }).done((review) => {
+    }).done((review: Review) => {
       markdown.textValue = review.review_text;
     }).fail((xhr) => {
       const title = 'Не удалось загрузить рецензию:';
@@ -57,14 +66,18 @@ export default class ReviewPage extends Vue {
       this.alertDialog().show(title, xhr.statusText);
     });
   }
-
   public hide() {
-    this.$el.setAttribute('hidden', 'true');
+    $(this.$el).hide(); // .setAttribute('hidden', 'true');
   }
 
-  public show(attemptId: string) {
+  public show(contest: ContestDto, attemptId: string) {
+    this.contest = contest;
     this.attemptId = attemptId;
     this.getLastReview();
-    this.$el.removeAttribute('hidden');
+    $(this.$el).show(); // .removeAttribute('hidden');
+  }
+
+  private backToStudents() {
+    this.contestMainWindow().showAttemptTableByStudent(this.contest!!);
   }
 }

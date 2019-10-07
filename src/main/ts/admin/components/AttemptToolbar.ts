@@ -20,6 +20,11 @@ export default class AttemptToolbar extends Vue {
   }
 
   public show(contest: ContestDto) {
+    $(this.$el).removeClass('d-none').addClass('d-flex');
     this.contest = contest;
+  }
+
+  public hide() {
+    $(this.$el).removeClass('d-flex').addClass('d-none');
   }
 }

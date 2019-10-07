@@ -18,9 +18,29 @@ class ReviewGetHandler : AdminHandler<ReviewGetArgs>() {
       (SolutionReview.reviewer_id eq it.id) and (SolutionReview.attempt_id eq argValues.attempt_id)
     }.toList()
     when {
-      solutionReview.size > 1 -> http.error(500, "get more than one solution by attempt_id and reviewer_id")
-      solutionReview.isNotEmpty() -> http.json(hashMapOf("review_text" to solutionReview.last()[SolutionReview.solution_review]))
-      else -> http.json(hashMapOf("review_text" to "[comment]: # (there was no review)"))
+      solutionReview.size > 1 -> http.json(mapOf(
+          "review_text" to "-- Найдено несколько ваших рецензий решения ${argValues.attempt_id}. Возможно, это ошибка сервера"
+      ))
+      solutionReview.isNotEmpty() -> http.json(mapOf("review_text" to solutionReview.last()[SolutionReview.solution_review]))
+      else -> {
+        val attempts = Attempts.select { Attempts.attempt_id eq argValues.attempt_id }.toList()
+        when {
+          attempts.size > 1 -> http.json(mapOf(
+              "review_text" to "-- Найдено несколько решений  ${argValues.attempt_id}. Возможно, это ошибка сервера"
+          ))
+          attempts.isNotEmpty() -> {
+            val attempt = attempts.last()[Attempts.attempt_text]
+            http.json(mapOf("review_text" to """
+              ```
+              $attempt
+              ```
+            """.trimIndent()))
+          }
+          else -> http.json(mapOf(
+              "review_text" to "-- Студенческое решение ${argValues.attempt_id} не найдено. Возможно, это ошибка сервера"
+          ))
+        }
+      }
     }
   }
 

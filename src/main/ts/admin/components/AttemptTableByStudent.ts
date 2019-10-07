@@ -4,7 +4,7 @@ import AlertDialog from '../../components/AlertDialog';
 import AttemptTable from './AttemptTable';
 
 @Component({
-  components: {AttemptTable}
+  components: {AttemptTable},
 })
 export default class AttemptTableByStudent extends Vue {
   @Inject() private readonly alertDialog!: () => AlertDialog;
@@ -18,7 +18,7 @@ export default class AttemptTableByStudent extends Vue {
   public refresh() {
     $.ajax({
       url: '/admin/submission/contest/users',
-      data: {contest_code: this.contest.code}
+      data: {contest_code: this.contest.code},
     }).done((students: Student[]) => {
       this.students = students;
     }).fail((xhr) => {
@@ -47,6 +47,8 @@ export default class AttemptTableByStudent extends Vue {
   }
 }
 
-class Student {
-  constructor(readonly user_id: number, readonly user_name: string) {}
+interface Student {
+  user_id: number;
+  user_name: string;
+  uni: string;
 }

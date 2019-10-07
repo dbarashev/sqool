@@ -4,12 +4,9 @@ import com.bardsoftware.sqool.contest.HttpApi
 import com.bardsoftware.sqool.contest.RequestArgs
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
-import org.jetbrains.exposed.sql.ResultRow
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.select
+import org.jetbrains.exposed.sql.*
 import org.ocpsoft.prettytime.PrettyTime
-import java.util.*
+import java.util.Date
 
 private val JSON_MAPPER = ObjectMapper()
 
@@ -51,6 +48,7 @@ object MyAttempts : Table("Contest.MyAttempts") {
   var attemptId = text("attempt_id").nullable()
   var attemptUserId = integer("user_id")
   var attemptUserName = text("user_name")
+  var attemptUserUni = text("user_uni")
   var status = text("status").nullable()
   var testingStartTs = date("testing_start_ts").nullable()
   var count = integer("count")
@@ -143,13 +141,15 @@ class ContestUsersHandler : AdminHandler<ContestUsersArgs>() {
   override fun args() = ContestUsersArgs("")
 
   override fun handle(http: HttpApi, argValues: ContestUsersArgs) = withAdminUser(http) {
-    val users = MyAttempts.slice(MyAttempts.contestCode, MyAttempts.attemptUserId, MyAttempts.attemptUserName)
-        .select { MyAttempts.contestCode eq argValues.contestCode }
+    val users = MyAttempts.slice(MyAttempts.contestCode, MyAttempts.attemptUserId, MyAttempts.attemptUserName, MyAttempts.attemptUserUni)
+        .select { MyAttempts.contestCode eq argValues.contestCode }.andWhere { MyAttempts.status neq "virgin" }
         .withDistinct()
+        .orderBy(MyAttempts.attemptUserUni to SortOrder.ASC, MyAttempts.attemptUserName to SortOrder.ASC)
         .map {
           mapOf(
               "user_id" to it[MyAttempts.attemptUserId],
-              "user_name" to it[MyAttempts.attemptUserName]
+              "user_name" to it[MyAttempts.attemptUserName],
+              "uni" to it[MyAttempts.attemptUserUni]
           )
         }.toList()
     http.json(users)
