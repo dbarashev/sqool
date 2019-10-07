@@ -6,13 +6,13 @@
                         <label for="task-properties-code">Markdown разметка</label>
                         <textarea class="form-control"
                                   v-model="text"
-                                  id="task-properties-code" rows="5">
+                                  id="task-properties-code" rows="50">
                         </textarea>
                     </div>
             </div>
             <div class="col-sm-12 col-lg-6 text-left">
                 <div class="form-group bmd-form-group">
-                    <label class="bmd-label-static" for="task-properties-preview">Preview</label>
+                    <label class="bmd-label-static" for="task-properties-preview">Превью</label>
                     <div id="task-properties-preview">
                         <div v-html="markdownText()"></div>
                     </div>

@@ -127,7 +127,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 DROP FUNCTION StartAttemptTesting;
-CREATE OR REPLACE FUNCTION StartAttemptTesting(_user_id INT, _task_id INT, _variant_id INT, _contest_code TEXT, _attempt_id TEXT)
+CREATE OR REPLACE FUNCTION StartAttemptTesting(_user_id INT, _task_id INT, _variant_id INT, _contest_code TEXT, _attempt_id TEXT, _attempt_text TEXT)
 RETURNS VOID AS $$
   DELETE FROM Contest.GradingDetails WHERE attempt_id IN (
     SELECT attempt_id
@@ -135,6 +135,8 @@ RETURNS VOID AS $$
     WHERE user_id = _user_id AND task_id = _task_id AND variant_id = _variant_id AND contest_code = _contest_code
   );
 
-  UPDATE Contest.Attempt SET status = 'testing', testing_start_ts = NOW(), attempt_id = _attempt_id
+  UPDATE Contest.Attempt SET status = 'testing', testing_start_ts = NOW(), attempt_id = _attempt_id, attempt_text = _attempt_text
   WHERE user_id = _user_id AND task_id = _task_id AND variant_id = _variant_id AND contest_code = _contest_code;
 $$ LANGUAGE SQL;
+
+

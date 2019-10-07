@@ -31,10 +31,10 @@ class ReviewGetHandler : AdminHandler<ReviewGetArgs>() {
           attempts.isNotEmpty() -> {
             val attempt = attempts.last()[Attempts.attempt_text]
             http.json(mapOf("review_text" to """
-              ```
-              $attempt
-              ```
-            """.trimIndent()))
+              |```
+              |$attempt
+              |```
+            """.trimMargin()))
           }
           else -> http.json(mapOf(
               "review_text" to "-- Студенческое решение ${argValues.attempt_id} не найдено. Возможно, это ошибка сервера"

@@ -2,7 +2,6 @@ package com.bardsoftware.sqool.contest.storage
 
 import com.bardsoftware.sqool.contest.admin.Contests
 import com.bardsoftware.sqool.contest.admin.DbQueryManager
-import com.bardsoftware.sqool.contest.admin.MyAttempts
 import com.bardsoftware.sqool.grader.AssessmentPubSubResp
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -390,7 +389,7 @@ class User(val entity: UserEntity, val storage: UserStorage) {
    * status to "testing"
    */
   fun recordAttempt(taskId: Int, variantId: Int, contestCode: String, attemptId: String, attemptText: String): Boolean {
-    return storage.procedure("SELECT Contest.StartAttemptTesting(?, ?, ?, ?, ?)") {
+    return storage.procedure("SELECT Contest.StartAttemptTesting(?, ?, ?, ?, ?, ?)") {
       setInt(1, this@User.id)
       setInt(2, taskId)
       setInt(3, variantId)
