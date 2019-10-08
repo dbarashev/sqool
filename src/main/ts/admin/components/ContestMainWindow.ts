@@ -6,6 +6,7 @@ import AttemptTableByTask from './AttemptTableByTask';
 import AttemptTableByStudent from './AttemptTableByStudent';
 import {ContestDto} from '../Contest';
 import ReviewPage from './ReviewPage';
+import {Attempt} from './AttemptTable';
 
 type VisibleComponent = 'contests' | 'attempts-by-task' | 'attempts-by-student';
 @Component({
@@ -52,10 +53,10 @@ export default class ContestMainWindow extends Vue {
     this.visibleComponent = 'contests';
   }
 
-  public showReviewPage(attemptId: string) {
+  public showReviewPage(attempt: Attempt) {
     this.hideChildren();
     this.attemptToolbar().hide();
-    this.reviewPage().show(this.contest!!, attemptId);
+    this.reviewPage().show(this.contest!!, attempt);
   }
 
   @Provide()

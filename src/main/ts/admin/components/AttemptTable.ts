@@ -1,7 +1,15 @@
 import {Component, Inject, Prop, Vue} from 'vue-property-decorator';
 import AlertDialog from '../../components/AlertDialog';
-import {Attempt} from '../Attempt';
 import ContestMainWindow from "./ContestMainWindow";
+
+export interface Attempt {
+  task_id: number;
+  variant_id: number;
+  name: string;
+  attempt_id: string | null;
+  status: string;
+  user_name: string;
+}
 
 @Component
 export default class AttemptTable extends Vue {
@@ -28,7 +36,7 @@ export default class AttemptTable extends Vue {
 
   public showReviewPage(attempt: Attempt) {
     if (attempt.attempt_id) {
-      this.contestMainWindow().showReviewPage(attempt.attempt_id);
+      this.contestMainWindow().showReviewPage(attempt);
     } else {
       const title = 'По этой задаче нет попыток';
       this.alertDialog().show(title);

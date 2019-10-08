@@ -311,6 +311,9 @@ fun main(args: Array<String>) {
       GET("/admin/review/get" BY adminReviewGetHandler ARGS mapOf(
           "attempt_id" to AdminReviewGetArgs::attempt_id
       ))
+      GET("/admin/review/list" BY ReviewListHandler() ARGS mapOf(
+          "attempt_id" to AdminReviewGetArgs::attempt_id
+      ))
       POST("/admin/review/save" BY adminReviewSaveHandler ARGS mapOf(
           "attempt_id" to ReviewSaveArgs::attempt_id,
           "solution_review" to ReviewSaveArgs::solution_review

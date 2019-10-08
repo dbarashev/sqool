@@ -1,6 +1,7 @@
 package com.bardsoftware.sqool.contest.admin
 
 import com.bardsoftware.sqool.contest.HttpApi
+import com.bardsoftware.sqool.contest.HttpResponse
 import com.bardsoftware.sqool.contest.RequestArgs
 import org.jetbrains.exposed.sql.*
 
@@ -12,7 +13,28 @@ object SolutionReview : Table("Contest.SolutionReview") {
 
 data class ReviewGetArgs(var attempt_id: String) : RequestArgs()
 
+class ReviewListHandler : AdminHandler<ReviewGetArgs>() {
+  override fun args(): ReviewGetArgs = ReviewGetArgs("")
+
+  override fun handle(http: HttpApi, argValues: ReviewGetArgs): HttpResponse {
+    return withAdminUser(http) {
+      val allReviews = SolutionReview.select {
+        SolutionReview.attempt_id eq argValues.attempt_id
+      }.toList()
+      println("We have ${allReviews.size} reviews for attempt=${argValues.attempt_id}")
+      when {
+        allReviews.isEmpty() -> http.json(listOf<String>())
+        else -> http.json(allReviews.map {
+          review -> mapOf("review_text" to review[SolutionReview.solution_review])
+        }.toList())
+      }
+    }
+  }
+}
+
 class ReviewGetHandler : AdminHandler<ReviewGetArgs>() {
+  override fun args(): ReviewGetArgs = ReviewGetArgs("")
+
   override fun handle(http: HttpApi, argValues: ReviewGetArgs) = withAdminUser(http) {
     val solutionReview = SolutionReview.select {
       (SolutionReview.reviewer_id eq it.id) and (SolutionReview.attempt_id eq argValues.attempt_id)
@@ -43,8 +65,6 @@ class ReviewGetHandler : AdminHandler<ReviewGetArgs>() {
       }
     }
   }
-
-  override fun args(): ReviewGetArgs = ReviewGetArgs("")
 }
 
 data class ReviewSaveArgs(var attempt_id: String, var solution_review: String) : RequestArgs()
