@@ -1,10 +1,15 @@
 import {Component, Vue} from 'vue-property-decorator';
 import Showdown from 'showdown';
 
+const converter = new Showdown.Converter();
+
 @Component
 export default class TaskMarkdown extends Vue {
+  public static markdown2html(markdown: string) {
+    return converter.makeHtml(markdown);
+  }
+
   private text = '';
-  private converter = new Showdown.Converter();
 
   get textValue(): string {
     return this.text;
@@ -15,7 +20,7 @@ export default class TaskMarkdown extends Vue {
   }
 
   get htmlValue(): string {
-    return this.converter.makeHtml(this.text);
+    return TaskMarkdown.markdown2html(this.text);
   }
 
   public markdownText(): string {

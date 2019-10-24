@@ -47,7 +47,7 @@ export default class ContestTable extends Vue {
   }
 
   public showAttemptsTable(contest: ContestDto) {
-    this.contestMainWindow().showAttemptTableByTask(contest);
+    this.contestMainWindow().showAttemptTableByStudent(contest);
   }
 
   public hide() {

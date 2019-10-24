@@ -67,6 +67,7 @@ object MyAttempts : Table("Contest.MyAttempts") {
       it.put("author", row[author])
       it.put("attempt_id", row[attemptId])
       it.put("user_id", row[attemptUserId])
+      it.put("user_name", row[attemptUserName])
       it.put("status", row[status])
       it.put("testing_start_ts", row[testingStartTs]?.let { dateTime ->
         val time = PrettyTime(dateTime.toDate())
