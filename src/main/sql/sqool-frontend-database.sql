@@ -54,7 +54,7 @@ CREATE OR REPLACE VIEW Contest.TaskDto AS
 SELECT id, name, script_id, author_id,
   COALESCE(description, '') AS description,
   COALESCE(solution, '') AS solution,
-  array_to_json(array_agg(json_object('{name, type}', ARRAY[col_name, col_type])))::TEXT AS result_json
+  array_to_json(array_agg(json_object('{name, type, num}', ARRAY[col_name, col_type, col_num::TEXT])))::TEXT AS result_json
 FROM Contest.Task T JOIN Contest.TaskResult R ON T.id=R.task_id
 GROUP BY T.id
 UNION ALL
@@ -461,7 +461,7 @@ RETURNS VOID AS $$
     FROM Contest.Attempt
     WHERE user_id = _user_id AND task_id = _task_id AND variant_id = _variant_id AND contest_code = _contest_code
   );
-  
+
   UPDATE Contest.Attempt SET status = 'testing', testing_start_ts = NOW(), attempt_id = _attempt_id, attempt_text = _attempt_text
   WHERE user_id = _user_id AND task_id = _task_id AND variant_id = _variant_id AND contest_code = _contest_code;
 $$ LANGUAGE SQL;
