@@ -38,6 +38,7 @@ before_script:
 test:
   stage: test
   script:
+    - docker pull postgres
     - gradle test -Ppostgres.ip=`getent hosts postgres | awk '{ print $1 }'`
   cache:
     key: "$CI_COMMIT_REF_NAME"
