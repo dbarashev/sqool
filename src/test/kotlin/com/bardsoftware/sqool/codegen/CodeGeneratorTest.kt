@@ -1,15 +1,34 @@
+/*
+ * Copyright (c) BarD Software s.r.o 2019
+ *
+ * This file is a part of SQooL, a service for running SQL contests.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.bardsoftware.sqool.codegen
 
-import com.bardsoftware.sqool.codegen.task.*
+import com.bardsoftware.sqool.codegen.task.MultiColumnTask
+import com.bardsoftware.sqool.codegen.task.ScalarValueTask
+import com.bardsoftware.sqool.codegen.task.SingleColumnTask
 import com.bardsoftware.sqool.codegen.task.spec.MatcherSpec
 import com.bardsoftware.sqool.codegen.task.spec.RelationSpec
 import com.bardsoftware.sqool.codegen.task.spec.SqlDataType
 import com.bardsoftware.sqool.codegen.task.spec.TaskResultColumn
 import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.whenever
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-
-import org.junit.jupiter.api.Assertions.*
 
 class CodeGeneratorTest {
   @Test
@@ -17,7 +36,7 @@ class CodeGeneratorTest {
     val expectedStaticCode = """
         |DROP SCHEMA IF EXISTS cw1 CASCADE;
         |CREATE SCHEMA cw1;
-        |SET search_path=cw1;
+        |SET search_path=cw1,ext;
         |
         |
         |CREATE OR REPLACE FUNCTION Task3_Robot()
@@ -82,7 +101,7 @@ class CodeGeneratorTest {
     val expectedPerSubmissionCode = """
         |SELECT set_config(
         |   ''search_path'',
-        |   ''cw1,'' || current_setting(''search_path''),
+        |   ''cw1,ext,'' || current_setting(''search_path''),
         |   false
         |);
         |
@@ -110,7 +129,7 @@ class CodeGeneratorTest {
     val expectedStaticCode = """
         |DROP SCHEMA IF EXISTS cw2 CASCADE;
         |CREATE SCHEMA cw2;
-        |SET search_path=cw2;
+        |SET search_path=cw2,ext;
         |\i '/hse/cw2/schema/schema.sql';
         |
         |CREATE OR REPLACE FUNCTION Task12_Robot()
@@ -159,7 +178,7 @@ class CodeGeneratorTest {
     val expectedPerSubmissionCode = """
         |SELECT set_config(
         |   ''search_path'',
-        |   ''cw2,'' || current_setting(''search_path''),
+        |   ''cw2,ext,'' || current_setting(''search_path''),
         |   false
         |);
         |
@@ -180,7 +199,7 @@ class CodeGeneratorTest {
     val expectedStaticCode = """
         |DROP SCHEMA IF EXISTS cw3 CASCADE;
         |CREATE SCHEMA cw3;
-        |SET search_path=cw3;
+        |SET search_path=cw3,ext;
         |
         |
         |CREATE OR REPLACE FUNCTION Task05_Robot()
@@ -258,7 +277,7 @@ class CodeGeneratorTest {
     val expectedPerSubmissionCode = """
         |SELECT set_config(
         |   ''search_path'',
-        |   ''cw3,'' || current_setting(''search_path''),
+        |   ''cw3,ext,'' || current_setting(''search_path''),
         |   false
         |);
         |
@@ -296,7 +315,7 @@ class CodeGeneratorTest {
     val expectedStaticCode = """
         |DROP SCHEMA IF EXISTS cw2 CASCADE;
         |CREATE SCHEMA cw2;
-        |SET search_path=cw2;
+        |SET search_path=cw2,ext;
         |\i '/workspace/hse/schema/Task1.sql';
         |\i '/workspace/hse/schema/Task2.sql';
         |
