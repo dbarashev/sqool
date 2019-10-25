@@ -62,7 +62,7 @@ class StaticCodeTester(
     val command = listOf("bash", "-c", "psql $postgresUri -f '/workspace/$contest/init.sql'")
     // docker.pull("postgres:10")
     val containerConfig = ContainerConfig.builder()
-        .image("postgres:10")
+        .image("postgres")
         .hostConfig(hostConfig)
         .cmd(command)
         .build()
