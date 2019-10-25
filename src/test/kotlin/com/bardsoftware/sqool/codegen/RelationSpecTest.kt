@@ -3,9 +3,8 @@ package com.bardsoftware.sqool.codegen
 import com.bardsoftware.sqool.codegen.task.spec.RelationSpec
 import com.bardsoftware.sqool.codegen.task.spec.SqlDataType
 import com.bardsoftware.sqool.codegen.task.spec.TaskResultColumn
-import org.junit.jupiter.api.Test
-
 import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Test
 
 class RelationSpecTest {
   @Test
@@ -53,6 +52,14 @@ class RelationSpecTest {
       RelationSpec(keyAttribute, nonKeyAttributes)
     }
     assertEquals("Column names must be unique", exception.message)
+  }
+
+  @Test
+  fun testResultColumnOrdering() {
+    RelationSpec(listOf(
+        TaskResultColumn("id", SqlDataType.INT, 2),
+        TaskResultColumn("value", SqlDataType.TEXT, 1)
+    ))
   }
 }
 

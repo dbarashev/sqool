@@ -10,7 +10,8 @@ import com.bardsoftware.sqool.codegen.task.spec.TaskResultColumn
 import com.nhaarman.mockito_kotlin.doReturn
 import com.nhaarman.mockito_kotlin.mock
 import org.jetbrains.exposed.sql.ResultRow
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 
 class DbQueryManagerTest {
@@ -66,10 +67,9 @@ class DbQueryManagerTest {
     )
     val resultRow = mockResultRow(taskName, solution, attributes)
 
-    val exception = assertThrows(MalformedDataException::class.java) {
+    assertThrows(MalformedDataException::class.java) {
       dbQueryManager.resultRowToTask(resultRow)
     }
-    assertEquals("Invalid task json", exception.message)
   }
 
   @Test
@@ -82,10 +82,30 @@ class DbQueryManagerTest {
     )
     val resultRow = mockResultRow(taskName, solution, attributes)
 
-    val exception = assertThrows(MalformedDataException::class.java) {
+    assertThrows(MalformedDataException::class.java) {
       dbQueryManager.resultRowToTask(resultRow)
     }
-    assertEquals("Invalid task json", exception.message)
+  }
+
+  @Test
+  fun `Test the result type of column tasks`() {
+    buildTask("Task001", """
+      [ {"name": "value", "type": "TEXT", "num": "2"}, {"name": "id", "type": "INT", "num": "1"} ] 
+    """.trimIndent(), "SELECT NULL::INT, NULL::TEXT").let {
+      assertEquals("TABLE(id INT, value TEXT)", it.resultType)
+    }
+
+    buildTask("Task002", """
+      [ {"name": "id", "type": "INT", "num": "1"}, {"name": "value", "type": "TEXT", "num": "2"} ] 
+    """.trimIndent(), "SELECT NULL::INT, NULL::TEXT").let {
+      assertEquals("TABLE(id INT, value TEXT)", it.resultType)
+    }
+
+    buildTask("Task003", """
+      [ {"name": "id", "type": "INT", "num": "1"} ] 
+    """.trimIndent(), "SELECT NULL::INT").let {
+      assertEquals("TABLE(id INT)", it.resultType)
+    }
   }
 
   private fun mockResultRow(name: String, solution: String, attributes: List<TaskResultColumn>): ResultRow {

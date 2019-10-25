@@ -36,8 +36,6 @@ object ContestTasks : Table("Contest.TaskContest") {
 }
 
 class DbQueryManager {
-  private val jsonMapper = ObjectMapper()
-
   fun listContestVariantsId(contestCode: String): List<Int> = transaction {
     Contests.select { Contests.code eq contestCode }
         .map { ObjectMapper().readValue(it[Contests.variants_id_json_array], IntArray::class.java).toList() }
@@ -86,9 +84,7 @@ class DbQueryManager {
   }
 
   fun resultRowToTask(row: ResultRow): Task = try {
-    val attributesJson = row[Tasks.result_json]
-    val keyAttributes = jsonMapper.readValue(attributesJson, object : TypeReference<List<AttributeDto>>() {})
-    TaskDto(row[Tasks.name], row[Tasks.solution], keyAttributes).toTask()
+    buildTask(row[Tasks.name], row[Tasks.result_json], row[Tasks.solution])
   } catch (exception: Exception) {
     when (exception) {
       is UnrecognizedPropertyException, is InvalidDefinitionException, is JsonMappingException,
@@ -98,45 +94,42 @@ class DbQueryManager {
   }
 }
 
-private class TaskDto(
-    private val name: String,
-    private val solution: String,
-    private val keyAttributes: List<AttributeDto>,
-    private val nonKeyAttributes: List<AttributeDto> = emptyList()
-) {
-  fun toTask(): Task {
-    if (!isValid()) {
-      throw MalformedDataException("Invalid task json")
-    }
-
-    if (keyAttributes.size == 1 && keyAttributes[0].name.isEmpty()) {
-      return ScalarValueTask(name, solution, SqlDataType.getEnum(keyAttributes[0].type))
-    }
-
-    if (keyAttributes.size == 1 && nonKeyAttributes.isEmpty()) {
-      val type = SqlDataType.getEnum(keyAttributes[0].type)
-      val column = TaskResultColumn(keyAttributes[0].name, type)
-      return SingleColumnTask(name, solution, column)
-    }
-
-    return buildMultiColumnTask()
-  }
-
-  private fun isValid() = name.isNotEmpty() && solution.isNotEmpty()
-
-  private fun buildMultiColumnTask(): Task {
-    val keyAttributes = keyAttributes.map { it.toTaskResultColumn() }
-    val nonKeyAttributes = nonKeyAttributes.map { it.toTaskResultColumn() }
-    val relationSpec = RelationSpec(keyAttributes.sortedBy { it.num }, nonKeyAttributes)
-    val matcherSpec = MatcherSpec(relationSpec)
-    return MultiColumnTask(name, solution, matcherSpec)
-  }
+private val TYPE_REFERENCE = object : TypeReference<List<AttributeDto>>() {}
+fun buildTask(name: String, resultJson: String, solution: String): Task {
+  val keyAttributes = jsonMapper.readValue(resultJson, TYPE_REFERENCE)
+  return buildTask(name, solution, keyAttributes)
 }
+
+private fun buildTask(
+    name: String, solution: String, keyAttributes: List<AttributeDto>, nonKeyAttributes: List<AttributeDto> = emptyList()): Task {
+  if (name.isEmpty() || solution.isEmpty()) {
+    throw MalformedDataException("Invalid task")
+  }
+
+  if (keyAttributes.size == 1 && keyAttributes[0].name.isEmpty()) {
+    return ScalarValueTask(name, solution, SqlDataType.getEnum(keyAttributes[0].type))
+  }
+
+  if (keyAttributes.size == 1 && nonKeyAttributes.isEmpty()) {
+    val type = SqlDataType.getEnum(keyAttributes[0].type)
+    val column = TaskResultColumn(keyAttributes[0].name, type)
+    return SingleColumnTask(name, solution, column)
+  }
+
+  val keyAttributes = keyAttributes.map { it.toTaskResultColumn() }
+  val nonKeyAttributes = nonKeyAttributes.map { it.toTaskResultColumn() }
+  val relationSpec = RelationSpec(keyAttributes.sortedBy { it.num }, nonKeyAttributes)
+  val matcherSpec = MatcherSpec(relationSpec)
+  return MultiColumnTask(name, solution, matcherSpec)
+}
+
 
 private class AttributeDto {
   val name: String = ""
   val type: String = ""
-  val num: String = ""
+  val num: String = "0"
 
   fun toTaskResultColumn(): TaskResultColumn = TaskResultColumn(name, SqlDataType.getEnum(type), num.toInt())
 }
+
+private val jsonMapper = ObjectMapper()
