@@ -1,6 +1,6 @@
 package com.bardsoftware.sqool.codegen.task.spec
 
-data class TaskResultColumn(val name: String, val type: SqlDataType) {
+data class TaskResultColumn(val name: String, val type: SqlDataType, val num: Int = 0) {
   override fun toString(): String = "$name $type"
 }
 

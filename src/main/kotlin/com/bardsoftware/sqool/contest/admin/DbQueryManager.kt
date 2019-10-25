@@ -127,7 +127,7 @@ private class TaskDto(
   private fun buildMultiColumnTask(): Task {
     val keyAttributes = keyAttributes.map { it.toTaskResultColumn() }
     val nonKeyAttributes = nonKeyAttributes.map { it.toTaskResultColumn() }
-    val relationSpec = RelationSpec(keyAttributes, nonKeyAttributes)
+    val relationSpec = RelationSpec(keyAttributes.sortedBy { it.num }, nonKeyAttributes)
     val matcherSpec = MatcherSpec(relationSpec)
     return MultiColumnTask(name, solution, matcherSpec)
   }
@@ -136,6 +136,7 @@ private class TaskDto(
 private class AttributeDto {
   val name: String = ""
   val type: String = ""
+  val num: String = ""
 
-  fun toTaskResultColumn(): TaskResultColumn = TaskResultColumn(name, SqlDataType.getEnum(type))
+  fun toTaskResultColumn(): TaskResultColumn = TaskResultColumn(name, SqlDataType.getEnum(type), num.toInt())
 }
