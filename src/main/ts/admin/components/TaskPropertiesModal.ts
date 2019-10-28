@@ -12,6 +12,7 @@ export default class TaskPropertiesModal extends Vue {
   public taskName: string = '';
   public taskResult: string = '';
   public taskSolution: string = '';
+  public taskHasResult: boolean = true;
 
   private taskId: number = -1;
   private deferred: JQueryDeferred<TaskDto> = $.Deferred<TaskDto>();
@@ -28,6 +29,7 @@ export default class TaskPropertiesModal extends Vue {
     $('#task-properties').modal();
     this.taskId = task.id;
     this.taskName = task.name;
+    this.taskHasResult = task.has_result;
     this.taskResult = getTaskResultSql(task);
     this.markdown.textValue = task.description;
     this.scriptsDropdown.setSelectedScriptById(task.script_id);
@@ -46,7 +48,7 @@ export default class TaskPropertiesModal extends Vue {
     const taskDescription = this.markdown.textValue;
     const scriptId = this.scriptsDropdown.selectedScript.value;
     this.deferred.resolve(
-        new TaskDto(this.taskId, this.taskName, taskDescription, this.taskResult, this.taskSolution, scriptId),
+        new TaskDto(this.taskId, this.taskName, taskDescription, this.taskHasResult, this.taskResult, this.taskSolution, scriptId),
     );
   }
 }

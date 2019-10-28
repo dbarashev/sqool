@@ -13,6 +13,7 @@ export default class TaskToolbar extends Vue {
         id: task.id,
         name: task.name,
         description: task.description,
+        has_result: task.has_result,
         result: task.result_json,
         solution: task.solution,
         script_id: task.script_id,
@@ -25,7 +26,7 @@ export default class TaskToolbar extends Vue {
   @Inject() private readonly alertDialog!: () => AlertDialog;
 
   public createNewTask() {
-    const newTask = new TaskDto(-1, '000', '', '', '', null);
+    const newTask = new TaskDto(-1, '000', '', true, '', '', null);
     this.showAndSubmitTask(newTask, '/admin/task/new');
   }
 

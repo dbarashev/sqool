@@ -21,10 +21,7 @@ package com.bardsoftware.sqool.contest.admin
 import com.bardsoftware.sqool.codegen.Contest
 import com.bardsoftware.sqool.codegen.Schema
 import com.bardsoftware.sqool.codegen.Variant
-import com.bardsoftware.sqool.codegen.task.MultiColumnTask
-import com.bardsoftware.sqool.codegen.task.ScalarValueTask
-import com.bardsoftware.sqool.codegen.task.SingleColumnTask
-import com.bardsoftware.sqool.codegen.task.Task
+import com.bardsoftware.sqool.codegen.task.*
 import com.bardsoftware.sqool.codegen.task.spec.MatcherSpec
 import com.bardsoftware.sqool.codegen.task.spec.RelationSpec
 import com.bardsoftware.sqool.codegen.task.spec.SqlDataType
@@ -102,7 +99,11 @@ class DbQueryManager {
   }
 
   fun resultRowToTask(row: ResultRow): Task = try {
-    buildTask(row[Tasks.name], row[Tasks.result_json], row[Tasks.solution])
+    if (row[Tasks.hasResult]) {
+      buildTask(row[Tasks.name], row[Tasks.result_json], row[Tasks.solution])
+    } else {
+      buildDdlTask(row[Tasks.name])
+    }
   } catch (exception: Exception) {
     when (exception) {
       is UnrecognizedPropertyException, is InvalidDefinitionException, is JsonMappingException,
@@ -141,6 +142,9 @@ private fun buildTask(
   return MultiColumnTask(name, solution, matcherSpec)
 }
 
+private fun buildDdlTask(name: String): Task {
+  return DdlTask(name, "")
+}
 
 private class AttributeDto {
   val name: String = ""

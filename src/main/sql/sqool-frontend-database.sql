@@ -30,6 +30,7 @@ CREATE TABLE Contest.Task(
   name TEXT,
   real_name TEXT UNIQUE,
   description TEXT,
+  has_result BOOLEAN DEFAULT TRUE,
   solution TEXT,
   score INT CHECK(score BETWEEN 1 AND 10) DEFAULT 1,
   difficulty INT CHECK(difficulty BETWEEN 1 AND 3) DEFAULT 1,
@@ -54,6 +55,7 @@ CREATE OR REPLACE VIEW Contest.TaskDto AS
 SELECT id, name, script_id, author_id,
   COALESCE(description, '') AS description,
   COALESCE(solution, '') AS solution,
+  has_result AS has_result,
   array_to_json(array_agg(json_object('{name, type, num}', ARRAY[col_name, col_type, col_num::TEXT])))::TEXT AS result_json
 FROM Contest.Task T JOIN Contest.TaskResult R ON T.id=R.task_id
 GROUP BY T.id
@@ -63,6 +65,7 @@ UNION ALL
 SELECT id, name, script_id, author_id,
   COALESCE(description, '') AS description,
   COALESCE(solution, '') AS solution,
+  has_result AS has_result,
   '[]' AS result_json
 FROM Contest.Task T LEFT JOIN Contest.TaskResult R ON T.id=R.task_id
 WHERE R.task_id IS NULL
@@ -76,27 +79,34 @@ DECLARE
 BEGIN
   IF NEW.id IS NULL THEN
     WITH T AS (
-      INSERT INTO Contest.Task(name, real_name, description, solution, script_id, author_id)
-        VALUES (NEW.name, NEW.name, NEW.description, NEW.solution, NEW.script_id, NEW.author_id)
+      INSERT INTO Contest.Task(name, real_name, description, has_result, solution, script_id, author_id)
+        VALUES (NEW.name, NEW.name, NEW.description, NEW.has_result, NEW.solution, NEW.script_id, NEW.author_id)
         RETURNING id
     )
     SELECT id INTO new_task_id
     FROM T;
   ELSE
-    UPDATE Contest.Task SET name = NEW.name, real_name = NEW.name, description = NEW.description,
-                            solution = NEW.solution, script_id = NEW.script_id
+    UPDATE Contest.Task
+    SET name = NEW.name,
+        real_name = NEW.name,
+        description = NEW.description,
+        has_result = NEW.has_result,
+        solution = NEW.solution,
+        script_id = NEW.script_id
     WHERE id = NEW.id;
     SELECT NEW.id INTO new_task_id;
   END IF;
 
   DELETE FROM Contest.TaskResult WHERE task_id = new_task_id;
-  WITH T AS (
-    SELECT new_task_id AS task_id, X.*
-    FROM json_to_recordset(NEW.result_json::JSON) AS X(col_num INT, col_name TEXT, col_type TEXT)
-  )
-  INSERT INTO Contest.TaskResult(task_id, col_num, col_name, col_type)
-  SELECT task_id, col_num, col_name, col_type
-  FROM T;
+  IF NEW.has_result THEN
+      WITH T AS (
+        SELECT new_task_id AS task_id, X.*
+        FROM json_to_recordset(NEW.result_json::JSON) AS X(col_num INT, col_name TEXT, col_type TEXT)
+      )
+      INSERT INTO Contest.TaskResult(task_id, col_num, col_name, col_type)
+      SELECT task_id, col_num, col_name, col_type
+      FROM T;
+  END IF;
 RETURN NEW;
 end;
 $$ LANGUAGE plpgsql;

@@ -33,6 +33,7 @@ object Tasks : Table("Contest.TaskDto") {
   val id = integer("id").primaryKey()
   val name = text("name")
   val description = text("description")
+  val hasResult = bool("has_result")
   val result_json = text("result_json")
   val solution = text("solution")
   val script_id = integer("script_id").nullable()
@@ -43,6 +44,7 @@ object Tasks : Table("Contest.TaskDto") {
       it.put("id", row[id])
       it.put("name", row[name])
       it.put("description", row[description])
+      it.put("has_result", row[hasResult])
       it.put("solution", row[solution])
       it.put("result_json", row[result_json])
       it.put("script_id", row[script_id])
@@ -70,6 +72,7 @@ data class TaskEditArgs(
     var id: String,
     var name: String,
     var description: String,
+    var hasResult: String,
     var result: String,
     var solution: String,
     var script_id: String
@@ -77,15 +80,16 @@ data class TaskEditArgs(
 
 class TaskEditHandler : AdminHandler<TaskEditArgs>() {
   override fun args(): TaskEditArgs = TaskEditArgs(
-      id = "", name = "", description = "", result = "", solution = "", script_id = "")
+      id = "", name = "", description = "", hasResult = "", result = "", solution = "", script_id = "")
 
   override fun handle(http: HttpApi, argValues: TaskEditArgs) = withAdminUser(http) { admin ->
-    val resultJson = buildResultJson(argValues.result)
+    val resultJson = if (argValues.hasResult.toBoolean()) buildResultJson(argValues.result) else "[]"
     when (Strings.emptyToNull(argValues.id)) {
       null -> {
         Tasks.insert {
           it[name] = argValues.name
           it[description] = argValues.description
+          it[hasResult] = argValues.hasResult.toBoolean()
           it[result_json] = resultJson
           it[solution] = argValues.solution
           it[script_id] = argValues.script_id.toIntOrNull()
@@ -97,6 +101,7 @@ class TaskEditHandler : AdminHandler<TaskEditArgs>() {
         Tasks.update(where = { Tasks.id eq argValues.id.toInt() }) {
           it[name] = argValues.name
           it[description] = argValues.description
+          it[hasResult] = argValues.hasResult.toBoolean()
           it[result_json] = resultJson
           it[solution] = argValues.solution
           it[script_id] = argValues.script_id.toIntOrNull()

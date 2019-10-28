@@ -281,6 +281,7 @@ fun main(args: Array<String>) {
 
       GET("/admin/task/all" BY adminTaskAllHandler)
       POST("/admin/task/new" BY adminTaskEditHandler ARGS mapOf(
+          "has_result" to TaskEditArgs::hasResult,
           "result" to TaskEditArgs::result,
           "name" to TaskEditArgs::name,
           "description" to TaskEditArgs::description,
@@ -289,6 +290,7 @@ fun main(args: Array<String>) {
       ))
       POST("/admin/task/update" BY adminTaskEditHandler ARGS mapOf(
           "id" to TaskEditArgs::id,
+          "has_result" to TaskEditArgs::hasResult,
           "result" to TaskEditArgs::result,
           "name" to TaskEditArgs::name,
           "description" to TaskEditArgs::description,

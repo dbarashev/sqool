@@ -33,19 +33,35 @@
                                             <input type="text" class="form-control" id="task-properties-name" aria-describedby="task-properties-name-help"
                                                    v-model="taskName">
                                             <small id="task-properties-name-help"
-                                                   class="form-text text-muted">Обычно это номер.</small>
+                                                   class="form-text text-muted">Обычно это что-то типа Class101 или Control 206.</small>
                                         </div>
                                     </div>
                                 </fieldset>
 
-
                                 <fieldset class="form-group">
+                                    <div class="row">
+                                        <label for="task-properties-name"
+                                               class="col-form-label col-sm-3">Есть ли у задачи результат?</label>
+                                        <div class="col-sm-9 text-left form-check">
+                                            <input type="checkbox"
+                                                   id="task-properties-has-result"
+                                                   aria-describedby="task-properties-has-result-help"
+                                                   v-model="taskHasResult"
+                                            >
+                                            <small id="task-properties-has-result-help"
+                                                   class="form-text text-muted">У DDL задач результата нет, у DML задач (запросов) результат есть</small>
+                                        </div>
+                                    </div>
+                                </fieldset>
+
+                                <fieldset class="form-group" :disabled="!taskHasResult">
                                     <div class="row">
                                         <label for="task-properties-name"
                                                class="col-form-label col-sm-3">Столбцы результата</label>
                                         <div class="col-sm-9 text-left">
                                             <input type="text" class="form-control"
                                                    id="task-properties-result"
+                                                   :disabled="!taskHasResult"
                                                    aria-describedby="task-properties-result-help"
                                                    v-model="taskResult"
                                             >
