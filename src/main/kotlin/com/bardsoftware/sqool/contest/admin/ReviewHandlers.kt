@@ -110,3 +110,14 @@ class ReviewSaveHandler : AdminHandler<ReviewSaveArgs>() {
 
   override fun args(): ReviewSaveArgs = ReviewSaveArgs("", "")
 }
+
+data class ReviewEmailArgs(var contest_code: String, var user_id: String) : RequestArgs()
+class ReviewEmailHandler : AdminHandler<ReviewEmailArgs>() {
+  override fun args(): ReviewEmailArgs  = ReviewEmailArgs("", "")
+
+  override fun handle(http: HttpApi, argValues: ReviewEmailArgs): HttpResponse {
+    return withAdminUser(http) {
+      http.ok()
+    }
+  }
+}

@@ -22,6 +22,7 @@ CREATE TABLE Contest.ContestUser(
   name TEXT UNIQUE,
   nick TEXT,
   passwd TEXT,
+  email TEXT UNIQUE,
   is_admin BOOLEAN NOT NULL DEFAULT FALSE
 );
 
@@ -319,6 +320,16 @@ CREATE TABLE Contest.GradingDetails(
   error_msg TEXT,
   result_set TEXT
 );
+CREATE TABLE Contest.AttemptHistory(
+   attempt_id TEXT PRIMARY KEY,
+   task_id INT,
+   variant_id INT,
+   contest_code TEXT,
+   user_id INT,
+   status AttemptStatus DEFAULT 'failure',
+   attempt_text TEXT,
+   testing_start_ts TIMESTAMP
+);
 
 CREATE TABLE Contest.SolutionReview (
   attempt_id TEXT NOT NULL REFERENCES Contest.Attempt(attempt_id) ON UPDATE CASCADE ON DELETE CASCADE,
@@ -487,6 +498,11 @@ RETURNS VOID AS $$
   SET status = (CASE _success WHEN true THEN 'success'::AttemptStatus ELSE 'failure'::AttemptStatus END),
   count = count+1
   WHERE attempt_id = _attemptId;
+
+    INSERT INTO AttemptHistory(attempt_id, task_id, variant_id, contest_code, user_id, attempt_text, testing_start_ts)
+    SELECT attempt_id, task_id, variant_id, contest_code, user_id, attempt_text, testing_start_ts
+    FROM Attempt
+    WHERE attempt_id = _attemptId;
 
   INSERT INTO Contest.GradingDetails(attempt_id, error_msg, result_set) VALUES (_attemptId, _errorMsg, _resultLines);
 $$ LANGUAGE SQL;

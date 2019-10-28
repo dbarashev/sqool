@@ -10,6 +10,7 @@ export default class AttemptTableByStudent extends Vue {
   @Inject() private readonly alertDialog!: () => AlertDialog;
   private contest = new ContestDto('', '', '', '', []);
   private students: Student[] = [];
+  private emailProgress: boolean = false;
 
   public mounted() {
     this.refresh();
@@ -41,10 +42,23 @@ export default class AttemptTableByStudent extends Vue {
     this.$el.removeAttribute('hidden');
   }
 
+  public emailReviews(userId: number, contestCode: string) {
+    this.emailProgress = true;
+    $.ajax({
+      url: '/admin/review/email',
+      data: {contest_code: contestCode, user_id: userId},
+    }).fail((xhr) => {
+      this.alertDialog().show('Что-то пошло не так во время рассылки', xhr.statusText);
+    }).always( () => {
+      this.emailProgress = false;
+    });
+  }
+
   private userAttemptTable(ref: string): AttemptTable {
     const table = this.$refs[ref] as AttemptTable[];
     return table[0];
   }
+
 }
 
 interface Student {

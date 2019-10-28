@@ -131,9 +131,10 @@ class DbQueryManagerTest {
       """"name" : "${it.name}", "type" : "${it.type.name}""""
     }
     return mock {
-      on { get(Tasks.name) } doReturn name
-      on { get(Tasks.solution) } doReturn solution
-      on { get(Tasks.result_json) } doReturn resultJson
+      onGeneric { get(Tasks.name) } doReturn name
+      onGeneric { get(Tasks.solution) } doReturn solution
+      onGeneric { get(Tasks.hasResult) } doReturn true
+      onGeneric { get(Tasks.result_json) } doReturn resultJson
     }
   }
 }

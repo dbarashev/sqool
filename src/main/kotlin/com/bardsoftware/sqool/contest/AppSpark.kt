@@ -328,6 +328,10 @@ fun main(args: Array<String>) {
           "contest_code" to ContestUsersArgs::contestCode
       ))
 
+      POST("/admin/review/email" BY ReviewEmailHandler() ARGS mapOf(
+          "contest_code" to ReviewEmailArgs::contest_code,
+          "user_id" to ReviewEmailArgs::user_id
+      ))
       GET("/admin/review/get" BY adminReviewGetHandler ARGS mapOf(
           "attempt_id" to AdminReviewGetArgs::attempt_id
       ))

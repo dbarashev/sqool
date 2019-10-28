@@ -74,3 +74,32 @@ CREATE TRIGGER TaskDto_Update_Trigger
     INSTEAD OF UPDATE ON Contest.TaskDto
     FOR EACH ROW
 EXECUTE PROCEDURE TaskDto_Insert();
+
+
+CREATE TABLE Contest.AttemptHistory(
+   attempt_id TEXT PRIMARY KEY,
+   task_id INT,
+   variant_id INT,
+   contest_code TEXT,
+   user_id INT,
+   status AttemptStatus DEFAULT 'failure',
+   attempt_text TEXT,
+   testing_start_ts TIMESTAMP
+);
+
+CREATE OR REPLACE FUNCTION RecordAttemptResult(_attemptId TEXT, _success BOOLEAN, _errorMsg TEXT, _resultLines TEXT)
+    RETURNS VOID AS $$
+    UPDATE Contest.Attempt
+    SET status = (CASE _success WHEN true THEN 'success'::AttemptStatus ELSE 'failure'::AttemptStatus END),
+        count = count+1
+    WHERE attempt_id = _attemptId;
+
+    INSERT INTO AttemptHistory(attempt_id, task_id, variant_id, contest_code, user_id, attempt_text, testing_start_ts)
+    SELECT attempt_id, task_id, variant_id, contest_code, user_id, attempt_text, testing_start_ts
+    FROM Attempt
+    WHERE attempt_id = _attemptId;
+
+    INSERT INTO Contest.GradingDetails(attempt_id, error_msg, result_set) VALUES (_attemptId, _errorMsg, _resultLines);
+$$ LANGUAGE SQL;
+
+ALTER TABLE ContestUser ADD COLUMN email TEXT UNIQUE;

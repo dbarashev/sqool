@@ -14,6 +14,10 @@
                    @click="refreshUserTable('attemptTable' + student.user_id)">
                     Показать попытки
                 </a>
+                <a class="btn float-right" role="button"
+                   @click="emailReviews(contest.code, student.user_id)">
+                    Отослать рецензии
+                </a>
                 <div :id="student.user_id" class="collapse m-4">
                     <AttemptTable :ref="'attemptTable' + student.user_id" :contestCode="contest.code" :userId="student.user_id">
                     </AttemptTable>
