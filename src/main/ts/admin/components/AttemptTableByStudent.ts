@@ -45,6 +45,7 @@ export default class AttemptTableByStudent extends Vue {
   public emailReviews(userId: number, contestCode: string) {
     this.emailProgress = true;
     $.ajax({
+      method: 'POST',
       url: '/admin/review/email',
       data: {contest_code: contestCode, user_id: userId},
     }).fail((xhr) => {

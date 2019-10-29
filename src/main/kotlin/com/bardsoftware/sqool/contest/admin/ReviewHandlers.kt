@@ -21,6 +21,7 @@ package com.bardsoftware.sqool.contest.admin
 import com.bardsoftware.sqool.contest.HttpApi
 import com.bardsoftware.sqool.contest.HttpResponse
 import com.bardsoftware.sqool.contest.RequestArgs
+import com.bardsoftware.sqool.contest.storage.UserStorage
 import org.jetbrains.exposed.sql.*
 
 object SolutionReview : Table("Contest.SolutionReview") {
@@ -117,6 +118,11 @@ class ReviewEmailHandler : AdminHandler<ReviewEmailArgs>() {
 
   override fun handle(http: HttpApi, argValues: ReviewEmailArgs): HttpResponse {
     return withAdminUser(http) {
+      val email = UserStorage.exec {
+        val recipient = this.findUserById(argValues.user_id.toInt()) ?: return@exec http.error(404)
+        recipient.email
+      }
+      println("Sending email to $email")
       http.ok()
     }
   }

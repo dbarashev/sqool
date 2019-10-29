@@ -15,7 +15,7 @@
                     Показать попытки
                 </a>
                 <a class="btn float-right" role="button"
-                   @click="emailReviews(contest.code, student.user_id)">
+                   @click="emailReviews(student.user_id, contest.code)">
                     Отослать рецензии
                 </a>
                 <div :id="student.user_id" class="collapse m-4">

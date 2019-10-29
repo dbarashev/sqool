@@ -19,7 +19,7 @@
 package com.bardsoftware.sqool.contest
 
 import com.bardsoftware.sqool.contest.admin.Contests
-import com.bardsoftware.sqool.contest.admin.SolutionReview
+import com.bardsoftware.sqool.contest.admin.Variants
 import com.bardsoftware.sqool.contest.storage.AvailableContests
 import com.bardsoftware.sqool.contest.storage.User
 import com.bardsoftware.sqool.contest.storage.UserStorage
@@ -78,6 +78,7 @@ class ContestRecentHandler : DashboardHandler<RequestArgs>() {
   }
 }
 
+data class ContestAcceptResponse(val id: Int, val name: String)
 data class ContestAcceptArgs(var contest_code: String, var variant_id: String) : RequestArgs()
 
 class ContestAcceptHandler : DashboardHandler<ContestAcceptArgs>() {
@@ -89,7 +90,9 @@ class ContestAcceptHandler : DashboardHandler<ContestAcceptArgs>() {
     if (selectedVariant != "") {
       return@withUserContest if (variantChoice == Contests.VariantChoice.ANY) {
         user.assignVariant(argValues.contest_code, selectedVariant.toInt())
-        http.ok()
+        getResponse(selectedVariant.toInt())?.let {
+          http.json(it)
+        } ?: http.error(400, "Variant $selectedVariant not found")
       } else {
         http.error(400, "Variant can't be chosen by client in contest ${argValues.contest_code}")
       }
@@ -97,15 +100,27 @@ class ContestAcceptHandler : DashboardHandler<ContestAcceptArgs>() {
 
     val assignedVariant = rowUserContest[AvailableContests.assigned_variant_id]
     if (assignedVariant != null) {
-      return@withUserContest http.ok()
+      return@withUserContest getResponse(assignedVariant)?.let {
+        http.json(it)
+      } ?: http.error(500, "Can't locate assigned variant $assignedVariant")
     }
 
     when (variantChoice) {
       Contests.VariantChoice.ANY -> http.error(400, "No variant chosen in contest ${argValues.contest_code}")
 
-      Contests.VariantChoice.RANDOM -> http.ok().also { user.assignRandomVariant(argValues.contest_code) }
+      Contests.VariantChoice.RANDOM -> {
+        val variantId = user.assignRandomVariant(argValues.contest_code)
+        getResponse(variantId)?.let {
+          http.json(it)
+        } ?: http.error(500, "Can't assign random varian")
+      }
     }
   }
+}
+private fun getResponse(variantId: Int): ContestAcceptResponse? {
+  return Variants.select { Variants.id eq variantId }
+      .map { ContestAcceptResponse(it[Variants.id], it[Variants.name]) }
+      .firstOrNull()
 }
 
 data class ContestAttemptsArgs(var contest_code: String) : RequestArgs()

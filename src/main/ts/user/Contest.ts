@@ -25,10 +25,13 @@ export class Contest {
   }
 
   public acceptRandomVariant(): JQuery.jqXHR {
-    return $.ajax({
+    const result = $.ajax({
       url: '/contest/accept',
       method: 'POST',
       data: {contest_code: this.contestCode},
+    });
+    return result.done((variant: VariantOption) => {
+      this.chosenVariant = variant;
     });
   }
 
@@ -41,9 +44,8 @@ export class Contest {
         variant_id: variant.id,
       },
     });
-    result.done(() => {
+    return result.done(() => {
       this.chosenVariant = variant;
     });
-    return result;
   }
 }

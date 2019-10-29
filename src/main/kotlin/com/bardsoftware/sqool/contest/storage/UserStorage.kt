@@ -33,7 +33,7 @@ import java.sql.Types
 import java.util.Random
 
 data class ChallengeOffer(val taskId: Int, val description: String)
-data class UserEntity(var id: Int, var nick: String, var name: String, var passwd: String, var isAdmin: Boolean)
+data class UserEntity(var id: Int, var nick: String, var name: String, var passwd: String, var isAdmin: Boolean, var email: String)
 data class TaskAttemptEntity(
     var taskEntity: TaskEntity,
     var userId: Int,
@@ -93,6 +93,7 @@ object UserTable : Table("Contest.ContestUser") {
   var nick = text("nick")
   var name = text("name")
   var passwd = text("passwd")
+  var email = text("email").nullable()
   var isAdmin = bool("is_admin")
 }
 
@@ -252,7 +253,7 @@ class User(val entity: UserEntity, val storage: UserStorage) {
   val id: Int get() = entity.id
   val isAdmin: Boolean
     get() = entity.isAdmin
-
+  val email: String get() = entity.email
   /**
    * Returns the list of all attempts made by this user.
    */
@@ -454,7 +455,9 @@ class UserStorage(val txn: Transaction) {
               name = it.getString("name"),
               nick = it.getString("nick"),
               passwd = it.getString("passwd"),
-              isAdmin = it.getBoolean("is_admin")), this@UserStorage)
+              isAdmin = it.getBoolean("is_admin"),
+              email = it.getString("email")
+          ), this@UserStorage)
         } else {
           null
         }
@@ -468,7 +471,8 @@ class UserStorage(val txn: Transaction) {
         name = userRow[UserTable.name],
         nick = userRow[UserTable.nick],
         passwd = userRow[UserTable.passwd],
-        isAdmin = userRow[UserTable.isAdmin]
+        isAdmin = userRow[UserTable.isAdmin],
+        email = userRow[UserTable.email] ?: ""
     ), this@UserStorage)
   }
 
