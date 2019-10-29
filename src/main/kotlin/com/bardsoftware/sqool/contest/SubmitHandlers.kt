@@ -18,6 +18,9 @@
 
 package com.bardsoftware.sqool.contest
 
+import com.bardsoftware.sqool.contest.admin.Tasks
+import org.jetbrains.exposed.sql.select
+
 data class SubmitDoArgs(var contestCode: String = "",
                         var taskId: String = "",
                         var taskName: String = "",
@@ -32,7 +35,9 @@ class SubmitDoHandler(private val assessor: AssessorApi) : DashboardHandler<Subm
 
   override fun handle(http: HttpApi, argValues: SubmitDoArgs): HttpResponse {
     return withUser(http) {user ->
-      assessor.submit(argValues.contestCode, argValues.variantName, argValues.taskName, argValues.submissionText) {attemptId ->
+      val hasResult = Tasks.select { Tasks.id eq argValues.taskId.toInt() }.map { it[Tasks.hasResult] }.firstOrNull() ?: false
+
+      assessor.submit(argValues.contestCode, argValues.variantName, argValues.taskName, hasResult, argValues.submissionText) {attemptId ->
         println("User $user submitted assessor task $attemptId")
         withUser(http) {
           it.recordAttempt(argValues.taskId.toInt(), argValues.variantId.toInt(), argValues.contestCode, attemptId, argValues.submissionText)

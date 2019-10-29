@@ -28,8 +28,8 @@ import com.google.cloud.pubsub.v1.AckReplyConsumer
 import com.google.cloud.pubsub.v1.MessageReceiver
 import com.google.cloud.pubsub.v1.Publisher
 import com.google.protobuf.ByteString
+import com.google.pubsub.v1.ProjectTopicName
 import com.google.pubsub.v1.PubsubMessage
-import com.google.pubsub.v1.TopicName
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
@@ -40,11 +40,11 @@ private val MAPPER = ObjectMapper()
  * @author dbarashev@bardsoftware.com
  */
 interface AssessorApi {
-  fun submit(contestCode: String, variantName: String, taskName: String, solution: String, consumer: (String) -> Unit)
+  fun submit(contestCode: String, variantName: String, taskName: String, hasResult: Boolean, solution: String, consumer: (String) -> Unit)
 }
 
 class AssessorApiVoid : AssessorApi {
-  override fun submit(contestCode: String, variantName: String, taskName: String, solution: String, consumer: (String) -> Unit) {
+  override fun submit(contestCode: String, variantName: String, taskName: String, hasResult: Boolean, solution: String, consumer: (String) -> Unit) {
     println("""
       Submitting solution of task $taskName in variant $variantName of contest $contestCode
       This is an assessor stub. It will not do anything""".trimIndent())
@@ -74,6 +74,7 @@ class ResultMessageReceiver(val responseConsumer: (AssessmentPubSubResp) -> Unit
 class AssessorPubSub(private val topicId: String,
                      private val subscriptionId: String,
                      private val responseConsumer: (AssessmentPubSubResp) -> Unit) : AssessorApi {
+  private val publisher: Publisher
   private val executor = Executors.newSingleThreadExecutor()
   private val timeoutScheduler = Executors.newScheduledThreadPool(1)
   private val receiver = ResultMessageReceiver(responseConsumer)
@@ -85,17 +86,17 @@ class AssessorPubSub(private val topicId: String,
       onShutdown.complete(null)
     }))
     subscriber.listen(onShutdown)
+    val topicName = ProjectTopicName.of(ServiceOptions.getDefaultProjectId(), topicId)
+    publisher = Publisher.newBuilder(topicName).build()
   }
 
-  override fun submit(contestCode: String, variantName: String, taskName: String, solution: String, consumer: (String) -> Unit) {
+  override fun submit(contestCode: String, variantName: String, taskName: String, hasResult: Boolean, solution: String, consumer: (String) -> Unit) {
     try {
       val id = TaskId(course = contestCode, module = variantName, task = taskName)
-      val pubsubTask = AssessmentPubSubTask(id = id, submission = solution)
+      val pubsubTask = AssessmentPubSubTask(id = id, submission = solution, isDdl = !hasResult)
       val data = MAPPER.writeValueAsBytes(pubsubTask)
       val message = PubsubMessage.newBuilder().setData(ByteString.copyFrom(data)).build()
       println("============ Publishing message")
-      val topicName = TopicName.create(ServiceOptions.getDefaultProjectId(), topicId)
-      val publisher = Publisher.defaultBuilder(topicName).build()
       val future = publisher.publish(message)
       future.addListener(Runnable {
         val msgId = future.get()

@@ -18,6 +18,8 @@
 
 package com.bardsoftware.sqool.codegen.task
 
+import com.bardsoftware.sqool.codegen.getExtensionSchemaName
+
 /**
  * @author dbarashev@bardsoftware.com
  */
@@ -27,9 +29,8 @@ class DdlTask(name: String, solution: String) : Task(name, solution) {
 
   override val mockSolution: String
     get() = """
-      |BEGIN
-      |CREATE TABLE Foo(id INT PRIMARY KEY, value TEXT);
-      |END;""".trimMargin()
+      |CREATE TABLE Foo(id INT PRIMARY KEY, value TEXT)
+      """.trimMargin()
 
   override val mockSolutionError: Regex
     get() = ".*".toRegex()
@@ -38,43 +39,30 @@ class DdlTask(name: String, solution: String) : Task(name, solution) {
     val matcherFunName = "${name}_Matcher"
     val matcherCode = """
         | BEGIN
-        | PERFORM $userQueryFunName();
-        | RETURN;
-        | EXCEPTION
-        |   WHEN OTHERS THEN
-        |     RETURN NEXT SQLERRM;
-        |   RETURN;
         | END;
         """.trimMargin()
     return """
             |${generateFunDef(
-        funName = userQueryFunName, returnType = resultType,
-        body = mockSolution, language = Language.PLPGSQL
-    )}
-            |
-            |${generateFunDef(
         funName = matcherFunName, returnType = "SETOF TEXT",
         body = matcherCode, language = Language.PLPGSQL
     )}
-            |
-            |DROP FUNCTION $userQueryFunName() CASCADE;
             """.trimMargin()
   }
 
+  override fun generateDynamicCodeHeader(variant: String) = """
+      |SELECT set_config(
+      |   ''search_path'',
+      |   current_setting(''search_path'') || '',$variant,${getExtensionSchemaName()}'',
+      |   false
+      |);
+      """.trimMargin()
+
   override fun generateDynamicCode(variant: String): String {
-    val userFxn = generateFunDef(
-        funName = userQueryFunName,
-        returnType = resultType,
-        body = """
-          BEGIN
-          {1}
-          END;""".trimIndent(),
-        language = Language.PLPGSQL
-    )
     return """
         |${generateDynamicCodeHeader(variant)}
         |
-        |$userFxn
+        |{1}
+        |;
         """.trimMargin()
   }
 

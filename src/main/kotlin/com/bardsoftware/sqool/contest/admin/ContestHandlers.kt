@@ -18,10 +18,11 @@
 
 package com.bardsoftware.sqool.contest.admin
 
-import com.bardsoftware.sqool.codegen.*
+import com.bardsoftware.sqool.codegen.Contest
 import com.bardsoftware.sqool.codegen.docker.ContestImageManager
 import com.bardsoftware.sqool.codegen.docker.ImageCheckResult
-import com.bardsoftware.sqool.contest.*
+import com.bardsoftware.sqool.contest.HttpApi
+import com.bardsoftware.sqool.contest.RequestArgs
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.jetbrains.exposed.sql.*
@@ -137,7 +138,9 @@ class ContestBuildHandler : AdminHandler<ContestBuildArgs> {
     try {
       val contest = queryManager.findContest(argValues.code)
       val imageManager = imageManager(contest)
+      println("Creating image...")
       imageManager.createImage()
+      println("Image done, testing...")
 
       val errorStream = ByteArrayOutputStream()
       when (imageManager.checkImage(errorStream)) {
@@ -151,6 +154,9 @@ class ContestBuildHandler : AdminHandler<ContestBuildArgs> {
     } catch (exception: NoSuchContestException) {
       exception.printStackTrace()
       http.error(404, "No such contest")
+    } catch (exception: Throwable) {
+      exception.printStackTrace()
+      http.error(500, exception.message)
     }
   }
 }

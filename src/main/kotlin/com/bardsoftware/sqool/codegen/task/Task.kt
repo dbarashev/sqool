@@ -31,7 +31,7 @@ abstract class Task(val name: String, val solution: String) {
 
   abstract fun generateDynamicCode(variant: String): String
 
-  protected fun generateDynamicCodeHeader(variant: String) = """
+  protected open fun generateDynamicCodeHeader(variant: String) = """
       |SELECT set_config(
       |   ''search_path'',
       |   ''$variant,${getExtensionSchemaName()},'' || current_setting(''search_path''),

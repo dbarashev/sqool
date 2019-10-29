@@ -24,7 +24,7 @@ import com.google.cloud.ServiceOptions
 import com.google.cloud.pubsub.v1.MessageReceiver
 import com.google.cloud.pubsub.v1.Subscriber
 import com.google.common.util.concurrent.MoreExecutors
-import com.google.pubsub.v1.SubscriptionName
+import com.google.pubsub.v1.ProjectSubscriptionName
 import java.util.concurrent.CompletableFuture
 
 data class TaskId(
@@ -35,7 +35,9 @@ data class TaskId(
 
 data class AssessmentPubSubTask(
     @JsonProperty("id") val id: TaskId,
-    @JsonProperty("submission") val submission: String)
+    @JsonProperty("submission") val submission: String,
+    @JsonProperty("isDdl")      val isDdl: Boolean
+)
 
 data class AssessmentPubSubResp(
     @JsonProperty("requestId") val requestId: String,
@@ -44,11 +46,11 @@ data class AssessmentPubSubResp(
     @JsonProperty("resultLines") val resultLines: List<Map<String, Any>> = emptyList())
 
 open class PubSubSubscriber(subscription: String, val receiver: MessageReceiver) {
-  val subscriptionFullName = SubscriptionName.create(ServiceOptions.getDefaultProjectId(), subscription)
+  val subscriptionFullName = ProjectSubscriptionName.of(ServiceOptions.getDefaultProjectId(), subscription)
   fun listen(onShutdown: CompletableFuture<Any>) {
     var subscriber: Subscriber? = null
     try {
-      subscriber = Subscriber.defaultBuilder(subscriptionFullName, receiver).build()
+      subscriber = Subscriber.newBuilder(subscriptionFullName, receiver).build()
       subscriber.addListener(object : ApiService.Listener() {
         override fun failed(from: ApiService.State?, failure: Throwable?) {
           println("FAILED!")
