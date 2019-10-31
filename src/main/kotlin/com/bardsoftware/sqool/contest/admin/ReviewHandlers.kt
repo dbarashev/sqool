@@ -22,7 +22,9 @@ import com.bardsoftware.sqool.contest.HttpApi
 import com.bardsoftware.sqool.contest.HttpResponse
 import com.bardsoftware.sqool.contest.RequestArgs
 import com.bardsoftware.sqool.contest.storage.UserStorage
+import okhttp3.*
 import org.jetbrains.exposed.sql.*
+import java.io.IOException
 
 object SolutionReview : Table("Contest.SolutionReview") {
   val attempt_id = text("attempt_id")
@@ -113,16 +115,49 @@ class ReviewSaveHandler : AdminHandler<ReviewSaveArgs>() {
 }
 
 data class ReviewEmailArgs(var contest_code: String, var user_id: String) : RequestArgs()
-class ReviewEmailHandler : AdminHandler<ReviewEmailArgs>() {
+class ReviewEmailHandler(val apiKey: String) : AdminHandler<ReviewEmailArgs>() {
+  private val httpClient = OkHttpClient.Builder().authenticator(object : Authenticator {
+    @Throws(IOException::class)
+    override fun authenticate(route: Route?, response: Response): Request? {
+      if (response.request.header("Authorization") != null) {
+        return null // Give up, we've already attempted to authenticate.
+      }
+      return response.request.newBuilder()
+          .header("Authorization", Credentials.basic("api", apiKey))
+          .build()
+    }
+  }).build()
+
   override fun args(): ReviewEmailArgs  = ReviewEmailArgs("", "")
 
   override fun handle(http: HttpApi, argValues: ReviewEmailArgs): HttpResponse {
     return withAdminUser(http) {
-      val email = UserStorage.exec {
-        val recipient = this.findUserById(argValues.user_id.toInt()) ?: return@exec http.error(404)
+      val email = UserStorage.exec<String?> {
+        val recipient = this.findUserById(argValues.user_id.toInt()) ?: return@exec null
         recipient.email
+      } ?: return@withAdminUser http.error(404, "User ${argValues.user_id} not found")
+      if (email == "") {
+        return@withAdminUser http.error(404, "Email is unknown for user ${argValues.user_id}")
       }
-      println("Sending email to $email")
+      val req = Request.Builder()
+          .url("https://api.mailgun.net/v3/mg.barashev.net/messages")
+          .post(FormBody.Builder()
+              .add("from", "DBMS Class <dbms@mg.barashev.net>")
+              .add("to", email)
+              .add("subject", "Рецензия на задачу")
+              .add("h:Reply-To", "dbms@barashev.net")
+              .add("html", """
+                <code><pre>
+                SELECT NULL
+                FROM NULL
+                WHERE NULL
+                </pre></code>""".trimIndent())
+              .build()
+          ).build()
+      httpClient.newCall(req).execute().use { response ->
+        if (!response.isSuccessful) throw IOException("Unexpected code $response")
+        println(response.body!!.string())
+      }
       http.ok()
     }
   }

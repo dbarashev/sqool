@@ -328,7 +328,7 @@ fun main(args: Array<String>) {
           "contest_code" to ContestUsersArgs::contestCode
       ))
 
-      POST("/admin/review/email" BY ReviewEmailHandler() ARGS mapOf(
+      POST("/admin/review/email" BY ReviewEmailHandler(flags.mailgunKey) ARGS mapOf(
           "contest_code" to ReviewEmailArgs::contest_code,
           "user_id" to ReviewEmailArgs::user_id
       ))

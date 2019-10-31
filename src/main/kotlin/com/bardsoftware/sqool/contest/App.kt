@@ -25,6 +25,7 @@ import freemarker.template.Configuration
 import spark.template.freemarker.FreeMarkerEngine
 
 class Flags(parser: ArgParser) {
+  val mailgunKey by parser.storing("--mailgun-key").default("")
   val postgresAddress by parser.storing("--pg-address", help = "").default("localhost")
   val postgresUser by parser.storing("--pg-user", help = "").default("postgres")
   val postgresPort by parser.storing("--pg-port", help = "").default("5432")
