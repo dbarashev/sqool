@@ -1,24 +1,17 @@
 <template>
     <table class="table table-hover table-striped">
-        <thead class="thead-dark">
-        <tr>
-            <th>Задача</th>
-            <th></th>
-        </tr>
-        </thead>
         <tbody>
         <tr v-for="attempt in attempts" v-if="attempt.status !== 'virgin'" @click="showReviewPage(attempt)">
-            <td>{{ attempt.name }}</td>
             <td>
-                <div v-if="attempt.status === 'failure'">
-                    <i class="fa fa-thumbs-down"></i>Решена неверно
-                </div>
-                <div v-if="attempt.status === 'testing'">
-                    <i class="fa fa-cog fa-spin fa-fw"></i>Проверяется...
-                </div>
-                <div v-if="attempt.status === 'success'">
-                    <i class="fa fa-thumbs-up"></i>Решена!
-                </div>
+                <a class="btn float-right" role="button"
+                   @click="showReviewPage(attempt)">
+                    Рецензии
+                </a>
+                {{ attempt.name }}
+                <br>
+                <small class="text-muted">{{ formatStatus(attempt) }}</small>&nbsp;
+                <small class="text-muted">Попыток: {{ attempt.count }}</small>&nbsp;
+                <small class="text-muted">Последняя попытка: {{ attempt.testing_start_ts }}</small>
             </td>
         </tr>
         </tbody>

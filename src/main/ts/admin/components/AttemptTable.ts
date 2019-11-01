@@ -1,6 +1,6 @@
 import {Component, Inject, Prop, Vue} from 'vue-property-decorator';
 import AlertDialog from '../../components/AlertDialog';
-import ContestMainWindow from "./ContestMainWindow";
+import ContestMainWindow from './ContestMainWindow';
 
 export interface Attempt {
   task_id: number;
@@ -9,6 +9,8 @@ export interface Attempt {
   attempt_id: string | null;
   status: string;
   user_name: string;
+  count: number;
+  testing_start_ts: string;
 }
 
 @Component
@@ -24,8 +26,8 @@ export default class AttemptTable extends Vue {
       url: '/admin/submission/contest',
       data: {
         contest_code: this.contestCode,
-        user_id: this.userId
-      }
+        user_id: this.userId,
+      },
     }).done((attempts: Attempt[]) => {
       this.attempts = attempts;
     }).fail((xhr) => {
@@ -42,4 +44,15 @@ export default class AttemptTable extends Vue {
       this.alertDialog().show(title);
     }
   }
+
+  public formatStatus(attempt: Attempt): string {
+    switch (attempt.status) {
+      case 'failure': return 'Решена неверно';
+      case 'virgin': return 'Не решалась';
+      case 'success': return 'Решена успешно';
+      case 'testing': return 'Тестируется';
+    }
+    return '';
+  }
+
 }
