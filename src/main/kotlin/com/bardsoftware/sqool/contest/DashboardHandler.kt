@@ -141,6 +141,10 @@ object ReviewByUser : Table("Contest.ReviewByUser") {
   val attempt_id = text("attempt_id")
   val user_id = integer("user_id")
   val solution_review = text("solution_review")
+  val contest_code = text("contest_code")
+  val variant_id = integer("variant_id")
+  val task_id = integer("task_id")
+  val task_name = text("task_name")
 }
 
 data class ReviewGetArgs(var attempt_id: String) : RequestArgs()

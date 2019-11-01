@@ -59,6 +59,8 @@ dependencies {
 	compile 'org.apache.httpcomponents:fluent-hc:4.+'
 
 	compile group: 'com.squareup.okhttp3', name: 'okhttp', version: '4.2.2'
+	compile 'com.vladsch.flexmark:flexmark-all:0.+'
+
 	testCompile group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: '5.+'
 	testCompile group: 'com.nhaarman', name: 'mockito-kotlin', version: '1.6.+'
 }

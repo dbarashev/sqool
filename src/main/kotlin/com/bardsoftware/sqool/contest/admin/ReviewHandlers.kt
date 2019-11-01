@@ -21,10 +21,15 @@ package com.bardsoftware.sqool.contest.admin
 import com.bardsoftware.sqool.contest.HttpApi
 import com.bardsoftware.sqool.contest.HttpResponse
 import com.bardsoftware.sqool.contest.RequestArgs
+import com.bardsoftware.sqool.contest.ReviewByUser
 import com.bardsoftware.sqool.contest.storage.UserStorage
+import com.vladsch.flexmark.html.HtmlRenderer
+import com.vladsch.flexmark.parser.Parser
+import com.vladsch.flexmark.util.data.MutableDataSet
 import okhttp3.*
 import org.jetbrains.exposed.sql.*
 import java.io.IOException
+
 
 object SolutionReview : Table("Contest.SolutionReview") {
   val attempt_id = text("attempt_id")
@@ -114,7 +119,7 @@ class ReviewSaveHandler : AdminHandler<ReviewSaveArgs>() {
   override fun args(): ReviewSaveArgs = ReviewSaveArgs("", "")
 }
 
-data class ReviewEmailArgs(var contest_code: String, var user_id: String) : RequestArgs()
+data class ReviewEmailArgs(var contest_code: String, var user_id: String, var attempt_id: String) : RequestArgs()
 class ReviewEmailHandler(val apiKey: String) : AdminHandler<ReviewEmailArgs>() {
   private val httpClient = OkHttpClient.Builder().authenticator(object : Authenticator {
     @Throws(IOException::class)
@@ -128,7 +133,7 @@ class ReviewEmailHandler(val apiKey: String) : AdminHandler<ReviewEmailArgs>() {
     }
   }).build()
 
-  override fun args(): ReviewEmailArgs  = ReviewEmailArgs("", "")
+  override fun args(): ReviewEmailArgs = ReviewEmailArgs("", "", "")
 
   override fun handle(http: HttpApi, argValues: ReviewEmailArgs): HttpResponse {
     return withAdminUser(http) {
@@ -139,21 +144,44 @@ class ReviewEmailHandler(val apiKey: String) : AdminHandler<ReviewEmailArgs>() {
       if (email == "") {
         return@withAdminUser http.error(404, "Email is unknown for user ${argValues.user_id}")
       }
+
+      val query = if (argValues.attempt_id == "") ReviewByUser.select {
+        (ReviewByUser.user_id eq argValues.user_id.toInt()) and (ReviewByUser.contest_code eq argValues.contest_code)
+      } else ReviewByUser.select {
+        ReviewByUser.attempt_id eq argValues.attempt_id
+      }
+
+      val contestName = Contests.select { Contests.code eq argValues.contest_code }.firstOrNull()?.let {
+        it[Contests.name]
+      } ?: ""
+      val markdown = query.orderBy(ReviewByUser.task_id).map {
+        """
+### Задача ${it[ReviewByUser.task_name]}
+
+${it[ReviewByUser.solution_review]} 
+
+        """
+      }.joinToString(
+        separator = """
+
+----
+
+"""
+      )
+      val html = """
+${markdown2html(markdown)}""".trimIndent()
+
       val req = Request.Builder()
           .url("https://api.mailgun.net/v3/mg.barashev.net/messages")
           .post(FormBody.Builder()
               .add("from", "DBMS Class <dbms@mg.barashev.net>")
               .add("to", email)
-              .add("subject", "Рецензия на задачу")
+              .add("subject", "Рецензии на задачи контеста $contestName")
               .add("h:Reply-To", "dbms@barashev.net")
-              .add("html", """
-                <code><pre>
-                SELECT NULL
-                FROM NULL
-                WHERE NULL
-                </pre></code>""".trimIndent())
+              .add("html", html)
               .build()
           ).build()
+      println("Sending email to $email")
       httpClient.newCall(req).execute().use { response ->
         if (!response.isSuccessful) throw IOException("Unexpected code $response")
         println(response.body!!.string())
@@ -161,4 +189,12 @@ class ReviewEmailHandler(val apiKey: String) : AdminHandler<ReviewEmailArgs>() {
       http.ok()
     }
   }
+}
+
+private val ourParser = Parser.builder(MutableDataSet()).build()
+private val ourRenderer = HtmlRenderer.builder(MutableDataSet()).build()
+
+fun markdown2html(mdReview: String): String {
+  val document = ourParser.parse(mdReview)
+  return ourRenderer.render(document)
 }
