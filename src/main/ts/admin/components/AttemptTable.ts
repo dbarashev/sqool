@@ -10,7 +10,7 @@ export interface Attempt {
   status: string;
   user_name: string;
   count: number;
-  testing_start_ts: string;
+  testing_start_ts: number;
 }
 
 @Component
@@ -53,6 +53,16 @@ export default class AttemptTable extends Vue {
       case 'testing': return 'Тестируется';
     }
     return '';
+  }
+
+  public formatTimestamp(attempt: Attempt): string {
+    return new Date(attempt.testing_start_ts).toLocaleString('ru-RU', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
   }
 
 }

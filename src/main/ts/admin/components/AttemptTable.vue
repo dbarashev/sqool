@@ -11,7 +11,7 @@
                 <br>
                 <small class="text-muted">{{ formatStatus(attempt) }}</small>&nbsp;
                 <small class="text-muted">Попыток: {{ attempt.count }}</small>&nbsp;
-                <small class="text-muted">Последняя попытка: {{ attempt.testing_start_ts }}</small>
+                <small class="text-muted">Последняя попытка: {{ formatTimestamp(attempt) }}</small>
             </td>
         </tr>
         </tbody>

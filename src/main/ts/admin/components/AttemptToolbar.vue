@@ -7,6 +7,11 @@
         <button type="button"
                 v-bind:class="{btn: true, 'btn-secondary': true, active:  activeView === 'by-students'}"
                 @click="showAttemptsByStudents">По студентам</button>
+        <span style="flex-grow: 1"></span>
+        <button type="button" class="btn btn-outline-danger"
+                v-if="activeView === 'by-students'"
+                @click="emailReviews()"
+                v-bind:disabled="selection.length === 0">Послать рецензии</button>
     </div>
 </template>
 

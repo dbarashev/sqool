@@ -23,8 +23,6 @@ import com.bardsoftware.sqool.contest.RequestArgs
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.jetbrains.exposed.sql.*
-import org.ocpsoft.prettytime.PrettyTime
-import java.util.Date
 
 private val JSON_MAPPER = ObjectMapper()
 
@@ -87,10 +85,7 @@ object MyAttempts : Table("Contest.MyAttempts") {
       it.put("user_id", row[attemptUserId])
       it.put("user_name", row[attemptUserName])
       it.put("status", row[status])
-      it.put("testing_start_ts", row[testingStartTs]?.let { dateTime ->
-        val time = PrettyTime(dateTime.toDate())
-        time.format(Date(0))
-      })
+      it.put("testing_start_ts", row[testingStartTs]?.millis)
       it.put("count", row[count])
       it.put("error_msg", row[errorMsg])
       it.put("result_set", row[resultSet])

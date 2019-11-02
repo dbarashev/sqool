@@ -7,10 +7,11 @@ import AttemptTable from './AttemptTable';
   components: {AttemptTable},
 })
 export default class AttemptTableByStudent extends Vue {
-  @Inject() private readonly alertDialog!: () => AlertDialog;
+  @Inject() public readonly alertDialog!: () => AlertDialog;
   private contest = new ContestDto('', '', '', '', []);
   private students: Student[] = [];
   private emailProgress: boolean = false;
+  private onSelectionChange?: (selection: Student[]) => void;
 
   public mounted() {
     this.refresh();
@@ -36,23 +37,19 @@ export default class AttemptTableByStudent extends Vue {
     this.$el.setAttribute('hidden', 'true');
   }
 
-  public show(contest: ContestDto) {
+  public show(contest: ContestDto, onSelectionChange: (selection: Student[]) => void) {
+    this.onSelectionChange = onSelectionChange;
     this.contest = contest;
     this.refresh();
     this.$el.removeAttribute('hidden');
   }
 
-  public emailReviews(userId: number, contestCode: string) {
-    this.emailProgress = true;
-    $.ajax({
-      method: 'POST',
-      url: '/admin/review/email',
-      data: {contest_code: contestCode, user_id: userId},
-    }).fail((xhr) => {
-      this.alertDialog().show('Что-то пошло не так во время рассылки', xhr.statusText);
-    }).always( () => {
-      this.emailProgress = false;
-    });
+  public select(student: Student, isSelected: boolean) {
+    student.is_selected = isSelected;
+    if (this.onSelectionChange) {
+      this.onSelectionChange(this.getSelectedStudents());
+    }
+    this.$forceUpdate();
   }
 
   private userAttemptTable(ref: string): AttemptTable {
@@ -60,10 +57,14 @@ export default class AttemptTableByStudent extends Vue {
     return table[0];
   }
 
+  private getSelectedStudents(): Student[] {
+    return this.students.filter((student) => student.is_selected);
+  }
 }
 
-interface Student {
+export interface Student {
   user_id: number;
   user_name: string;
   uni: string;
+  is_selected: boolean;
 }

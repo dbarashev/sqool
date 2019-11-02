@@ -44,7 +44,7 @@ export default class ContestMainWindow extends Vue {
     this.contest = contest;
     this.$nextTick(() => {
       this.attemptToolbar().show(contest);
-      this.attemptTableByStudent().show(contest);
+      this.attemptTableByStudent().show(contest, this.attemptToolbar().getSelectionListener());
     });
   }
 
