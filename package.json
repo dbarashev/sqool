@@ -13,9 +13,11 @@
     "bootstrap": "^4.3.1",
     "bootstrap-vue": "^2.0.4",
     "showdown": "^1.9.0",
+    "simplemde": "^1.11.2",
     "vue": "^2.6.10",
     "vue-class-component": "^6.0.0",
     "vue-property-decorator": "^7.0.0",
+    "vue-simplemde": "^1.0.0",
     "webpack": "^4.41.2"
   },
   "devDependencies": {

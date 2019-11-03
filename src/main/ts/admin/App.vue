@@ -82,6 +82,10 @@ import TaskMainWindow from './components/TaskMainWindow';
 import VariantToolbar from './components/VariantToolbar.vue';
 import VariantPropertiesModal from './components/VariantPropertiesModal.vue';
 import VariantTable from './components/VariantTable';
+import VueSimplemde from 'vue-simplemde';
+import 'simplemde/dist/simplemde.min.css';
+
+Vue.component('vue-simplemde', VueSimplemde);
 
 @Component({
   components: {
@@ -162,7 +166,6 @@ export default class App extends Vue {
 
 }
 </script>
-
 <style lang="scss">
   #app {
     font-family: 'Avenir', Helvetica, Arial, sans-serif;
