@@ -12,9 +12,18 @@
                     data-target="#allReviews"
                     aria-expanded="false"
                     aria-controls="allReviews">Другие рецензии ({{ allReviews.length }})</button>
+            <button type="button" class="btn btn-sm float-right"
+                    data-toggle="collapse"
+                    data-target="#taskDescription"
+                    aria-expanded="false"
+                    aria-controls="allReviews">Описание задачи</button>
         </div>
         <div class="collapse" id="allReviews">
             <div class="card card-body" v-html="allReviewsHtml">
+            </div>
+        </div>
+        <div class="collapse" id="taskDescription">
+            <div class="card card-body" v-html="taskDescriptionHtml">
             </div>
         </div>
         <TaskMarkdown ref="taskMarkdown"></TaskMarkdown>

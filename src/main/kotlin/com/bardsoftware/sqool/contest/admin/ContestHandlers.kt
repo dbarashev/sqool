@@ -76,7 +76,7 @@ object Contests : Table("Contest.ContestDto") {
 
 class ContestAllHandler : AdminHandler<RequestArgs>() {
   override fun handle(http: HttpApi, argValues: RequestArgs) = withAdminUser(http) {
-    http.json(Contests.selectAll().map(Contests::asJson).toList())
+    http.json(Contests.selectAll().orderBy(Contests.start_ts, SortOrder.DESC).map(Contests::asJson).toList())
   }
 
   override fun args(): RequestArgs {

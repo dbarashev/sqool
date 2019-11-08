@@ -44,15 +44,17 @@ class ReviewListHandler : AdminHandler<ReviewGetArgs>() {
 
   override fun handle(http: HttpApi, argValues: ReviewGetArgs): HttpResponse {
     return withAdminUser(http) {
-      val allReviews = SolutionReview.select {
-        SolutionReview.attempt_id eq argValues.attempt_id
+      val allReviews = ReviewByUser.select {
+        ReviewByUser.attempt_id eq argValues.attempt_id
       }.toList()
       println("We have ${allReviews.size} reviews for attempt=${argValues.attempt_id}")
       when {
         allReviews.isEmpty() -> http.json(listOf<String>())
         else -> http.json(allReviews.map {
-          review -> mapOf("review_text" to review[SolutionReview.solution_review])
-        }.toList())
+          review -> mapOf(
+            "review_text" to review[ReviewByUser.solution_review],
+            "reviewer_name" to review[ReviewByUser.reviewer_name]
+        )}.toList())
       }
     }
   }
@@ -158,6 +160,8 @@ class ReviewEmailHandler(val apiKey: String) : AdminHandler<ReviewEmailArgs>() {
         """
 ### Задача ${it[ReviewByUser.task_name]}
 
+_рецензировал ${it[ReviewByUser.reviewer_name]}_
+
 ${it[ReviewByUser.solution_review]} 
 
         """
@@ -176,6 +180,7 @@ ${markdown2html(markdown)}""".trimIndent()
           .post(FormBody.Builder()
               .add("from", "DBMS Class <dbms@mg.barashev.net>")
               .add("to", email)
+              .add("bcc", "dbms+review@barashev.net")
               .add("subject", "Рецензии на задачи контеста $contestName")
               .add("h:Reply-To", "dbms@barashev.net")
               .add("html", html)

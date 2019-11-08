@@ -24,6 +24,7 @@ import com.bardsoftware.sqool.contest.HttpApi
 import com.bardsoftware.sqool.contest.RequestArgs
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.google.common.base.Strings
 import org.jetbrains.exposed.sql.*
 
@@ -53,15 +54,16 @@ object Tasks : Table("Contest.TaskDto") {
   }
 }
 
-/**
- * @author dbarashev@bardsoftware.com
- */
+data class TaskAllArgs(var id: String) : RequestArgs()
+class TaskAllHandler : AdminHandler<TaskAllArgs>() {
+  override fun args() = TaskAllArgs("")
 
-class TaskAllHandler : AdminHandler<RequestArgs>() {
-  override fun args() = RequestArgs()
-
-  override fun handle(http: HttpApi, argValues: RequestArgs) = withAdminUser(http) {
-    http.json(Tasks.selectAll().orderBy(Tasks.name).map(Tasks::asJson).toList())
+  override fun handle(http: HttpApi, argValues: TaskAllArgs) = withAdminUser(http) {
+    if (argValues.id == "") {
+      http.json(Tasks.selectAll().orderBy(Tasks.name).map(Tasks::asJson).toList())
+    } else {
+      http.json(Tasks.select { Tasks.id eq argValues.id.toInt() }.map(Tasks::asJson).firstOrNull() ?: jacksonObjectMapper().createObjectNode())
+    }
   }
 
 }

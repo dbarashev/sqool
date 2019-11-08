@@ -279,7 +279,9 @@ fun main(args: Array<String>) {
           "body" to ScriptEditArgs::body
       ))
 
-      GET("/admin/task/all" BY adminTaskAllHandler)
+      GET("/admin/task/all" BY adminTaskAllHandler ARGS mapOf(
+          "id" to TaskAllArgs::id
+      ))
       POST("/admin/task/new" BY adminTaskEditHandler ARGS mapOf(
           "has_result" to TaskEditArgs::hasResult,
           "result" to TaskEditArgs::result,
