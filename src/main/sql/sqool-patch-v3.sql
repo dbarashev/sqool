@@ -103,3 +103,49 @@ CREATE OR REPLACE FUNCTION RecordAttemptResult(_attemptId TEXT, _success BOOLEAN
 $$ LANGUAGE SQL;
 
 ALTER TABLE ContestUser ADD COLUMN email TEXT UNIQUE;
+
+DROP FUNCTION GetOrCreateContestUser;
+CREATE OR REPLACE FUNCTION GetOrCreateContestUser(argName TEXT, argPass TEXT, generateNick BOOLEAN)
+RETURNS TABLE(id INT, nick TEXT, name TEXT, passwd TEXT, is_admin BOOLEAN, email TEXT, code INT) AS $$
+DECLARE
+  _id INT;
+  _name TEXT;
+  _passwd TEXT;
+  _nick TEXT;
+  _is_admin BOOLEAN;
+  _email TEXT;
+BEGIN
+  SELECT ContestUser.id, ContestUser.name, ContestUser.nick, ContestUser.passwd, ContestUser.is_admin, ContestUser.email
+  INTO _id, _name, _nick, _passwd, _is_admin, _email
+  FROM ContestUser WHERE ContestUser.name=argName;
+  IF FOUND THEN
+    IF md5(argPass) <> _passwd THEN
+      RETURN QUERY SELECT NULL::INT, NULL::TEXT, NULL::TEXT, NULL::TEXT, NULL::BOOLEAN, NULL::TEXT, 1;
+      RETURN;
+    END IF;
+
+    RETURN QUERY SELECT _id, _nick, _name, _passwd, _is_admin, _email, 0;
+    RETURN;
+  END IF;
+
+  LOOP
+    IF generateNick THEN
+      _nick := (SELECT GenNickname());
+    ELSE
+      _nick := argName;
+      generateNick := TRUE;
+    END IF;
+  EXIT WHEN NOT EXISTS (SELECT * FROM ContestUser WHERE ContestUser.nick = _nick);
+  END LOOP;
+
+  WITH T AS (
+      INSERT INTO ContestUser (name, nick, passwd, is_admin) VALUES (argName, _nick, md5(argPass), COALESCE(_is_admin, FALSE)) RETURNING ContestUser.id
+  )
+  SELECT T.id INTO _id FROM T;
+  INSERT INTO UserContest(user_id, contest_code) SELECT _id, Contest.code FROM Contest;
+  RETURN QUERY SELECT U.id, U.nick, U.name, U.passwd, U.is_admin, U.email, 0 AS code FROM ContestUser U WHERE U.name = argName;
+  RETURN;
+END;
+$$ LANGUAGE plpgsql;
+
+

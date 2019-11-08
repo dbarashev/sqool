@@ -444,7 +444,7 @@ class User(val entity: UserEntity, val storage: UserStorage) {
 
 class UserStorage(val txn: Transaction) {
   fun createUser(newName: String, newPassword: String): User? {
-    return procedure("SELECT id, nick, name, passwd, is_admin FROM Contest.GetOrCreateContestUser(?,?,?)") {
+    return procedure("SELECT id, nick, name, passwd, is_admin, email FROM Contest.GetOrCreateContestUser(?,?,?)") {
       setString(1, newName)
       setString(2, newPassword)
       setBoolean(3, true)
@@ -456,7 +456,7 @@ class UserStorage(val txn: Transaction) {
               nick = it.getString("nick"),
               passwd = it.getString("passwd"),
               isAdmin = it.getBoolean("is_admin"),
-              email = it.getString("email")
+              email = it.getString("email") ?: ""
           ), this@UserStorage)
         } else {
           null

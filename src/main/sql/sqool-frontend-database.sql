@@ -402,24 +402,25 @@ $$ LANGUAGE plpgsql;
 -----------------------------------------------------------------------------------------------------------------------
 -- Returns existing of creates new user with the given name and password, generating nickname if requested
 CREATE OR REPLACE FUNCTION GetOrCreateContestUser(argName TEXT, argPass TEXT, generateNick BOOLEAN)
-RETURNS TABLE(id INT, nick TEXT, name TEXT, passwd TEXT, is_admin BOOLEAN, code INT) AS $$
+RETURNS TABLE(id INT, nick TEXT, name TEXT, passwd TEXT, is_admin BOOLEAN, email TEXT, code INT) AS $$
 DECLARE
   _id INT;
   _name TEXT;
   _passwd TEXT;
   _nick TEXT;
   _is_admin BOOLEAN;
+  _email TEXT;
 BEGIN
-  SELECT ContestUser.id, ContestUser.name, ContestUser.nick, ContestUser.passwd, ContestUser.is_admin
-  INTO _id, _name, _nick, _passwd, _is_admin
+  SELECT ContestUser.id, ContestUser.name, ContestUser.nick, ContestUser.passwd, ContestUser.is_admin, ContestUser.email
+  INTO _id, _name, _nick, _passwd, _is_admin, _email
   FROM ContestUser WHERE ContestUser.name=argName;
   IF FOUND THEN
     IF md5(argPass) <> _passwd THEN
-      RETURN QUERY SELECT NULL::INT, NULL::TEXT, NULL::TEXT, NULL::TEXT, NULL::BOOLEAN, 1;
+      RETURN QUERY SELECT NULL::INT, NULL::TEXT, NULL::TEXT, NULL::TEXT, NULL::BOOLEAN, NULL::TEXT, 1;
       RETURN;
     END IF;
 
-    RETURN QUERY SELECT _id, _nick, _name, _passwd, _is_admin, 0;
+    RETURN QUERY SELECT _id, _nick, _name, _passwd, _is_admin, _email, 0;
     RETURN;
   END IF;
 
@@ -438,7 +439,7 @@ BEGIN
   )
   SELECT T.id INTO _id FROM T;
   INSERT INTO UserContest(user_id, contest_code) SELECT _id, Contest.code FROM Contest;
-  RETURN QUERY SELECT U.id, U.nick, U.name, U.passwd, U.is_admin, 0 AS code FROM ContestUser U WHERE U.name = argName;
+  RETURN QUERY SELECT U.id, U.nick, U.name, U.passwd, U.is_admin, U.email, 0 AS code FROM ContestUser U WHERE U.name = argName;
   RETURN;
 END;
 $$ LANGUAGE plpgsql;
