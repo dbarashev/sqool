@@ -21,13 +21,24 @@ package com.bardsoftware.sqool.contest
 import com.bardsoftware.sqool.contest.storage.UserStorage
 import org.apache.commons.codec.digest.DigestUtils
 
-data class LoginReq(val name: String, val password: String, val createIfMissing: Boolean)
+data class LoginReq(val name: String, val password: String, val createIfMissing: Boolean, val redirectUrl: String)
 
+data class LoginPageArgs(var redirectUrl: String) : RequestArgs()
+
+class LoginPageHandler : RequestHandler<LoginPageArgs>() {
+  override fun args(): LoginPageArgs = LoginPageArgs("")
+
+  override fun handle(http: HttpApi, argValues: LoginPageArgs): HttpResponse {
+    return http.render("login.ftl", mapOf("redirectUrl" to argValues.redirectUrl))
+  }
+
+}
 /**
  * @author dbarashev@bardsoftware.com
  */
 class LoginHandler {
   fun handle(http: HttpApi, req: LoginReq): HttpResponse {
+    println("Redirect url=${req.redirectUrl}")
     return UserStorage.exec {
       (findUser(req.name) ?: if (req.createIfMissing) {
         createUser(req.name, req.password)
@@ -35,7 +46,7 @@ class LoginHandler {
         if (DigestUtils.md5Hex(req.password) == it.password) {
           http.chain {
             session("name", it.name)
-            redirect("/me2")
+            redirect(req.redirectUrl)
           }
         } else {
           http.redirect("/error403")
@@ -51,8 +62,8 @@ class LogoutHandler : RequestHandler<RequestArgs>() {
   override fun handle(http: HttpApi, argValues: RequestArgs) = redirectToLogin(http)
 }
 
-fun redirectToLogin(http: HttpApi) = http.chain {
+fun redirectToLogin(http: HttpApi, redirectUrl: String = "/me2") = http.chain {
   clearSession()
-  redirect("/login")
+  redirect("/login?redirectUrl=$redirectUrl")
 }
 

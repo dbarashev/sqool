@@ -373,9 +373,9 @@ fun main(args: Array<String>) {
           "variant-name" to SubmitDoArgs::variantName,
           "solution" to SubmitDoArgs::submissionText
       ))
-    }
-    get("/login") {
-      freemarker.render(ModelAndView(emptyMap<String, String>(), "login.ftl"))
+      GET("/login" BY LoginPageHandler() ARGS mapOf(
+          "redirectUrl" to LoginPageArgs::redirectUrl
+      ))
     }
     post("/login.do") {
       val handler = LoginHandler()

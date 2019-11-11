@@ -11,6 +11,7 @@
             <h1 class="row">Login</h1>
             <form class="form-horizontal" method="post" action="/login.do">
                 <input type="hidden" name="createIfMissing" value="false"/>
+                <input type="hidden" name="redirectUrl" value="${redirectUrl}"/>
                 <div class="form-group">
                     <label class="col-sm-3 text-right" for="name">Имя</label>
                     <div class="col-sm-9">
