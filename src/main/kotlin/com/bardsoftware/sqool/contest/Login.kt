@@ -29,7 +29,9 @@ class LoginPageHandler : RequestHandler<LoginPageArgs>() {
   override fun args(): LoginPageArgs = LoginPageArgs("")
 
   override fun handle(http: HttpApi, argValues: LoginPageArgs): HttpResponse {
-    return http.render("login.ftl", mapOf("redirectUrl" to argValues.redirectUrl))
+    return http.render("login.ftl", mapOf(
+        "redirectUrl" to if (argValues.redirectUrl == "") "/me2" else argValues.redirectUrl
+    ))
   }
 
 }
