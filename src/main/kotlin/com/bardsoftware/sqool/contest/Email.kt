@@ -58,7 +58,9 @@ ${markdown2html(markdown)}""".trimIndent()
       .build()
   httpClient?.let {
     it.newCall(req).execute().use { response ->
-      if (!response.isSuccessful) throw IOException("Unexpected code $response")
+      if (!response.isSuccessful) {
+        throw IOException("Unexpected code $response")
+      }
       println(response.body!!.string())
     }
   }

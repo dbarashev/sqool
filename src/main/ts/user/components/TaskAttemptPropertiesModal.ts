@@ -13,6 +13,7 @@ export default class TaskAttemptPropertiesModal extends Vue {
   private taskSignature = '';
   private hasSchema = false;
   private schemaBodyUrl = '';
+  private isGrading = false;
   private deferred: JQueryDeferred<string> = $.Deferred<string>();
 
   public show(attempt: TaskAttempt, ajaxReview: JQuery.jqXHR): JQueryDeferred<string> {
@@ -42,6 +43,7 @@ export default class TaskAttemptPropertiesModal extends Vue {
       return;
     }
     localStorage.setItem(String(this.attempt.taskEntity.id), this.taskSolution);
+    this.isGrading = true;
     this.deferred.resolve(this.taskSolution);
   }
 
@@ -52,5 +54,22 @@ export default class TaskAttemptPropertiesModal extends Vue {
       const title = 'Не удалось загрузить ревью:';
       this.alertDialog().show(title, xhr.statusText);
     })
+  }
+
+  processAttempt(attempts: TaskAttempt[]) {
+    this.isGrading = false;
+    let attempt = attempts.find((attempt) => attempt.taskEntity.id === this.attempt.taskEntity.id);
+    if (attempt) {
+      if (attempt.status === 'success') {
+        this.hide();
+      } else {
+        this.review = `
+### Что-то пошло не так
+
+${attempt.errorMsg}
+`;
+        $(this.$el).find("#review-tab").trigger("click");
+      }
+    }
   }
 }

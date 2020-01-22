@@ -21,6 +21,7 @@ package com.bardsoftware.sqool.contest
 import com.bardsoftware.sqool.contest.storage.User
 import com.bardsoftware.sqool.contest.storage.UserStorage
 import org.apache.commons.codec.digest.DigestUtils
+import java.io.IOException
 
 data class LoginReq(var email: String, var name: String, var password: String, var createIfMissing: String, var redirectUrl: String, var action: String) : RequestArgs()
 
@@ -58,7 +59,8 @@ class LoginHandler : RequestHandler<LoginReq>() {
           val existingUser = findUser(req.name, req.email) ?:
           if (req.createIfMissing.toBoolean()) {
             createUser(req.name, req.password, req.email)?.also { it ->
-              sendEmail("""
+              try {
+                sendEmail("""
                 Привет, ${req.name}, это Дмитрий Барашев и робот SQooL. Просто подтверждаем, что вы зарегистрированы в SQooL и можете теперь решать задачи контестов, когда они появятся. 
                 
                 На этот адрес вам будут приходить рецензии, если таковые подразумеваются контестом.
@@ -68,11 +70,14 @@ class LoginHandler : RequestHandler<LoginReq>() {
                 _-- Дмитрий Барашев_
                 
               """.trimIndent(), mapOf(
-                  "from" to "DBMS Class <dbms@mg.barashev.net>",
-                  "to" to req.email,
-                  "subject" to "Welcome to SQooL",
-                  "h:Reply-To" to "dbms@barashev.net"
-              ))
+                    "from" to "DBMS Class <dbms@mg.barashev.net>",
+                    "to" to req.email,
+                    "subject" to "Welcome to SQooL",
+                    "h:Reply-To" to "dbms@barashev.net"
+                ))
+              } catch (ex: IOException) {
+                LOGGER.error("Failed to send an email to ${req.email} (${req.name})", ex)
+              }
             }
           } else null
 

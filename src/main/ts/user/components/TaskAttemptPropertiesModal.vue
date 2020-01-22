@@ -41,6 +41,9 @@
                             </form>
                         </div>
                         <div class="tab-pane fade" id="solution" role="tabpanel" aria-labelledby="solution-tab">
+                            <div class="d-flex justify-content-center align-items-center spinner-glasspane" style="" v-if="isGrading">
+                                <i class="fas fa-spinner fa-spin fa-5x" aria-hidden="true"></i>
+                            </div>
                             <form>
                                 <div class="form-group">
                                     <label for="task-solution-text">Текст решения</label>
@@ -50,12 +53,10 @@
                             </form>
                         </div>
                         <div class="tab-pane fade" id="review" role="tabpanel" aria-labelledby="review-tab">
-                            <form>
                                 <div class="form-group">
                                     <!-- TODO: get review from the server -->
                                     <div class="text-left" v-html="markdownText(review)"></div>
                                 </div>
-                            </form>
                         </div>
                     </div>
                 </div>
@@ -69,3 +70,22 @@
 
 <script lang="ts" src="./TaskAttemptPropertiesModal.ts">
 </script>
+
+<style lang="scss">
+    .spinner-glasspane {
+        opacity: 0.7;
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 1;
+        background: whitesmoke;
+    }
+    .tab-pane {
+        position: relative;
+    }
+
+</style>
+
+

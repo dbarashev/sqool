@@ -40,12 +40,13 @@ export default class AttemptTable extends Vue {
   private refresh() {
     if (this.contest) {
       this.contest.refreshAttempts()
-          .done(() => {
+          .done((attempts: TaskAttempt[]) => {
             if (this.contest) {
-              const hasTesting = this.contest.attempts.some((attempt) => attempt.status === 'testing');
+              const hasTesting = attempts.some((attempt) => attempt.status === 'testing');
               if (!hasTesting) {
                 window.clearInterval(this.reloader);
               }
+              this.taskAttemptProperties().processAttempt(attempts);
             }
           })
           .fail((xhr) => {
@@ -78,7 +79,8 @@ export default class AttemptTable extends Vue {
         const title = 'Не удалось проверить решение:';
         this.alertDialog().show(title, xhr.statusText);
       }).always(() => {
-        this.taskAttemptProperties().hide();
+
+        // this.taskAttemptProperties().hide();
       });
     }
   }

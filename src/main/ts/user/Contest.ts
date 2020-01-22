@@ -15,12 +15,17 @@ export class Contest {
               readonly variants: VariantOption[],
               public chosenVariant?: VariantOption) {}
 
-  public refreshAttempts(): JQuery.jqXHR {
+  public refreshAttempts(): JQueryPromise<TaskAttempt[]> {
     return $.ajax({
       url: '/contest/attempts',
       data: {contest_code: this.contestCode},
-    }).done((attempts: TaskAttempt[]) => {
+    }).then((attempts: TaskAttempt[]) => {
       this.attempts = attempts;
+      return this.attempts;
+      // return this.attempts.map(a => {
+      //   return new TaskAttempt(a.attemptId, a.taskEntity, a.count, 'failure', 'Фигня какая-то', '1\n2\n3');
+      //
+      // });
     });
   }
 

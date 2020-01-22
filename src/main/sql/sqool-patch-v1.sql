@@ -46,7 +46,7 @@ JOIN Contest.Attempt A ON A.task_id = T.id
 JOIN Contest.ContestUser S ON A.user_id = S.id
 LEFT JOIN Contest.GradingDetails D ON A.attempt_id = D.attempt_id
 LEFT JOIN Contest.TaskResult TR ON TR.task_id = T.id
-GROUP BY T.id, TR.task_id, A.user_id, A.task_id, A.variant_id, S.id, D.error_msg, D.result_set, U.id;
+GROUP BY T.id, TR.task_id, A.user_id, A.task_id, A.variant_id, A.attempt_id, A.status, A.count, A.testing_start_ts, S.id, D.error_msg, D.result_set, U.id;
 
 -- This view just needs to be re-created as is because it was dependent on MyAttempts
 CREATE OR REPLACE VIEW AttemptsByContest AS
