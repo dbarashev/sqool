@@ -5,10 +5,15 @@
     <#include "bootstrap.ftl">
 </head>
 <body>
-<div class="container-fluid">
-    <h1 class="row text-center">
-        Контест-сервер курса Базы Данных
-    </h1>
-    <p class="row text-center"><a href="/login" class="btn btn-info">Вход</a></p>
+<div class="jumbotron" style="
+    margin: 20px;
+">
+    <h1 class="display-4">SQooL</h1>
+    <p class="lead">это контест-сервер курса Базы Данных.</p>
+    <hr class="my-4">
+    <p>Выполняет ваши SQL запросы, сравнивает результат с ожидаемым, помогает преподавателю рецензировать ваш код</p>
+    <p class="lead">
+        <a class="btn btn-primary btn-lg" href="/login" role="button">Начать работать</a>
+    </p>
 </div>
 </body></html>

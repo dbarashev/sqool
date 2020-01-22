@@ -18,15 +18,10 @@
 
 package com.bardsoftware.sqool.contest.admin
 
-import com.bardsoftware.sqool.contest.HttpApi
-import com.bardsoftware.sqool.contest.HttpResponse
-import com.bardsoftware.sqool.contest.RequestArgs
-import com.bardsoftware.sqool.contest.ReviewByUser
+import com.bardsoftware.sqool.contest.*
 import com.bardsoftware.sqool.contest.storage.UserStorage
-import com.vladsch.flexmark.html.HtmlRenderer
-import com.vladsch.flexmark.parser.Parser
-import com.vladsch.flexmark.util.data.MutableDataSet
 import okhttp3.*
+import okhttp3.Route
 import org.jetbrains.exposed.sql.*
 import java.io.IOException
 
@@ -172,34 +167,17 @@ ${it[ReviewByUser.solution_review]}
 
 """
       )
-      val html = """
-${markdown2html(markdown)}""".trimIndent()
 
-      val req = Request.Builder()
-          .url("https://api.mailgun.net/v3/mg.barashev.net/messages")
-          .post(FormBody.Builder()
-              .add("from", "DBMS Class <dbms@mg.barashev.net>")
-              .add("to", email)
-              .add("bcc", "dbms+review@barashev.net")
-              .add("subject", "Рецензии на задачи контеста $contestName")
-              .add("h:Reply-To", "dbms@barashev.net")
-              .add("html", html)
-              .build()
-          ).build()
       println("Sending email to $email")
-      httpClient.newCall(req).execute().use { response ->
-        if (!response.isSuccessful) throw IOException("Unexpected code $response")
-        println(response.body!!.string())
-      }
+      sendEmail(markdown, mapOf(
+          "from" to "DBMS Class <dbms@mg.barashev.net>",
+          "to" to email,
+          "bcc" to "dbms+review@barashev.net",
+          "subject" to "Рецензии на задачи контеста $contestName",
+          "h:Reply-To" to "dbms@barashev.net"
+      ))
       http.ok()
     }
   }
 }
 
-private val ourParser = Parser.builder(MutableDataSet()).build()
-private val ourRenderer = HtmlRenderer.builder(MutableDataSet()).build()
-
-fun markdown2html(mdReview: String): String {
-  val document = ourParser.parse(mdReview)
-  return ourRenderer.render(document)
-}

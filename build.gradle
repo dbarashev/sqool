@@ -44,6 +44,7 @@ dependencies {
 	compile 'org.ocpsoft.prettytime:prettytime:4.+'
 
 	// PubSub stuff
+	compile 'com.google.cloud:google-cloud-core:1.+'
 	compile 'com.google.cloud:google-cloud-pubsub:1.+'
 
 	// Postgres stuff

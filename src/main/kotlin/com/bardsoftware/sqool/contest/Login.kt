@@ -18,10 +18,11 @@
 
 package com.bardsoftware.sqool.contest
 
+import com.bardsoftware.sqool.contest.storage.User
 import com.bardsoftware.sqool.contest.storage.UserStorage
 import org.apache.commons.codec.digest.DigestUtils
 
-data class LoginReq(val name: String, val password: String, val createIfMissing: Boolean, val redirectUrl: String)
+data class LoginReq(var email: String, var name: String, var password: String, var createIfMissing: String, var redirectUrl: String, var action: String) : RequestArgs()
 
 data class LoginPageArgs(var redirectUrl: String) : RequestArgs()
 
@@ -38,24 +39,67 @@ class LoginPageHandler : RequestHandler<LoginPageArgs>() {
 /**
  * @author dbarashev@bardsoftware.com
  */
-class LoginHandler {
-  fun handle(http: HttpApi, req: LoginReq): HttpResponse {
-    println("Redirect url=${req.redirectUrl}")
-    return UserStorage.exec {
-      (findUser(req.name) ?: if (req.createIfMissing) {
-        createUser(req.name, req.password)
-      } else null)?.let {
-        if (DigestUtils.md5Hex(req.password) == it.password) {
-          http.chain {
-            session("name", it.name)
-            redirect(req.redirectUrl)
-          }
-        } else {
-          http.redirect("/error403")
-        }
-      } ?: http.render("signup.ftl", mapOf("name" to req.name, "password" to req.password))
+class LoginHandler : RequestHandler<LoginReq>() {
+  private fun trySignin(http: HttpApi, user: User, req: LoginReq): HttpResponse {
+    return if (DigestUtils.md5Hex(req.password) == user.password) {
+      http.chain {
+        session("name", user.name)
+        redirect(req.redirectUrl)
+      }
+    } else {
+      http.redirect("/error403")
     }
   }
+
+  override fun handle(http: HttpApi, req: LoginReq): HttpResponse {
+    return UserStorage.exec {
+      when (req.action) {
+        "signup" -> {
+          val existingUser = findUser(req.name, req.email) ?:
+          if (req.createIfMissing.toBoolean()) {
+            createUser(req.name, req.password, req.email)?.also { it ->
+              sendEmail("""
+                Привет, ${req.name}, это Дмитрий Барашев и робот SQooL. Просто подтверждаем, что вы зарегистрированы в SQooL и можете теперь решать задачи контестов, когда они появятся. 
+                
+                На этот адрес вам будут приходить рецензии, если таковые подразумеваются контестом.
+
+                Хорошей учебы!
+                _-- Дмитрий Барашев_
+                
+              """.trimIndent(), mapOf(
+                  "from" to "DBMS Class <dbms@mg.barashev.net>",
+                  "to" to req.email,
+                  "subject" to "Welcome to SQooL",
+                  "h:Reply-To" to "dbms@barashev.net"
+              ))
+            }
+          } else null
+
+          if (existingUser == null) {
+            http.render("signup.ftl", mapOf(
+                "name" to req.name,
+                "password" to req.password,
+                "email" to req.email,
+                "redirectUrl" to req.redirectUrl)
+            )
+          } else {
+            trySignin(http, existingUser, req)
+          }
+        }
+        "signin" -> {
+          val existingUser = findUser(req.name, req.email)
+          if (existingUser == null) {
+            http.redirect("/login")
+          } else {
+            trySignin(http, existingUser, req)
+          }
+        }
+        else -> http.error(400, "Unknown action ${req.action}")
+      }
+    }
+  }
+
+  override fun args(): LoginReq = LoginReq("", "", "", "false", "", "signup")
 }
 
 class LogoutHandler : RequestHandler<RequestArgs>() {

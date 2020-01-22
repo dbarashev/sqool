@@ -443,11 +443,12 @@ class User(val entity: UserEntity, val storage: UserStorage) {
 }
 
 class UserStorage(val txn: Transaction) {
-  fun createUser(newName: String, newPassword: String): User? {
-    return procedure("SELECT id, nick, name, passwd, is_admin, email FROM Contest.GetOrCreateContestUser(?,?,?)") {
+  fun createUser(newName: String, newPassword: String, newEmail: String): User? {
+    return procedure("SELECT id, nick, name, passwd, is_admin, email FROM Contest.GetOrCreateContestUser(?,?,?,?)") {
       setString(1, newName)
       setString(2, newPassword)
-      setBoolean(3, true)
+      setString(3, newEmail)
+      setBoolean(4, true)
       executeQuery().use {
         if (it.next()) {
           User(UserEntity(
@@ -480,8 +481,8 @@ class UserStorage(val txn: Transaction) {
     return UserTable.select { UserTable.id.eq(id) }.map(this::fromRow).firstOrNull()
   }
 
-  fun findUser(name: String): User? {
-    return UserTable.select { UserTable.name.eq(name) }.map(this::fromRow).firstOrNull()
+  fun findUser(name: String, email: String = ""): User? {
+    return UserTable.select { UserTable.name.eq(name) or UserTable.email.eq(email) }.map(this::fromRow).firstOrNull()
   }
 
   fun findTask(id: Int): Task? {

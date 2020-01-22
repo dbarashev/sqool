@@ -248,6 +248,7 @@ fun main(args: Array<String>) {
     port(8080)
     staticFiles.location("/public")
 
+    initEmail(flags.mailgunKey)
     Routes(this, freemarker).apply {
       GET("/admin/contest/all" BY adminContestAllHandler)
       POST("/admin/contest/new" BY adminContestNewHandler ARGS mapOf(
@@ -376,13 +377,14 @@ fun main(args: Array<String>) {
       GET("/login" BY LoginPageHandler() ARGS mapOf(
           "redirectUrl" to LoginPageArgs::redirectUrl
       ))
-    }
-    post("/login.do") {
-      val handler = LoginHandler()
-      val loginResp = handler.handle(
-          Http(request, response, { session() }, freemarker),
-          parseDto(request.body()))
-      loginResp()
+      POST("/login.do" BY LoginHandler() ARGS mapOf(
+          "name" to LoginReq::name,
+          "email" to LoginReq::email,
+          "password" to LoginReq::password,
+          "createIfMissing" to LoginReq::createIfMissing,
+          "redirectUrl" to LoginReq::redirectUrl,
+          "action" to LoginReq::action
+      ))
     }
 
     get("/me") {

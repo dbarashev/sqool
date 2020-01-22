@@ -37,7 +37,13 @@ import TaskAttemptPropertiesModal from '../components/TaskAttemptPropertiesModal
 import FailureDetailsModal from '../components/FailureDetailsModal';
 
 @Component({
-    components: {AttemptTable, AvailableContestsDropdown, VariantChooser, TaskAttemptPropertiesModal, FailureDetailsModal},
+    components: {
+      AttemptTable,
+      AvailableContestsDropdown,
+      VariantChooser,
+      TaskAttemptPropertiesModal,
+      FailureDetailsModal,
+    },
 })
 export default class Dashboard extends Vue {
   private userName = window.userName || 'чувак';
@@ -63,3 +69,10 @@ export default class Dashboard extends Vue {
   }
 }
 </script>
+
+<style lang="scss">
+    #userDropdown {
+        text-transform: none;
+    }
+</style>
+
