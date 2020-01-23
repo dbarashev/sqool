@@ -218,7 +218,9 @@ fun main(args: Array<String>) {
   }
   Database.connect(dataSource)
   val assessor = if (flags.pubTasksTopic.isBlank()) {
-    AssessorApiVoid()
+    AssessorApiVoid() {
+      ChallengeHandler().handleAssessmentResponse(it)
+    }
   } else {
     AssessorPubSub(flags.pubTasksTopic, flags.subResultsSubscription) {
       ChallengeHandler().handleAssessmentResponse(it)

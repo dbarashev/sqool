@@ -15,7 +15,7 @@
             <td @click="showTaskAttempt(attempt)">{{ attempt.taskEntity.score }}</td>
             <td>
                 <div v-if="attempt.status === 'failure'">
-                    <a href="#" @click="showFailureDetails(attempt)">{{ getErrorMessage(attempt.count) }}</a>
+                    {{ getErrorMessage(attempt.count) }}
                 </div>
                 <div v-if="attempt.status === 'virgin'" @click="showTaskAttempt(attempt)">
                     Нет решения

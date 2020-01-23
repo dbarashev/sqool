@@ -9,7 +9,6 @@ import {Contest} from '../Contest';
 export default class AttemptTable extends Vue {
   @Inject() private readonly alertDialog!: () => AlertDialog;
   @Inject() private readonly taskAttemptProperties!: () => TaskAttemptPropertiesModal;
-  @Inject() private readonly failureDetails!: () => FailureDetailsModal;
   // This can't be undefined because it is used in Vue template
   private contest: Contest | null = null;
   private reloader: number = 0;
@@ -68,19 +67,17 @@ export default class AttemptTable extends Vue {
           attempt_id: attempt.attemptId,
         },
       });
-      this.taskAttemptProperties().show(attempt, review).then((solution) => {
+
+      this.taskAttemptProperties().show(attempt, review, (solution) => {
         if (this.reloader) {
           window.clearInterval(this.reloader);
         }
-        return $.ajax('/submit.do', this.buildSubmissionPayload(attempt, solution));
-      }).done(() => {
-        this.startPolling();
-      }).fail((xhr) => {
-        const title = 'Не удалось проверить решение:';
-        this.alertDialog().show(title, xhr.statusText);
-      }).always(() => {
-
-        // this.taskAttemptProperties().hide();
+        $.ajax('/submit.do', this.buildSubmissionPayload(attempt, solution)).done(() => {
+          this.startPolling();
+        }).fail((xhr) => {
+          const title = 'Не удалось проверить решение:';
+          this.alertDialog().show(title, xhr.statusText);
+        });
       });
     }
   }
@@ -101,9 +98,5 @@ export default class AttemptTable extends Vue {
     } else {
       return {};
     }
-  }
-
-  private showFailureDetails(attempt: TaskAttempt) {
-    this.failureDetails().show(attempt);
   }
 }

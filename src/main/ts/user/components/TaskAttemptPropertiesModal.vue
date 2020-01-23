@@ -1,6 +1,6 @@
 <template>
     <div class="modal" tabindex="-1" role="dialog" id="task-attempt">
-        <div class="modal-dialog" role="document">
+        <div class="modal-dialog w-75 mw-100" role="document">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Задача {{ attempt.taskEntity.name }}</h5>
@@ -20,7 +20,7 @@
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" id="review-tab" data-toggle="tab" href="#review" role="tab"
-                               aria-controls="variants" aria-selected="false">Рецензия</a>
+                               aria-controls="variants" aria-selected="false">Ответ робота</a>
                         </li>
                     </ul>
                     <div class="tab-content">
@@ -53,10 +53,7 @@
                             </form>
                         </div>
                         <div class="tab-pane fade" id="review" role="tabpanel" aria-labelledby="review-tab">
-                                <div class="form-group">
-                                    <!-- TODO: get review from the server -->
-                                    <div class="text-left" v-html="markdownText(review)"></div>
-                                </div>
+                            <FailureDetails ref="failureDetails"/>
                         </div>
                     </div>
                 </div>

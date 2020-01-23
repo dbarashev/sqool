@@ -43,12 +43,20 @@ interface AssessorApi {
   fun submit(contestCode: String, variantName: String, taskName: String, hasResult: Boolean, solution: String, consumer: (String) -> Unit)
 }
 
-class AssessorApiVoid : AssessorApi {
+class AssessorApiVoid(private val responseConsumer: (AssessmentPubSubResp) -> Unit) : AssessorApi {
   override fun submit(contestCode: String, variantName: String, taskName: String, hasResult: Boolean, solution: String, consumer: (String) -> Unit) {
     println("""
       Submitting solution of task $taskName in variant $variantName of contest $contestCode
       This is an assessor stub. It will not do anything""".trimIndent())
-    consumer("${taskName}_${System.currentTimeMillis().toString(16)}")
+    val requestId = "${taskName}_${System.currentTimeMillis().toString(16)}"
+    consumer(requestId)
+
+    responseConsumer(AssessmentPubSubResp(
+        requestId = requestId,
+        score = 0,
+        errors = "I am just lazy",
+        resultLines = listOf(mapOf("name" to "Anna Maria Jesus Violetta Francesca", "age" to 42))
+    ))
   }
 }
 
