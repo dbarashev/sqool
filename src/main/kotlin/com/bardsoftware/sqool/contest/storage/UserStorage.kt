@@ -31,6 +31,7 @@ import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.sql.Types
 import java.util.Random
+import java.util.concurrent.atomic.AtomicInteger
 
 data class ChallengeOffer(val taskId: Int, val description: String)
 data class UserEntity(var id: Int, var nick: String, var name: String, var passwd: String, var isAdmin: Boolean, var email: String)
@@ -349,12 +350,14 @@ class User(val entity: UserEntity, val storage: UserStorage) {
         .map(TaskAttemptEntity.Factory::fromRow)
   }
 
+
   /**
    * Assigns random variant from the given contest to this user and creates new virgin attempts
    * for all tasks from that variant.
    */
   fun assignRandomVariant(contestCode: String): Int {
-    val variantId = queryManager.listContestVariantsId(contestCode).random()
+    val variants = queryManager.listContestVariantsId(contestCode)
+    val variantId = variants[counter.getAndIncrement() % variants.size]
     assignVariant(contestCode, variantId)
     return variantId
   }
@@ -439,6 +442,10 @@ class User(val entity: UserEntity, val storage: UserStorage) {
       }
       execute()
     }
+  }
+
+  companion object Static {
+    var counter = AtomicInteger(0)
   }
 }
 
