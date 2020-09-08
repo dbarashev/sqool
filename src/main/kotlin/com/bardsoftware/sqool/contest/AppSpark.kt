@@ -351,6 +351,12 @@ fun main(args: Array<String>) {
       GET("/auth/dev" BY authDevHandler ARGS mapOf(
           "user_id" to AuthDevArgs::user_id
       ))
+      GET("/user/get" BY UserGetHandler() ARGS mapOf(
+          "id" to UserGetArgs::id,
+          "forceCreate" to UserGetArgs::forceCreate,
+          "email" to UserGetArgs::email,
+          "displayName" to UserGetArgs::displayName
+      ))
 
       GET("/me2" BY DashboardPageHandler())
       GET("/logout" BY LogoutHandler())

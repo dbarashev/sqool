@@ -28,19 +28,56 @@ import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.select
 
-abstract class DashboardHandler<T : RequestArgs> : RequestHandler<T>() {
-  protected fun withUser(http: HttpApi, handle: (User) -> HttpResponse): HttpResponse {
-    val userName = http.session("name") ?: return redirectToLogin(http)
-    return UserStorage.exec {
-      val user = findUser(userName) ?: return@exec redirectToLogin(http)
-      handle(user)
+fun withUser(http: HttpApi, userName: String? = http.session("name"), userEmail: String? = http.session("email"), handle: (User) -> HttpResponse): HttpResponse {
+  //if (userName == null) return redirectToLogin(http)
+  return UserStorage.exec {
+    val user = findUser(userName ?: "", userEmail ?: "") ?: return@exec redirectToLogin(http)
+    handle(user)
+  }
+}
+
+data class UserGetArgs(
+    var id: String, var forceCreate: String, var email: String, var displayName: String
+) : RequestArgs()
+
+class UserGetHandler() : RequestHandler<UserGetArgs>() {
+  override fun args() = UserGetArgs("", "", "false", "")
+
+  override fun handle(http: HttpApi, argValues: UserGetArgs): HttpResponse {
+    val user = UserStorage.exec {
+      findUser("", argValues.email)
+    }
+    return securityHeaders(http) {
+      val http = this
+      if (user != null) {
+        http.session("name", argValues.id)
+        http.session("email", argValues.email)
+        http.ok()
+      } else {
+        if (argValues.forceCreate.toBoolean()) {
+          UserStorage.exec {
+            createUser(argValues.displayName, "", argValues.email).let {
+              http.session("name", argValues.id)
+              http.session("email", argValues.email)
+              http.ok()
+            }
+          }
+        } else {
+          http.error(404)
+        }
+      }
     }
   }
+}
 
+
+
+abstract class DashboardHandler<T : RequestArgs> : RequestHandler<T>() {
   protected fun withUserContest(http: HttpApi, contestCode: String, handle: (User, ResultRow) -> HttpResponse): HttpResponse {
-    val userName = http.session("name") ?: return redirectToLogin(http)
+    val userName = http.session("name") ?: ""
+    val email = http.session("email") ?: ""
     return UserStorage.exec {
-      val user = findUser(userName) ?: return@exec redirectToLogin(http)
+      val user = findUser(userName, email) ?: return@exec redirectToLogin(http)
       val rowUserContest = AvailableContests.select {
         (AvailableContests.contest_code eq contestCode) and (AvailableContests.user_id eq user.id)
       }.toList()

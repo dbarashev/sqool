@@ -4,6 +4,7 @@ module.exports = {
   assetsDir: 'public',
     pages: {
       admin: './src/main/ts/admin/main.ts',
-      user: './src/main/ts/user/main.ts'
+      user: './src/main/ts/user/main.ts',
+      signup: './src/main/ts/auth/Signup.ts'
     }
 };

@@ -11,7 +11,7 @@
                     {{ userName }}
                 </a>
                 <div class="dropdown-menu" aria-labelledby="userDropdown">
-                    <a class="dropdown-item" href="/logout">Выйти</a>
+                    <a class="dropdown-item btn-logout" href="#" @click="logout">Выйти</a>
                 </div>
             </div>
         </nav>
@@ -33,6 +33,8 @@ import AvailableContestsDropdown from './AvailableContestsDropdown.vue';
 import VariantChooser from './VariantChooser';
 import AttemptTable from './AttemptTable.vue';
 import TaskAttemptPropertiesModal from '../components/TaskAttemptPropertiesModal';
+import {getUser, User, init as authInit, signOut} from '../../auth/Auth';
+import {Landing} from '../../Routes';
 
 @Component({
     components: {
@@ -44,6 +46,7 @@ import TaskAttemptPropertiesModal from '../components/TaskAttemptPropertiesModal
 })
 export default class Dashboard extends Vue {
   private userName = window.userName || 'чувак';
+  private user: User;
 
   @Provide()
   public variantChooser(): VariantChooser {
@@ -58,6 +61,14 @@ export default class Dashboard extends Vue {
   @Provide()
   public taskAttemptProperties(): TaskAttemptPropertiesModal {
     return this.$refs.taskAttemptPropertiesModal as TaskAttemptPropertiesModal;
+  }
+
+  public mounted() {
+    authInit().then((user) => this.user = user);
+  }
+
+  private logout() {
+    signOut().then(() => Landing.redirect());
   }
 }
 </script>

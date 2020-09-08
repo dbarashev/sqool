@@ -18,6 +18,7 @@
 
 package com.bardsoftware.sqool.contest
 
+import com.google.common.net.HttpHeaders
 import org.apache.http.client.utils.URIBuilder
 import org.slf4j.LoggerFactory.getLogger
 import spark.template.freemarker.FreeMarkerEngine
@@ -61,6 +62,8 @@ abstract class RequestHandler<T : RequestArgs> {
 
   fun getFontOrigins(): String = fontOrigins.joinToString(" ")
 
+  open fun getConnectOrigins(http: HttpApi): String = ""
+
   var route: RouteHandler<T>? = null
     set(value) {
       if (value == null) {
@@ -102,19 +105,30 @@ abstract class RequestHandler<T : RequestArgs> {
   protected fun addFontOrigin(origin: String) = this.fontOrigins.add(origin)
   protected fun addStyleOrigin(origin: String) = this.styleOrigins.add(origin)
 
-  //  protected fun securityHeaders(http: HttpApi, body: HttpApi.() -> Unit): HttpResponse {
-//    return http.chain {
-//      header(HttpHeaders.CONTENT_SECURITY_POLICY, createMarkupCspHeader(this@RequestHandler))
-//      header(HttpHeaders.X_FRAME_OPTIONS, "DENY")
-//      if (!isLocalDevelopmentEnvironment()) {
-//        header(HttpHeaders.STRICT_TRANSPORT_SECURITY, "max-age=2592000; preload")
-//      }
-//      body(this)
-//    }
-//  }
+  protected fun securityHeaders(http: HttpApi, body: HttpApi.() -> Unit): HttpResponse {
+    return http.chain {
+      header(HttpHeaders.CONTENT_SECURITY_POLICY, createMarkupCspHeader(this@RequestHandler, http))
+      header(HttpHeaders.X_FRAME_OPTIONS, "DENY")
+       // header(HttpHeaders.STRICT_TRANSPORT_SECURITY, "max-age=2592000; preload")
+      body(this)
+    }
+  }
   abstract fun handle(http: HttpApi, argValues: T): HttpResponse
 
   abstract fun args(): T
+}
+
+fun createMarkupCspHeader(handler: RequestHandler<*>, http: HttpApi): String {
+  return """
+    default-src https: 'unsafe-inline';
+    font-src ${handler.getFontOrigins()};
+    img-src ${handler.getImgOrigins()};
+    object-src 'none';
+    script-src ${handler.getScriptOrigins()};
+    style-src ${handler.getStyleOrigins()};
+    connect-src 'self' https://www.googleapis.com https://securetoken.googleapis.com ${handler.getConnectOrigins(http)};
+    frame-ancestors 'none'
+    """.trimIndent().replace('\n', ' ')
 }
 
 data class BaseContext(

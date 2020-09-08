@@ -8,66 +8,78 @@
     <link rel="stylesheet" href="https://unpkg.com/bootstrap-material-design@4.1.1/dist/css/bootstrap-material-design.min.css" integrity="sha384-wXznGJNEXNG1NFsbm0ugrLFMQPWswR3lds2VeinahP8N0zJw9VWSopbjv2x7WCvX" crossorigin="anonymous">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Material+Icons">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"/>
-    <link href="/js/user.js" rel="preload" as="script">
+    <link type="text/css" rel="stylesheet" href="https://www.gstatic.com/firebasejs/ui/4.6.1/firebase-ui-auth.css" />
 </head>
 <body>
 <div class="container-fluid mt-5">
     <div class="row">
         <div class="col-lg-offset-4 col-lg-4 col-md-offset-4 col-md-4 col-xs-12 col-sm-offset2 col-sm-10 container-fluid">
-
-            <ul class="nav nav-tabs" role="tablist">
-                <li class="nav-item">
-                    <a class="nav-link active"
-                       data-toggle="tab" role="tab"
-                       href="#tab-signin">Вход</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link"
-                       data-toggle="tab" role="tab"
-                       href="#tab-signup">Регистрация</a>
-                </li>
-            </ul>
-            <div class="tab-content">
-                <div class="tab-pane fade show active" id="tab-signin" role="tabpanel">
-                    <form method="post" action="/login.do">
-                        <input type="hidden" name="action" value="signin"/>
-                        <input type="hidden" name="createIfMissing" value="false"/>
-                        <input type="hidden" name="redirectUrl" value="${redirectUrl}"/>
-                        <div class="form-group">
-                            <label for="name" class="bmd-label-floating">Ваше имя</label>
-                            <input type="text" class="form-control" id="name" name="name" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="password" class="bmd-label-floating">Пароль</label>
-                            <input type="password" class="form-control" id="password" name="password">
-                        </div>
-                        <button type="submit" class="btn btn-primary btn-raised">Войти</button>
-                    </form>
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="title">Вход</h2>
+                    <div class="help-text">
+                        Авторизуйтесь при помощи аккаунта на Google или GitHub
+                    </div>
                 </div>
-                <div class="tab-pane fade" id="tab-signup" role="tabpanel">
-                    <form method="post" action="/login.do">
-                        <input type="hidden" name="action" value="signup"/>
-                        <input type="hidden" name="createIfMissing" value="false"/>
-                        <input type="hidden" name="redirectUrl" value="${redirectUrl}"/>
-                        <div class="form-group">
-                            <label for="name" class="bmd-label-floating">Ваше имя</label>
-                            <input type="text" class="form-control" id="name" name="name" required>
-                            <small class="form-text text-muted">Имя в настоящей жизни</small>
-                        </div>
-                        <div class="form-group">
-                            <label for="password" class="bmd-label-floating">Пароль</label>
-                            <input type="password" class="form-control" id="password" name="password">
-                            <small class="form-text text-muted">Да хоть пустой</small>
-                        </div>
-                        <div class="form-group">
-                            <label for="email" class="bmd-label-floating">Адрес электронной почты</label>
-                            <input type="email" class="form-control" id="email" name="email" required>
-                            <small class="form-text text-muted">Куда будут приходить рецензии от преподавателя</small>
-                        </div>
-                        <button type="submit" class="btn btn-primary btn-raised">Зарегистрироваться</button>
-                    </form>
+                <div class="card-body">
+                    <div id="firebaseui-auth-container"></div>
+                    <div id="loader"><i class="fa fa-spin fa-spinner"></i>&nbsp;Loading&hellip;</div>
                 </div>
             </div>
+
+<#--            <ul class="nav nav-tabs" role="tablist">-->
+<#--                <li class="nav-item">-->
+<#--                    <a class="nav-link active"-->
+<#--                       data-toggle="tab" role="tab"-->
+<#--                       href="#tab-signin">Вход</a>-->
+<#--                </li>-->
+<#--                <li class="nav-item">-->
+<#--                    <a class="nav-link"-->
+<#--                       data-toggle="tab" role="tab"-->
+<#--                       href="#tab-signup">Регистрация</a>-->
+<#--                </li>-->
+<#--            </ul>-->
+<#--            <div class="tab-content">-->
+<#--                <div class="tab-pane fade show active" id="tab-signin" role="tabpanel">-->
+<#--                    <form method="post" action="/login.do">-->
+<#--                        <input type="hidden" name="action" value="signin"/>-->
+<#--                        <input type="hidden" name="createIfMissing" value="false"/>-->
+<#--                        <input type="hidden" name="redirectUrl" value="${redirectUrl}"/>-->
+<#--                        <div class="form-group">-->
+<#--                            <label for="name" class="bmd-label-floating">Ваше имя</label>-->
+<#--                            <input type="text" class="form-control" id="name" name="name" required>-->
+<#--                        </div>-->
+<#--                        <div class="form-group">-->
+<#--                            <label for="password" class="bmd-label-floating">Пароль</label>-->
+<#--                            <input type="password" class="form-control" id="password" name="password">-->
+<#--                        </div>-->
+<#--                        <button type="submit" class="btn btn-primary btn-raised">Войти</button>-->
+<#--                    </form>-->
+<#--                </div>-->
+<#--                <div class="tab-pane fade" id="tab-signup" role="tabpanel">-->
+<#--                    <form method="post" action="/login.do">-->
+<#--                        <input type="hidden" name="action" value="signup"/>-->
+<#--                        <input type="hidden" name="createIfMissing" value="false"/>-->
+<#--                        <input type="hidden" name="redirectUrl" value="${redirectUrl}"/>-->
+<#--                        <div class="form-group">-->
+<#--                            <label for="name" class="bmd-label-floating">Ваше имя</label>-->
+<#--                            <input type="text" class="form-control" id="name" name="name" required>-->
+<#--                            <small class="form-text text-muted">Имя в настоящей жизни</small>-->
+<#--                        </div>-->
+<#--                        <div class="form-group">-->
+<#--                            <label for="password" class="bmd-label-floating">Пароль</label>-->
+<#--                            <input type="password" class="form-control" id="password" name="password">-->
+<#--                            <small class="form-text text-muted">Да хоть пустой</small>-->
+<#--                        </div>-->
+<#--                        <div class="form-group">-->
+<#--                            <label for="email" class="bmd-label-floating">Адрес электронной почты</label>-->
+<#--                            <input type="email" class="form-control" id="email" name="email" required>-->
+<#--                            <small class="form-text text-muted">Куда будут приходить рецензии от преподавателя</small>-->
+<#--                        </div>-->
+<#--                        <button type="submit" class="btn btn-primary btn-raised">Зарегистрироваться</button>-->
+<#--                    </form>-->
+<#--                </div>-->
+<#--            </div>-->
         </div>
 
     </div>
@@ -85,6 +97,7 @@
         integrity="sha384-CauSuKpEqAFajSpkdjv3z9t8E7RlpJ1UP0lKM/+NdtSarroVKu069AlsRPKkFBz9"
         crossorigin="anonymous"></script>
 <script>$(document).ready(function() { $('body').bootstrapMaterialDesign(); });</script>
+<script src="/js/signup.js"></script>
 </body>
 </html>
 
