@@ -27,9 +27,9 @@ private val PROD_CODE_EXECUTOR: CodeExecutor = UserStorage.Companion::exec
 
 abstract class AdminHandler<T : RequestArgs>(private val codeExecutor: CodeExecutor = PROD_CODE_EXECUTOR) : RequestHandler<T>()  {
   protected fun withAdminUser(http: HttpApi, redirectUrl: String = "/dashboard", handle: (User) -> HttpResponse): HttpResponse {
-    val userName = http.session("name") ?: return redirectToLogin(http, redirectUrl)
+    val userEmail = http.session("email") ?: return redirectToLogin(http, redirectUrl)
     return codeExecutor {
-      val user = findUser(userName) ?: return@codeExecutor redirectToLogin(http)
+      val user = findUser(null, userEmail) ?: return@codeExecutor redirectToLogin(http, redirectUrl)
       if (!user.isAdmin) {
         return@codeExecutor http.error(403)
       }

@@ -34,7 +34,7 @@ class SubmitDoHandler(private val assessor: AssessorApi) : DashboardHandler<Subm
   override fun args(): SubmitDoArgs  = SubmitDoArgs()
 
   override fun handle(http: HttpApi, argValues: SubmitDoArgs): HttpResponse {
-    return withUser(http) {user ->
+    return withUser(http, null, http.session("email")) {user ->
       val hasResult = Tasks.select { Tasks.id eq argValues.taskId.toInt() }.map { it[Tasks.hasResult] }.firstOrNull() ?: false
 
       assessor.submit(argValues.contestCode, argValues.variantName, argValues.taskName, hasResult, argValues.submissionText) {attemptId ->

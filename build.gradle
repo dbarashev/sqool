@@ -13,7 +13,7 @@ buildscript {
 	}
 }
 plugins {
-	id 'com.google.cloud.tools.jib' version '1.7.0'
+	id 'com.google.cloud.tools.jib' version '2.5.0'
 //	id "name.remal.check-updates" version "1.0.157"
 }
 
@@ -63,7 +63,7 @@ dependencies {
 	compile 'com.vladsch.flexmark:flexmark-all:0.+'
 
 	testCompile group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: '5.+'
-	testCompile group: 'com.nhaarman', name: 'mockito-kotlin', version: '1.6.+'
+	testCompile group: 'com.nhaarman', name: 'mockito-kotlin', version: '1.+'
 }
 
 sourceSets {
@@ -147,7 +147,17 @@ jib {
 		environment = ["GOOGLE_APPLICATION_CREDENTIALS": "/var/run/sqool/dbms-class-2017-eb9a6787a012.json"]
 		args = ["--pub", "dbms2019-submissions", "--sub", "dbms2019-frontend"]
 	}
-	extraDirectory {
+	extraDirectories {
+		paths {
+			path {
+				from = file("src/main/resources/workspace")
+				into = "/workspace"
+			}
+			path {
+				from = file("src/main/jib/var/run/sqool/")
+				into = "/var/run/sqool"
+			}
+		}
 		permissions = [
 				'/workspace': '777',
 		]

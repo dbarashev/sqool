@@ -147,7 +147,7 @@ class ContestBuildHandlerTest {
       mock<User> { on { it.isAdmin } doReturn isAdmin }
     }
     val userStorageMock = mock<UserStorage> {
-      on { findUser(USER_NAME) } doReturn userMock
+      on { findUser(USER_NAME, "") } doReturn userMock
     }
     val codeExecutor: CodeExecutor = { code ->
       userStorageMock.code()

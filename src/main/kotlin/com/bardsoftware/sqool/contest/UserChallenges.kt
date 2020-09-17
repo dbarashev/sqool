@@ -28,9 +28,9 @@ import javax.servlet.http.HttpServletResponse
 
 class ChallengeHandler {
   fun handleMaybeTry(http: HttpApi): HttpResponse {
-    val userName = http.session("name") ?: return http.redirect("/login")
+    val email = http.session("email") ?: return http.redirect("/login")
     return UserStorage.exec {
-      val user = findUser(userName) ?: return@exec http.error(HttpServletResponse.SC_FORBIDDEN)
+      val user = findUser(null, email) ?: return@exec http.error(HttpServletResponse.SC_FORBIDDEN)
       val difficulty = http.formValue("difficulty")?.toInt()
           ?: return@exec http.error(HttpServletResponse.SC_BAD_REQUEST)
       val authorId = http.formValue("author")?.toInt()
@@ -39,10 +39,10 @@ class ChallengeHandler {
   }
 
   fun handleDoTry(http: HttpApi): HttpResponse {
-    val userName = http.session("name") ?: return http.redirect("/login")
+    val email = http.session("email") ?: return http.redirect("/login")
     val taskId = http.formValue("id")?.toInt() ?: return http.error(HttpServletResponse.SC_BAD_REQUEST)
     return UserStorage.exec {
-      val user = findUser(userName) ?: return@exec http.error(HttpServletResponse.SC_FORBIDDEN)
+      val user = findUser(null, email) ?: return@exec http.error(HttpServletResponse.SC_FORBIDDEN)
       if (user.acceptChallenge(taskId)) {
         http.error(HttpServletResponse.SC_NO_CONTENT)
       } else {

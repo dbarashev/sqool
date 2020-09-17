@@ -30,7 +30,7 @@ DECLARE
 BEGIN
   SELECT ContestUser.id, ContestUser.name, ContestUser.nick, ContestUser.passwd, ContestUser.is_admin, ContestUser.email
   INTO _id, _name, _nick, _passwd, _is_admin, _email
-  FROM ContestUser WHERE ContestUser.name=argName;
+  FROM ContestUser WHERE ContestUser.email=argemail;
   IF FOUND THEN
     IF md5(argPass) <> _passwd THEN
       RETURN QUERY SELECT NULL::INT, NULL::TEXT, NULL::TEXT, NULL::TEXT, NULL::BOOLEAN, NULL::TEXT, 1;

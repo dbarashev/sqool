@@ -161,14 +161,12 @@ inline fun httpWrapExceptions(http: HttpApi, work: () -> HttpResponse): HttpResp
     work()
   } catch (e: Exception) {
     LOGGER.error(e.message, e)
+    println(e)
     http.error(500, e.message, e)
   } catch (e: HttpException) {
     LOGGER.error(e.message, e)
-
+    println(e)
     http.error(e.code, e.message, e)
-  } catch (e: Exception) {
-    LOGGER.error(e.message, e)
-    http.error(INTERNAL_SERVER_ERROR, e.message, e)
   }
 }
 

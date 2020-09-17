@@ -31,7 +31,7 @@ import org.jetbrains.exposed.sql.select
 fun withUser(http: HttpApi, userName: String? = http.session("name"), userEmail: String? = http.session("email"), handle: (User) -> HttpResponse): HttpResponse {
   //if (userName == null) return redirectToLogin(http)
   return UserStorage.exec {
-    val user = findUser(userName ?: "", userEmail ?: "") ?: return@exec redirectToLogin(http)
+    val user = findUser(null, userEmail ?: "") ?: return@exec redirectToLogin(http)
     handle(user)
   }
 }
@@ -45,25 +45,22 @@ class UserGetHandler() : RequestHandler<UserGetArgs>() {
 
   override fun handle(http: HttpApi, argValues: UserGetArgs): HttpResponse {
     val user = UserStorage.exec {
-      findUser("", argValues.email)
+      findUser(null, argValues.email)
     }
     return securityHeaders(http) {
-      val http = this
       if (user != null) {
-        http.session("name", argValues.id)
-        http.session("email", argValues.email)
-        http.ok()
+        this.session("email", argValues.email)
+        this.ok()
       } else {
         if (argValues.forceCreate.toBoolean()) {
           UserStorage.exec {
             createUser(argValues.displayName, "", argValues.email).let {
-              http.session("name", argValues.id)
-              http.session("email", argValues.email)
-              http.ok()
+              this@securityHeaders.session("email", argValues.email)
+              this@securityHeaders.ok()
             }
           }
         } else {
-          http.error(404)
+          this@securityHeaders.error(404)
         }
       }
     }
@@ -74,7 +71,7 @@ class UserGetHandler() : RequestHandler<UserGetArgs>() {
 
 abstract class DashboardHandler<T : RequestArgs> : RequestHandler<T>() {
   protected fun withUserContest(http: HttpApi, contestCode: String, handle: (User, ResultRow) -> HttpResponse): HttpResponse {
-    val userName = http.session("name") ?: ""
+    val userName = null
     val email = http.session("email") ?: ""
     return UserStorage.exec {
       val user = findUser(userName, email) ?: return@exec redirectToLogin(http)
@@ -94,15 +91,17 @@ abstract class DashboardHandler<T : RequestArgs> : RequestHandler<T>() {
 class DashboardPageHandler : DashboardHandler<RequestArgs>() {
   override fun args() = RequestArgs()
 
-  override fun handle(http: HttpApi, argValues: RequestArgs) = withUser(http) {
-    http.render("me2.ftl", mapOf("userName" to it.name))
+  override fun handle(http: HttpApi, argValues: RequestArgs): HttpResponse {
+    return withUser(http, null, http.session("email")) {
+      http.render("me2.ftl", mapOf("userName" to it.name))
+    }
   }
 }
 
 class AvailableContestAllHandler : DashboardHandler<RequestArgs>() {
   override fun args() = RequestArgs()
 
-  override fun handle(http: HttpApi, argValues: RequestArgs) = withUser(http) {
+  override fun handle(http: HttpApi, argValues: RequestArgs) = withUser(http, null, http.session("email")) {
     http.json(it.availableContests())
   }
 }
@@ -110,7 +109,7 @@ class AvailableContestAllHandler : DashboardHandler<RequestArgs>() {
 class ContestRecentHandler : DashboardHandler<RequestArgs>() {
   override fun args() = RequestArgs()
 
-  override fun handle(http: HttpApi, argValues: RequestArgs) = withUser(http) { user ->
+  override fun handle(http: HttpApi, argValues: RequestArgs) = withUser(http, null, http.session("email")) { user ->
     user.recentContest()?.let { http.json(it) } ?: http.ok()
   }
 }
@@ -190,7 +189,7 @@ data class ReviewGetArgs(var attempt_id: String) : RequestArgs()
 class ReviewGetHandler : DashboardHandler<ReviewGetArgs>() {
   override fun args() = ReviewGetArgs("")
 
-  override fun handle(http: HttpApi, argValues: ReviewGetArgs) = withUser(http) { user ->
+  override fun handle(http: HttpApi, argValues: ReviewGetArgs) = withUser(http, null, http.session("email")) { user ->
     val reviewRow = ReviewByUser.select {
       (ReviewByUser.user_id eq user.id) and (ReviewByUser.attempt_id eq argValues.attempt_id)
     }.toList()

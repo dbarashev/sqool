@@ -45,7 +45,7 @@ import {Landing} from '../../Routes';
     },
 })
 export default class Dashboard extends Vue {
-  private userName = window.userName || 'чувак';
+  private userName = window.userName || '---';
   private user: User;
 
   @Provide()

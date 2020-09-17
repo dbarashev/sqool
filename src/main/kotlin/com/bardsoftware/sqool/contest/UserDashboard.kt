@@ -23,9 +23,9 @@ import javax.servlet.http.HttpServletResponse
 
 class UserDashboardHandler {
   fun handle(http: HttpApi): HttpResponse {
-    val userName = http.session("name") ?: return http.redirect("/login")
+    val email = http.session("email") ?: return http.redirect("/login")
     return UserStorage.exec {
-      val user = findUser(userName)
+      val user = findUser(null, email)
       if (user == null) {
         http.chain {
           clearSession()
@@ -41,9 +41,9 @@ class UserDashboardHandler {
   }
 
   fun handleAttempts(http: HttpApi): HttpResponse {
-    val userName = http.session("name") ?: return http.error(HttpServletResponse.SC_FORBIDDEN)
+    val email = http.session("email") ?: return http.error(HttpServletResponse.SC_FORBIDDEN)
     return UserStorage.exec {
-      val user = findUser(userName)
+      val user = findUser(null, email)
       if (user == null) {
         http.chain {
           clearSession()

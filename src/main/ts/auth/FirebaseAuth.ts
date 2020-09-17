@@ -91,8 +91,11 @@ export function init(): Promise<User> {
                             forceCreate: true,
                             email: newUser.email || '',
                             displayName: newUser.displayName,
+                        }).then( () => resolve(new FirebaseUser(newUser))).catch( (err) => {
+                            console.error(err);
+                            reject('Failed to get or create user');
                         });
-                        resolve(new FirebaseUser(newUser));
+
                     });
                 }
             });

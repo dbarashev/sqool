@@ -488,8 +488,13 @@ class UserStorage(val txn: Transaction) {
     return UserTable.select { UserTable.id.eq(id) }.map(this::fromRow).firstOrNull()
   }
 
-  fun findUser(name: String, email: String = ""): User? {
-    return UserTable.select { UserTable.name.eq(name) or UserTable.email.eq(email) }.map(this::fromRow).firstOrNull()
+  fun findUser(name: String?, email: String): User? {
+    val select = if (name != null) {
+      UserTable.select { UserTable.name.eq(name)  }
+    } else {
+      UserTable.select { UserTable.email.eq(email)  }
+    }
+    return select.map(this::fromRow).firstOrNull()
   }
 
   fun findTask(id: Int): Task? {
