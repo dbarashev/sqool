@@ -12,7 +12,7 @@ module.exports = {
       admin: {
         entry: './src/main/ts/admin/main.ts',
         template: './src/main/ts/template/dashboard.html',
-        filename: 'dashboard'
+        filename: 'dashboard.html'
       },
       user: './src/main/ts/user/main.ts',
       signup: './src/main/ts/auth/Signup.ts'

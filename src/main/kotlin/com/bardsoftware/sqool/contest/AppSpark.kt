@@ -156,6 +156,16 @@ class Http(
     }
   }
 
+  override fun html(body: String): HttpResponse {
+    return {
+      response.type(MediaType.HTML_UTF_8.toString())
+      response.raw().outputStream.use {
+        ByteStreams.copy(body.byteInputStream(Charsets.UTF_8), it)
+      }
+      response.status(200)
+    }
+  }
+
   override fun session(name: String, value: String?) {
     if (value != null) {
       session(true)!!.attribute(name, value)
