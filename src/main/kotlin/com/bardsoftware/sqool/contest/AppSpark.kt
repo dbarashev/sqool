@@ -178,6 +178,7 @@ class Http(
     }
     return {
       if (message != null) {
+        response.raw().addHeader("Content-Type", "text/plain;charset=utf-8")
         response.raw().sendError(status, message)
       } else {
         response.status(status)

@@ -18,6 +18,7 @@
 
 package com.bardsoftware.sqool.contest
 
+import com.bardsoftware.sqool.contest.admin.Contests
 import com.bardsoftware.sqool.contest.admin.Tasks
 import org.jetbrains.exposed.sql.select
 
@@ -35,6 +36,11 @@ class SubmitDoHandler(private val assessor: AssessorApi) : DashboardHandler<Subm
 
   override fun handle(http: HttpApi, argValues: SubmitDoArgs): HttpResponse {
     return withUser(http, null, http.session("email")) {user ->
+      val contest = Contests.select { Contests.code eq argValues.contestCode }.firstOrNull() ?: return@withUser http.error(404, "Соревнование не найдено")
+      if (contest[Contests.end_ts].isBeforeNow) {
+        return@withUser http.error(400, "The contest time is over!")
+      }
+
       val hasResult = Tasks.select { Tasks.id eq argValues.taskId.toInt() }.map { it[Tasks.hasResult] }.firstOrNull() ?: false
 
       assessor.submit(argValues.contestCode, argValues.variantName, argValues.taskName, hasResult, argValues.submissionText) {attemptId ->
