@@ -28,6 +28,9 @@
         <a class="list-group-item list-group-item-action"
            data-toggle="list" href="#list-contest" role="tab"
            aria-controls="contest">Соревнования</a>
+        <a class="list-group-item list-group-item-action"
+           data-toggle="list" href="#list-students" role="tab"
+           aria-controls="contest">Студенты</a>
       </div>
     </div>
     <main class="bmd-layout-content">
@@ -54,6 +57,11 @@
             </ScriptToolbar>
             <ScriptTable ref="scriptTable">
             </ScriptTable>
+          </div>
+          <div class="tab-pane fade" id="list-students" role="tabpanel">
+            <StudentTable>
+
+            </StudentTable>
           </div>
         </div>
       </div>
@@ -84,6 +92,7 @@ import VariantPropertiesModal from './components/VariantPropertiesModal.vue';
 import VariantTable from './components/VariantTable';
 import VueSimplemde from 'vue-simplemde';
 import 'simplemde/dist/simplemde.min.css';
+import StudentTable from './components/StudentTable.vue';
 
 Vue.component('vue-simplemde', VueSimplemde);
 
@@ -95,6 +104,7 @@ Vue.component('vue-simplemde', VueSimplemde);
     TaskToolbar, TaskPropertiesModal,
     ContestBuildingProgressBar, AlertDialog,
     TaskMainWindow, ScriptToolbar, ScriptPropertiesModal,
+    StudentTable,
     VariantTable, VariantToolbar, VariantPropertiesModal,
   },
 })
@@ -164,6 +174,9 @@ export default class App extends Vue {
     return this.$refs.scriptToolbar as ScriptToolbar;
   }
 
+  public mounted() {
+    ($('body') as any).bootstrapMaterialDesign();
+  }
 }
 </script>
 <style lang="scss">
