@@ -1,3 +1,5 @@
+SET search_path=Contest,public;
+
 DROP FUNCTION contest.getorcreatecontestuser;
 CREATE FUNCTION contest.getorcreatecontestuser(argname text, argpass text, argemail text, generatenick boolean) RETURNS TABLE(id integer, nick text, name text, passwd text, is_admin boolean, email text, code integer)
     LANGUAGE plpgsql

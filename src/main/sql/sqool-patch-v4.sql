@@ -1,3 +1,5 @@
+SET search_path=Contest,public;
+
 DROP VIEW Contest.ReviewByUser;
 
 CREATE OR REPLACE VIEW ReviewByUser AS

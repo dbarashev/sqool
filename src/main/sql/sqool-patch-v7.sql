@@ -1,3 +1,5 @@
+SET search_path=Contest,public;
+
 CREATE OR REPLACE VIEW MyAttempts AS
 SELECT  T.id AS task_id,
         T.script_id AS schema_id,
