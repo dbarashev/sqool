@@ -82,30 +82,8 @@ sourceSets {
 	}
 }
 
-//task compileCoffeeScript {
-//	inputs.files "src/main/coffee"
-//	description = 'Compiles CoffeeScript'
-//	def sourceDir = "src/main/coffee"
-//	def includedFiles = fileTree("src/main/coffee") {
-//		include "*.coffee"
-//	}
-//	def targetDir = "build/resources/main/public/js"
-//	doLast {
-//		file(targetDir).mkdirs()
-//		includedFiles.each {file ->
-//			def filename = file.name
-//			exec {
-//				workingDir "$projectDir"
-//				executable 'coffee'
-//				args "-o", "$targetDir/", "$sourceDir/$filename"
-//			}
-//		}
-//	}
-//}
-
 // Compiles TypeScript sources and makes webpack bundle
 task buildClient(type: Exec) {
-	inputs.files "src/main/ts"
 	workingDir = "$projectDir"
 	doFirst {
 		println("Building client")

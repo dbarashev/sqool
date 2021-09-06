@@ -25,6 +25,8 @@ class AdminDashboardPageHandler : AdminHandler<RequestArgs>() {
   override fun args() = RequestArgs()
 
   override fun handle(http: HttpApi, argValues: RequestArgs) = withAdminUser(http) {
-    http.render("dashboard.ftl", Any())
+    http.html(
+      this::class.java.getResourceAsStream("/public/dashboard.html").reader(Charsets.UTF_8).readText()
+    )
   }
 }
