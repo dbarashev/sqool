@@ -1,11 +1,10 @@
 buildscript {
 	ext {
-		kotlinVersion = '1.4.+'
+		kotlinVersion = '1.5.+'
 	}
 	repositories {
 		google()
 		mavenCentral()
-		jcenter()
 	}
 	dependencies {
 		classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:${kotlinVersion}")
@@ -28,7 +27,6 @@ ext {
 }
 repositories {
 	mavenCentral()
-	jcenter()
 }
 
 mainClassName = 'com.bardsoftware.sqool.contest.AppSparkKt'
@@ -84,26 +82,26 @@ sourceSets {
 	}
 }
 
-task compileCoffeeScript {
-	inputs.files "src/main/coffee"
-	description = 'Compiles CoffeeScript'
-	def sourceDir = "src/main/coffee"
-	def includedFiles = fileTree("src/main/coffee") {
-		include "*.coffee"
-	}
-	def targetDir = "build/resources/main/public/js"
-	doLast {
-		file(targetDir).mkdirs()
-		includedFiles.each {file ->
-			def filename = file.name
-			exec {
-				workingDir "$projectDir"
-				executable 'coffee'
-				args "-o", "$targetDir/", "$sourceDir/$filename"
-			}
-		}
-	}
-}
+//task compileCoffeeScript {
+//	inputs.files "src/main/coffee"
+//	description = 'Compiles CoffeeScript'
+//	def sourceDir = "src/main/coffee"
+//	def includedFiles = fileTree("src/main/coffee") {
+//		include "*.coffee"
+//	}
+//	def targetDir = "build/resources/main/public/js"
+//	doLast {
+//		file(targetDir).mkdirs()
+//		includedFiles.each {file ->
+//			def filename = file.name
+//			exec {
+//				workingDir "$projectDir"
+//				executable 'coffee'
+//				args "-o", "$targetDir/", "$sourceDir/$filename"
+//			}
+//		}
+//	}
+//}
 
 // Compiles TypeScript sources and makes webpack bundle
 task buildClient(type: Exec) {
@@ -124,13 +122,9 @@ task buildClient(type: Exec) {
 }
 
 assemble {
-	dependsOn compileCoffeeScript
 	dependsOn buildClient
 }
 
-run {
-	dependsOn buildClient
-}
 
 test {
 	useJUnitPlatform()
