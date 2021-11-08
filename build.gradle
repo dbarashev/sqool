@@ -49,6 +49,7 @@ dependencies {
 	compile 'org.postgresql:postgresql:42.+'
 	compile 'com.zaxxer:HikariCP:2.+'
 	compile 'org.jetbrains.exposed:exposed:0.17.+'
+	compile "org.jooq:jooq:3.+"
 
 	// Spark stuff
 	compile "com.sparkjava:spark-kotlin:1.+"
@@ -59,6 +60,8 @@ dependencies {
 
 	compile group: 'com.squareup.okhttp3', name: 'okhttp', version: '4.2.2'
 	compile 'com.vladsch.flexmark:flexmark-all:0.+'
+	compile "org.telegram:telegrambots:5.+"
+	compile "org.telegram:telegrambotsextensions:5.+"
 
 	testCompile group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: '5.+'
 	testCompile group: 'com.nhaarman', name: 'mockito-kotlin', version: '1.+'
