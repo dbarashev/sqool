@@ -18,6 +18,7 @@
 
 package com.bardsoftware.sqool.bot
 
+import com.fasterxml.jackson.databind.node.ObjectNode
 import org.telegram.telegrambots.bots.DefaultBotOptions
 import org.telegram.telegrambots.bots.TelegramLongPollingBot
 import org.telegram.telegrambots.meta.ApiConstants
@@ -68,17 +69,24 @@ class SQoolBot : TelegramLongPollingBot(
     chain(update, this) {
       val tg = this
       onCallback { json ->
-        val teammate = json["tg"]?.asText(null) ?: run {
-          reply("Внутренняя ошибка. Кажется, вам надо послать команду /t снова", isMarkdown = false, stop = true)
-          return@onCallback
-        }
-        val sprintNum = json["sprint"]?.asInt(0) ?: run {
-          reply("Внутренняя ошибка. Кажется, вам надо послать команду /t снова", isMarkdown = false, stop = true)
-          return@onCallback
-        }
-        db {
-          dialogState(tg.userId, 1, "$teammate:$sprintNum")
-          reply("Поставьте оценку $teammate. Вещественное число в диапазоне [0..1]", isMarkdown = false, stop = true)
+        val dialogPage = json["p"]?.asInt() ?: 0
+        when (dialogPage) {
+          1 -> teacherPageChooseAction(tg, json)
+          2 -> teacherPageRotateProjects(tg, json)
+          else -> {
+            val teammate = json["tg"]?.asText(null) ?: run {
+              reply("Внутренняя ошибка. Кажется, вам надо послать команду /t снова", isMarkdown = false, stop = true)
+              return@onCallback
+            }
+            val sprintNum = json["sprint"]?.asInt(0) ?: run {
+              reply("Внутренняя ошибка. Кажется, вам надо послать команду /t снова", isMarkdown = false, stop = true)
+              return@onCallback
+            }
+            db {
+              dialogState(tg.userId, 1, "$teammate:$sprintNum")
+              reply("Поставьте оценку $teammate. Вещественное число в диапазоне [0..1]", isMarkdown = false, stop = true)
+            }
+          }
         }
       }
       if (update.message?.chatId == update.message?.from?.id) {
@@ -102,6 +110,13 @@ class SQoolBot : TelegramLongPollingBot(
           }
         }
         onCommand("start") {
+          if (isTeacher(this.userName)) {
+            reply("Выберите вуз", isMarkdown = false, stop = true, buttons = listOf(
+                BtnData("ИТМО", """ {"u": 1, "p": 1} """),
+                BtnData("CSC", """ {"u": 2, "p": 1} """),
+                BtnData("ВШЭ", """ {"u": 3, "p": 1} """)
+            ))
+          }
           reply("Команда /t позволит поставить оценки товарищам. Всё остальное, что вы мне пишете, я пересылаю преподавателю.", isMarkdown = false)
           stop()
         }
@@ -111,7 +126,7 @@ class SQoolBot : TelegramLongPollingBot(
 
           val teammates = getPrevTeammates(this.userName)
           val btns = teammates.members.map { BtnData(it.first, """{"tg": "${it.second}", "sprint": ${teammates.sprintNum}} """) }
-          reply("Ваша команда на прошлой итерации. Если ткнуть в кнопку, можно поставить оценку", stop = true, buttons = btns, isMarkdown = false)
+          reply("Ваша команда на прошлой итерации. Если ткнуть в кнопку, можно поставить оценку", stop = true, buttons = btns, isMarkdown = false, maxCols = 1)
         }
         onRegexp(".*") {
           forward(update.message, INBOX_CHAT_ID)
@@ -119,6 +134,26 @@ class SQoolBot : TelegramLongPollingBot(
       }
     }
   }
+
+  fun teacherPageChooseAction(tg: ChainBuilder, json: ObjectNode) {
+    val uni = json["u"]?.asInt() ?: run {
+      tg.reply("Ошибка состояния: не найден университет", isMarkdown = false, stop = true)
+      return
+    }
+    tg.reply("Чего изволите?", isMarkdown = false, stop = true, buttons = listOf(
+        BtnData("Сделать ротацию в проектах", """ {"u": $uni, "p": 2 } """)
+    ))
+  }
+
+  fun teacherPageRotateProjects(tg: ChainBuilder, json: ObjectNode) {
+    val uni = json["u"]?.asInt() ?: run {
+      tg.reply("Ошибка состояния: не найден университет", isMarkdown = false, stop = true)
+      return
+    }
+    tg.reply("Произведём ротацию в университете $uni", isMarkdown = false, stop = true)
+  }
 }
+
+private fun isTeacher(username: String) = setOf("dbarashev").contains(username)
 
 private const val INBOX_CHAT_ID = "-585161267"
