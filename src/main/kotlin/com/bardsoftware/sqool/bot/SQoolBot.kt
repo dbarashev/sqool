@@ -73,6 +73,7 @@ class SQoolBot : TelegramLongPollingBot(
         when (dialogPage) {
           1 -> teacherPageChooseAction(tg, json)
           2 -> teacherPageRotateProjects(tg, json)
+          3 -> teacherPageGetPeerScores(tg, json)
           else -> {
             val teammate = json["tg"]?.asText(null) ?: run {
               reply("Внутренняя ошибка. Кажется, вам надо послать команду /t снова", isMarkdown = false, stop = true)
@@ -114,7 +115,7 @@ class SQoolBot : TelegramLongPollingBot(
             reply("Выберите вуз", isMarkdown = false, stop = true, buttons = listOf(
                 BtnData("ИТМО", """ {"u": 1, "p": 1} """),
                 BtnData("CSC", """ {"u": 2, "p": 1} """),
-                BtnData("ВШЭ", """ {"u": 3, "p": 1} """)
+                BtnData("ВШЭ", """ {"u": 0, "p": 1} """)
             ))
           }
           reply("Команда /t позволит поставить оценки товарищам. Всё остальное, что вы мне пишете, я пересылаю преподавателю.", isMarkdown = false)
@@ -141,7 +142,8 @@ class SQoolBot : TelegramLongPollingBot(
       return
     }
     tg.reply("Чего изволите?", isMarkdown = false, stop = true, buttons = listOf(
-        BtnData("Сделать ротацию в проектах", """ {"u": $uni, "p": 2 } """)
+        BtnData("Сделать ротацию в проектах", """ {"u": $uni, "p": 2 } """),
+        BtnData("Узнать peer оценки последней итерации", """ {"u": $uni, "p": 3 } """)
     ))
   }
 
@@ -151,6 +153,19 @@ class SQoolBot : TelegramLongPollingBot(
       return
     }
     tg.reply("Произведём ротацию в университете $uni", isMarkdown = false, stop = true)
+  }
+
+  fun teacherPageGetPeerScores(tg: ChainBuilder, json: ObjectNode) {
+    val uni = json["u"]?.asInt() ?: run {
+      tg.reply("Ошибка состояния: не найден университет", isMarkdown = false, stop = true)
+      return
+    }
+    val table = getAllScores(uni).map { """${it.name.escapeMarkdown()}:${it.scoreSumFormula.escapeMarkdown()}:${it.scoreSources.entries.toString().escapeMarkdown()}""" }.joinToString("\n")
+    tg.reply("""|
+      ```
+      |$table
+      ```
+    |""".trimMargin(), isMarkdown = true, stop = true)
   }
 }
 
