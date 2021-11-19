@@ -152,7 +152,22 @@ class SQoolBot : TelegramLongPollingBot(
       tg.reply("Ошибка состояния: не найден университет", isMarkdown = false, stop = true)
       return
     }
+
     tg.reply("Произведём ротацию в университете $uni", isMarkdown = false, stop = true)
+    val newTeamRecords = rotateTeams(uni)
+    println(newTeamRecords)
+    insertNewRotation(newTeamRecords)
+    var teamNum = -1
+    val buf = StringBuffer()
+    getAllCurrentTeamRecords(uni).forEach {
+      if (it.first > teamNum) {
+        buf.append("\n\n")
+        teamNum = it.first
+        buf.append("__team ${teamNum}__\n")
+      }
+      buf.append(it.second.escapeMarkdown()).append("\n")
+    }
+    tg.reply(buf.toString(), isMarkdown = true)
   }
 
   fun teacherPageGetPeerScores(tg: ChainBuilder, json: ObjectNode) {

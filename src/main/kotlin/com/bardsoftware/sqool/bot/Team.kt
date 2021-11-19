@@ -141,3 +141,76 @@ fun getAllScores(uni: Int): List<ScoreRecord> {
     result
   }
 }
+
+data class TeamRecord(val teamNum: Int, val tgUsername: String, val ord: Int)
+
+fun rotateTeams(uni: Int): List<TeamRecord> {
+  val records = db {
+    val lastSprint = select(field("sprint_num", Int::class.java))
+        .from(table("LastSprint"))
+        .where(field("uni").eq(uni)).fetchOne()?.value1()
+    select(
+        field("team_num", Int::class.java),
+        field("tg_username", String::class.java),
+        field("ord", Int::class.java)
+    ).from(table("Team")).where(field("sprint_num").eq(lastSprint)
+        .and(field("team_num", Int::class.java).between(uni * 100, (uni + 1) * 100)))
+        .orderBy(field("team_num", Int::class.java), field("ord", Int::class.java))
+        .map { TeamRecord(it.value1(), it.value2(), it.value3()) }.toList()
+  }
+  val teamNums = records.map { it.teamNum }.toSortedSet()
+  println("Cur team nums=$teamNums")
+  val newTeamNums = teamNums.toMutableList()
+  var doShuffle = true
+  while (doShuffle) {
+    newTeamNums.shuffle()
+    val matchedPair = teamNums.zip(newTeamNums).firstOrNull { it.first == it.second }
+    val matchedShiftedPair = newTeamNums.toMutableList().also {
+      it.add(0, it.removeLast())
+    }.zip(teamNums).firstOrNull { it.first == it.second }
+    doShuffle = matchedPair != null || matchedShiftedPair != null
+  }
+  println("New team nums=$newTeamNums")
+  val newRecords: List<TeamRecord> = records.map {
+    val teamIdx = teamNums.indexOf(it.teamNum)
+    when (it.ord) {
+      1 -> TeamRecord(teamNum = newTeamNums[teamIdx], tgUsername = it.tgUsername, ord = 3)
+      2 -> TeamRecord(teamNum = if (teamIdx == 0) newTeamNums.last() else newTeamNums[teamIdx-1],
+          tgUsername = it.tgUsername, ord = 4)
+      3 -> TeamRecord(teamNum = it.teamNum, tgUsername = it.tgUsername, ord = 2)
+      4 -> TeamRecord(teamNum = it.teamNum, tgUsername = it.tgUsername, ord = 1)
+      else -> {
+        println("unexpected ordinal number: ${it}")
+        it
+      }
+    }
+  }
+  return newRecords.sortedWith { left, right ->
+    val byTeam = left.teamNum - right.teamNum
+    if (byTeam != 0) byTeam else left.ord - right.ord
+  }
+}
+
+fun insertNewRotation(records: List<TeamRecord>) {
+  txn {
+    records.forEach {
+      insertInto(table("team"),
+          field("sprint_num", Int::class.java),
+          field("team_num", Int::class.java),
+          field("tg_username", String::class.java),
+          field("ord", Int::class.java)
+      ).values(0, it.teamNum, it.tgUsername, it.ord).execute()
+    }
+  }
+}
+
+fun getAllCurrentTeamRecords(uni: Int): List<Pair<Int, String>> {
+  return db {
+    // select team_num, name from Team T JOIN Student S USING (tg_username) WHERE sprint_num = 0 ORDER BY team_num, ord
+    select(field("team_num", Int::class.java), field("name", String::class.java))
+        .from(table("team").join(table("student")).using(field("tg_username")))
+        .where(field("sprint_num").eq(0))
+        .orderBy(field("team_num"), field("ord"))
+        .map { it.value1() to it.value2() }
+  }
+}
