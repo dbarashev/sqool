@@ -1,6 +1,6 @@
 buildscript {
 	ext {
-		kotlinVersion = '1.5.+'
+		kotlinVersion = '1.6.+'
 	}
 	repositories {
 		google()
@@ -28,20 +28,27 @@ repositories {
 mainClassName = 'com.bardsoftware.sqool.bot.SQoolBotKt'
 
 dependencies {
-	compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:${kotlinVersion}"
-	compile "org.jetbrains.kotlin:kotlin-reflect:${kotlinVersion}"
-	compile "org.telegram:telegrambots:5.+"
-	compile "org.telegram:telegrambotsextensions:5.+"
-	compile "com.fasterxml.jackson.module:jackson-module-kotlin:2.+"
-	compile "org.postgresql:postgresql:42.+"
-	compile 'com.zaxxer:HikariCP:2.+'
-	compile "org.jooq:jooq:3.+"
+	implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:${kotlinVersion}"
+	implementation "org.jetbrains.kotlin:kotlin-reflect:${kotlinVersion}"
+	implementation "org.telegram:telegrambots:5.3.+"
+	implementation "org.telegram:telegrambotsextensions:5.3.+"
+	implementation "com.fasterxml.jackson.module:jackson-module-kotlin:2.+"
+	implementation "org.postgresql:postgresql:42.+"
+	implementation 'com.zaxxer:HikariCP:5.+'
+	implementation "org.jooq:jooq:3.+"
+	implementation 'javax.xml.bind:jaxb-api:2.3.1'
+
 }
 
 sourceSets {
 	main {
 		kotlin {
 			include "**/bot/*.kt"
+		}
+	}
+	test {
+		kotlin {
+			exclude "**/*.kt"
 		}
 	}
 }
@@ -52,5 +59,10 @@ compileKotlin {
 jib {
 	to.image = 'dbarashev/sqool-bot'
 	from.image = 'gcr.io/distroless/java'
+	container.ports = ["8080"]
 }
 
+application {
+
+	applicationDefaultJvmArgs = ["-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:5005"]
+}
