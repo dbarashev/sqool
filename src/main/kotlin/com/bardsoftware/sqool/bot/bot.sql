@@ -21,10 +21,10 @@ from score join student on tg_username_to=tg_username group by sprint_num, tg_us
 
 CREATE OR REPLACE VIEW LastSprint AS
 WITH T1 AS (
-SELECT T.team_num / 100 AS uni, S.sprint_num
-FROM Score S JOIN Team T on S.tg_username_to = T.tg_username and S.sprint_num = T.sprint_num
+SELECT T.team_num / 100 AS uni, T.sprint_num
+FROM Team T
 )
-SELECT uni, MAX(sprint_num) FROM T1 GROUP BY uni;
+SELECT uni, MAX(sprint_num) AS sprint_num FROM T1 GROUP BY uni;
 
 create view PeerScores AS
 select T1.sprint_num, t1.team_num, t1.ord AS ord_to, t1.tg_username AS tg_username_to, score, t.tg_username as tg_username_from, t.ord AS ord_from

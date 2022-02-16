@@ -36,10 +36,14 @@ import org.telegram.telegrambots.updatesreceivers.DefaultBotSession
 import org.telegram.telegrambots.updatesreceivers.DefaultWebhook
 import java.io.Serializable
 
-fun main() {
-  TelegramBotsApi(DefaultBotSession::class.java, DefaultWebhook().also {
-    it.setInternalUrl("http://0.0.0.0:8080")
-  }).registerBot(SQooLWebhookBot(), SetWebhook(System.getenv("TG_BOT_URL")))
+fun main(args: Array<String>) {
+  if (args.isNotEmpty() && args[0] == "poll") {
+    TelegramBotsApi(DefaultBotSession::class.java).registerBot(SQoolBot())
+  } else {
+    TelegramBotsApi(DefaultBotSession::class.java, DefaultWebhook().also {
+      it.setInternalUrl("http://0.0.0.0:8080")
+    }).registerBot(SQooLWebhookBot(), SetWebhook(System.getenv("TG_BOT_URL")))
+  }
 }
 
 /**
@@ -127,6 +131,7 @@ private fun process(update: Update, sender: MessageSender) = chain(update, sende
       1 -> teacherPageChooseAction(tg, json)
       2 -> teacherPageRotateProjects(tg, json)
       3 -> teacherPageGetPeerScores(tg, json)
+      4 -> studentRegister(tg, json)
       else -> {
         val teammate = json["tg"]?.asText(null) ?: run {
           reply("Внутренняя ошибка. Кажется, вам надо послать команду /t снова", isMarkdown = false, stop = true)
@@ -163,7 +168,7 @@ private fun process(update: Update, sender: MessageSender) = chain(update, sende
         }
       }
     }
-    onCommand("start") {
+    onCommand("start", "help") {
       if (isTeacher(this.userName)) {
         reply("Выберите вуз", isMarkdown = false, stop = true, buttons = listOf(
             BtnData("ИТМО", """ {"u": 1, "p": 1} """),
@@ -171,9 +176,18 @@ private fun process(update: Update, sender: MessageSender) = chain(update, sende
             BtnData("ВШЭ", """ {"u": 0, "p": 1} """)
         ))
       }
-      reply("Команда /t позволит поставить оценки товарищам. Всё остальное, что вы мне пишете, я пересылаю преподавателю.", isMarkdown = false)
+      val student = getStudent(this.userName)
+      if (student == null) {
+        reply("Вы посещаете курс BDSE 2022?", buttons = listOf(
+            BtnData("Да!", """ {"tg": "${this.userName}", "p": 4, "a": 1} """),
+            BtnData("Нет :(", """ {"tg": "${this.userName}", "p": 4, "a": 0} """),
+        ), isMarkdown = false, stop = true)
+      } else {
+        reply("Привет, ${student.name}! Пока ничего нового нет, но скоро будет.", isMarkdown = false, stop = true)
+      }
       stop()
     }
+    /*
     onCommand("t") {
       val curTeammates = getCurrentTeammates(this.userName)
       reply("Ваша нынешняя команда: ${curTeammates.map { it.first }.joinToString()}", isMarkdown = false)
@@ -185,6 +199,7 @@ private fun process(update: Update, sender: MessageSender) = chain(update, sende
     onRegexp(".*") {
       sender.forward(update.message, INBOX_CHAT_ID)
     }
+     */
   }
 }
 
@@ -235,7 +250,16 @@ private fun teacherPageGetPeerScores(tg: ChainBuilder, json: ObjectNode) {
     |""".trimMargin(), isMarkdown = true, stop = true)
 }
 
-private fun isTeacher(username: String) = setOf("dbarashev").contains(username)
+private fun studentRegister(tg: ChainBuilder, json: ObjectNode) {
+  val answer = json["a"]?.asInt() ?: 0
+  if (answer == 1) {
+    insertStudent(tg.userName, tg.fromUser?.displayName() ?: tg.userName)
+    tg.reply("Окей, мы теперь с вами знакомы.", isMarkdown = false, stop = true)
+  } else {
+    tg.reply("Ну штош, бывает.", isMarkdown = false, stop = true)
+  }
+}
+private fun isTeacher(username: String) = false && setOf("dbarashev").contains(username)
 
 private const val INBOX_CHAT_ID = "-585161267"
 private val LOGGER = LoggerFactory.getLogger("Bot")

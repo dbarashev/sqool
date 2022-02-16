@@ -125,13 +125,13 @@ open class ChainBuilder(internal val update: Update, internal val sendMessage: M
     }
   }
 
-  fun onCommand(command: String, code: MessageHandler) {
+  fun onCommand(vararg commands: String, code: MessageHandler) {
     this.handlers += { msg ->
-      val slashedCommand = "/$command"
-      if (msg.lowercase().startsWith(slashedCommand)) {
-        code(msg.substring(slashedCommand.length).trim())
-      } else {
-        null
+      commands.forEach { command ->
+        val slashedCommand = "/$command"
+        if (msg.lowercase().startsWith(slashedCommand)) {
+          code(msg.substring(slashedCommand.length).trim())
+        }
       }
     }
   }

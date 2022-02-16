@@ -63,6 +63,5 @@ jib {
 }
 
 application {
-
-	applicationDefaultJvmArgs = ["-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:5005"]
+	applicationDefaultJvmArgs = ["-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"]
 }
