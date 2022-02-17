@@ -183,23 +183,26 @@ private fun process(update: Update, sender: MessageSender) = chain(update, sende
             BtnData("Нет :(", """ {"tg": "${this.userName}", "p": 4, "a": 0} """),
         ), isMarkdown = false, stop = true)
       } else {
-        reply("Привет, ${student.name}! Пока ничего нового нет, но скоро будет.", isMarkdown = false, stop = true)
+        val curTeammates = getCurrentTeammates(this.userName)
+        reply("""Привет, ${student.name}!
+          |
+          | Ваша нынешняя команда №${curTeammates.teamNum}: ${curTeammates.members.map { it.first }.joinToString()}
+        """.trimMargin(), isMarkdown = false, stop = true)
       }
       stop()
     }
-    /*
+
     onCommand("t") {
       val curTeammates = getCurrentTeammates(this.userName)
-      reply("Ваша нынешняя команда: ${curTeammates.map { it.first }.joinToString()}", isMarkdown = false)
+      reply("Ваша нынешняя команда №${curTeammates.teamNum}: ${curTeammates.members.map { it.first }.joinToString()}", isMarkdown = false)
 
-      val teammates = getPrevTeammates(this.userName)
-      val btns = teammates.members.map { BtnData(it.first, """{"tg": "${it.second}", "sprint": ${teammates.sprintNum}} """) }
-      reply("Ваша команда на прошлой итерации. Если ткнуть в кнопку, можно поставить оценку", stop = true, buttons = btns, isMarkdown = false, maxCols = 1)
+//      val teammates = getPrevTeammates(this.userName)
+//      val btns = teammates.members.map { BtnData(it.first, """{"tg": "${it.second}", "sprint": ${teammates.sprintNum}} """) }
+//      reply("Ваша команда на прошлой итерации. Если ткнуть в кнопку, можно поставить оценку", stop = true, buttons = btns, isMarkdown = false, maxCols = 1)
     }
-    onRegexp(".*") {
-      sender.forward(update.message, INBOX_CHAT_ID)
-    }
-     */
+//    onRegexp(".*") {
+//      sender.forward(update.message, INBOX_CHAT_ID)
+//    }
   }
 }
 

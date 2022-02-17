@@ -3,7 +3,9 @@ create table Team(
     sprint_num int check(sprint_num>=0) not null,
     team_num int check (team_num>0) not null,
     tg_username text not null references Student on update cascade,
-    unique (tg_username, sprint_num)
+    ord int check(ord>0) not null,
+    unique (tg_username, sprint_num),
+    unique (team_num, sprint_num, ord)
 );
 create table Score(
     tg_username_from text references Student,

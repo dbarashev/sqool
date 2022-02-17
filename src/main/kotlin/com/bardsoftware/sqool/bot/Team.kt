@@ -49,9 +49,9 @@ fun getAllSprints(tgUsername: String): List<Int> {
   }
 }
 
-fun getTeammates(tgUsername: String, sprintNum: Int): List<Pair<String, String>> {
+fun getTeammates(tgUsername: String, sprintNum: Int): Teammates {
   return db {
-    select(field("Student.name", String::class.java), field("Student.tg_username", String::class.java))
+    val mates = select(field("Student.name", String::class.java), field("Student.tg_username", String::class.java))
         .from(table("Student")
             .join(table("Team").`as`("t2")).using(field("tg_username"))
             .join(table("Team").`as`("t1")).using(field("team_num")))
@@ -61,16 +61,19 @@ fun getTeammates(tgUsername: String, sprintNum: Int): List<Pair<String, String>>
         ).map {
           it.value1() to it.value2()
         }
+    val teamNum = select(field("team_num", Int::class.java)).from(table("Team"))
+        .where(field("sprint_num").eq(sprintNum).and(field("tg_username").eq(tgUsername))).fetchOne()?.value1() ?: -1
+    Teammates(sprintNum, teamNum, mates)
   }
 }
 
-fun getCurrentTeammates(tgUsername: String): List<Pair<String, String>> = getTeammates(tgUsername, 0)
-data class Teammates(val sprintNum: Int, val members: List<Pair<String, String>>)
+fun getCurrentTeammates(tgUsername: String) = getTeammates(tgUsername, 0)
+data class Teammates(val sprintNum: Int, val teamNum: Int, val members: List<Pair<String, String>>)
 
 fun getPrevTeammates(tgUsername: String): Teammates {
   val allSprints = getAllSprints(tgUsername)
-  val maxSprint = allSprints.maxOrNull() ?: return Teammates(-1, listOf())
-  return Teammates(maxSprint, getTeammates(tgUsername, maxSprint))
+  val maxSprint = allSprints.maxOrNull() ?: return Teammates(-1, 0, listOf())
+  return getTeammates(tgUsername, maxSprint)
 }
 
 fun setScore(tgUsernameFrom: String, tgUsernameTo: String, score: Double, sprintNum: Int) {
