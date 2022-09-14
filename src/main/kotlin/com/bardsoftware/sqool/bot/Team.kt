@@ -183,6 +183,15 @@ fun rotateTeams(uni: Int): List<TeamRecord> {
   }
   val teamNums = records.map { it.teamNum }.toSortedSet()
   println("Cur team nums=$teamNums")
+  if (teamNums.isEmpty()) {
+      val initialRecords = db {
+        select(field("tg_username", String::class.java)).from(table("Student")).map { it.value1() }
+      }.shuffled().mapIndexed { idx, tgUsername ->
+          TeamRecord(idx / 2 + 1, tgUsername, idx % 2 + 1)
+      }.toList()
+      println(initialRecords)
+      return initialRecords
+  }
 
   // Генерируем новую перестанову номеров команд, пока не получим "хорошую".
   // Хорошая перестановка -- это такая где одни и те же номера не стоят на одной и той же позиции и не стоят
@@ -210,28 +219,28 @@ fun rotateTeams(uni: Int): List<TeamRecord> {
   val newRecords: List<TeamRecord> = records.map {
     val teamIdx = teamNums.indexOf(it.teamNum)
     when (it.ord) {
-      1 -> TeamRecord(teamNum = newTeamNums[teamIdx], tgUsername = it.tgUsername, ord = 3)
-      2 -> TeamRecord(teamNum = if (teamIdx == 0) newTeamNums.last() else newTeamNums[teamIdx-1],
-          tgUsername = it.tgUsername, ord = 4)
-      3 ->
-        // Если ты лузер, тебе ищут новую команду, а иначе идешь на повышение
-        if (it.ord == randomLosers[it.teamNum]) {
-          TeamRecord(teamNum = randomTeam(newTeamNums, listOf(it.teamNum)), tgUsername = it.tgUsername, ord = 5)
-        } else {
-          TeamRecord(teamNum = it.teamNum, tgUsername = it.tgUsername, ord = 2)
-        }
-      4 ->
+      1 -> TeamRecord(teamNum = newTeamNums[teamIdx], tgUsername = it.tgUsername, ord = 2)
+//      2 -> TeamRecord(teamNum = if (teamIdx == 0) newTeamNums.last() else newTeamNums[teamIdx-1],
+//          tgUsername = it.tgUsername, ord = 4)
+//      3 ->
+//        // Если ты лузер, тебе ищут новую команду, а иначе идешь на повышение
+//        if (it.ord == randomLosers[it.teamNum]) {
+//          TeamRecord(teamNum = randomTeam(newTeamNums, listOf(it.teamNum)), tgUsername = it.tgUsername, ord = 5)
+//        } else {
+//          TeamRecord(teamNum = it.teamNum, tgUsername = it.tgUsername, ord = 2)
+//        }
+      2 ->
         // Если ты лузер, тебе ищут новую команду, а иначе идешь на повышение
         if (it.ord == randomLosers[it.teamNum]) {
           TeamRecord(teamNum = randomTeam(newTeamNums, listOf(it.teamNum)), tgUsername = it.tgUsername, ord = 5)
         } else {
           TeamRecord(teamNum = it.teamNum, tgUsername = it.tgUsername, ord = 1)
         }
-      5 -> randomLosers[it.teamNum]!!.let { loser ->
-        // Ты уже был лузером, поэтому сейчас лузер кто-то из твоих товарищей. Нужно выяснить, кто именно, чтобы
-        // стать сеньором вместо него.
-        TeamRecord(teamNum = it.teamNum, tgUsername = it.tgUsername, ord = if (loser == 3) 2 else 1)
-      }
+//      5 -> randomLosers[it.teamNum]!!.let { loser ->
+//        // Ты уже был лузером, поэтому сейчас лузер кто-то из твоих товарищей. Нужно выяснить, кто именно, чтобы
+//        // стать сеньором вместо него.
+//        TeamRecord(teamNum = it.teamNum, tgUsername = it.tgUsername, ord = if (loser == 3) 2 else 1)
+//      }
       else -> {
         println("unexpected ordinal number: ${it}")
         it
@@ -243,6 +252,16 @@ fun rotateTeams(uni: Int): List<TeamRecord> {
     if (byTeam != 0) byTeam else left.ord - right.ord
   }
 }
+
+fun finishIteration(uni: Int): Int? =
+    txn {
+        val lastSprint = select(field("sprint_num", Int::class.java))
+            .from(table("LastSprint"))
+            .where(field("uni").eq(uni)).fetchOne()?.value1() ?: return@txn -1
+        update(table("Team")).set(field("sprint_num", Int::class.java), lastSprint + 1)
+            .where(field("team_num").lessThan((uni+1)*100)).and(field("sprint_num").eq(0)).execute()
+        lastSprint + 1
+    }
 
 private fun randomTeam(teams: List<Int>, exceptions: List<Int>) = teams.toMutableList().subtract(exceptions).random()
 

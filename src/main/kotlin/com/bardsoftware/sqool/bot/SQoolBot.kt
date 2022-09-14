@@ -55,7 +55,7 @@ class SQoolBot : TelegramLongPollingBot(
     }),
     MessageSender {
   init {
-    println("Started SQooL 2021 under name $botUsername")
+    println("Started SQooL 2022 under name $botUsername")
     setMessageSender(this)
   }
   override fun getBotUsername() = System.getenv("TG_BOT_USERNAME") ?: "sqool_bot"
@@ -82,12 +82,12 @@ class SQoolBot : TelegramLongPollingBot(
 }
 
 class SQooLWebhookBot : TelegramWebhookBot(), MessageSender {
-  override fun getBotUsername() = System.getenv("TG_BOT_USERNAME") ?: "sqool_bot"
+  override fun getBotUsername() = System.getenv("TG_BOT_USERNAME") ?: ""
   override fun getBotToken(): String = System.getenv("TG_BOT_TOKEN") ?: ""
   override fun getBotPath(): String = System.getenv("TG_BOT_PATH") ?: ""
 
   init {
-    println("Started SQooL 2021 under name $botUsername")
+    println("Started SQooL 2022 under name $botUsername")
     setMessageSender(this)
   }
 
@@ -129,9 +129,10 @@ private fun process(update: Update, sender: MessageSender) = chain(update, sende
     val dialogPage = json["p"]?.asInt() ?: 0
     when (dialogPage) {
       1 -> teacherPageChooseAction(tg, json)
-      2 -> teacherPageRotateProjects(tg, json)
-      3 -> teacherPageGetPeerScores(tg, json)
-      4 -> studentRegister(tg, json)
+      ACTION_ROTATE_TEAMS -> teacherPageRotateProjects(tg, json)
+      ACTION_PRINT_PEER_REVIEW_SCORES -> teacherPageGetPeerScores(tg, json)
+      ACTION_GREET_STUDENT -> studentRegister(tg, json)
+      ACTION_FINISH_ITERATION -> teacherPageFinishIteration(tg, json)
       else -> {
         val teammate = json["tg"]?.asText(null) ?: run {
           reply("Внутренняя ошибка. Кажется, вам надо послать команду /t снова", isMarkdown = false, stop = true)
@@ -160,7 +161,7 @@ private fun process(update: Update, sender: MessageSender) = chain(update, sende
           this.fromUser?.getDialogState()?.data?.let { data ->
             val (tgUsernameTo, sprintNum) = data.split(':', limit = 2)
             setScore(this.userName, tgUsernameTo, score, sprintNum.toInt())
-            reply("Вы поставили  ${score} товарищу ${tgUsernameTo}. Чтобы изменить оценку, пошлите команду /t", isMarkdown = false, stop = true)
+            reply("Вы поставили  $score товарищу ${tgUsernameTo}. Чтобы изменить оценку, пошлите команду /t", isMarkdown = false, stop = true)
             db {
               dialogState(tg.userId, null)
             }
@@ -171,16 +172,15 @@ private fun process(update: Update, sender: MessageSender) = chain(update, sende
     onCommand("start", "help") {
       if (isTeacher(this.userName)) {
         reply("Выберите вуз", isMarkdown = false, stop = true, buttons = listOf(
-            BtnData("ИТМО", """ {"u": 1, "p": 1} """),
-            BtnData("CSC", """ {"u": 2, "p": 1} """),
-            BtnData("ВШЭ", """ {"u": 0, "p": 1} """)
+            BtnData("JUB", """ {"u": 0, "p": 1} """)
         ))
+        stop()
       }
       val student = getStudent(this.userName)
       if (student == null) {
-        reply("Вы посещаете курс BDSE 2022?", buttons = listOf(
-            BtnData("Да!", """ {"tg": "${this.userName}", "p": 4, "a": 1} """),
-            BtnData("Нет :(", """ {"tg": "${this.userName}", "p": 4, "a": 0} """),
+        reply("Вы студент JUB и посещаете курс Database Internals 2022?", buttons = listOf(
+            BtnData("Да!", """ {"tg": "${this.userName}", "p": $ACTION_GREET_STUDENT, "a": 1} """),
+            BtnData("Нет :(", """ {"tg": "${this.userName}", "p": $ACTION_GREET_STUDENT, "a": 0} """),
         ), isMarkdown = false, stop = true)
       } else {
         val curTeammates = getCurrentTeammates(this.userName)
@@ -196,9 +196,9 @@ private fun process(update: Update, sender: MessageSender) = chain(update, sende
       val curTeammates = getCurrentTeammates(this.userName)
       reply("Ваша нынешняя команда №${curTeammates.teamNum}: ${curTeammates.members.map { it.first }.joinToString()}", isMarkdown = false)
 
-//      val teammates = getPrevTeammates(this.userName)
-//      val btns = teammates.members.map { BtnData(it.first, """{"tg": "${it.second}", "sprint": ${teammates.sprintNum}} """) }
-//      reply("Ваша команда на прошлой итерации. Если ткнуть в кнопку, можно поставить оценку", stop = true, buttons = btns, isMarkdown = false, maxCols = 1)
+      val teammates = getPrevTeammates(this.userName)
+      val btns = teammates.members.map { BtnData(it.first, """{"tg": "${it.second}", "sprint": ${teammates.sprintNum}} """) }
+      reply("Ваша команда на прошлой итерации. Если ткнуть в кнопку, можно поставить оценку", stop = true, buttons = btns, isMarkdown = false, maxCols = 1)
     }
 //    onRegexp(".*") {
 //      sender.forward(update.message, INBOX_CHAT_ID)
@@ -212,8 +212,9 @@ private fun teacherPageChooseAction(tg: ChainBuilder, json: ObjectNode) {
     return
   }
   tg.reply("Чего изволите?", isMarkdown = false, stop = true, buttons = listOf(
-      BtnData("Сделать ротацию в проектах", """ {"u": $uni, "p": 2 } """),
-      BtnData("Узнать peer оценки последней итерации", """ {"u": $uni, "p": 3 } """)
+      BtnData("Сделать ротацию в проектах", """ {"u": $uni, "p": $ACTION_ROTATE_TEAMS } """),
+      BtnData("Узнать peer оценки последней итерации", """ {"u": $uni, "p": $ACTION_PRINT_PEER_REVIEW_SCORES } """),
+      BtnData("Завершить итерацию", """ {"u": $uni, "p": $ACTION_FINISH_ITERATION} """)
   ))
 }
 
@@ -245,14 +246,28 @@ private fun teacherPageGetPeerScores(tg: ChainBuilder, json: ObjectNode) {
     tg.reply("Ошибка состояния: не найден университет", isMarkdown = false, stop = true)
     return
   }
-  val table = getAllScores(uni).map { """${it.name.escapeMarkdown()}:${it.scoreSumFormula.escapeMarkdown()}:${it.scoreSources.entries.toString().escapeMarkdown()}""" }.joinToString("\n")
+  val table = getAllScores(uni).joinToString("\n") {
+    """${it.name.escapeMarkdown()}:${it.scoreSumFormula.escapeMarkdown()}:${it.scoreSources.entries.toString().escapeMarkdown()}"""
+  }
   tg.reply("""|
       ```
-      |$table
+      |${table.ifBlank { "МНЕ НЕЧЕГО ВАМ СКАЗАТЬ" }}
       ```
     |""".trimMargin(), isMarkdown = true, stop = true)
 }
 
+private fun teacherPageFinishIteration(tg: ChainBuilder, json: ObjectNode) {
+  val uni = json["u"]?.asInt() ?: run {
+    tg.reply("Ошибка состояния: не найден университет", isMarkdown = false, stop = true)
+    return
+  }
+  val newIteration = finishIteration(uni)
+  if (newIteration == -1) {
+    tg.reply("Done")
+  } else {
+    tg.reply("Итерация завершена, новая итерация №$newIteration. Не забудь сделать ротацию.", isMarkdown = false, stop=true)
+  }
+}
 private fun studentRegister(tg: ChainBuilder, json: ObjectNode) {
   val answer = json["a"]?.asInt() ?: 0
   if (answer == 1) {
@@ -262,7 +277,11 @@ private fun studentRegister(tg: ChainBuilder, json: ObjectNode) {
     tg.reply("Ну штош, бывает.", isMarkdown = false, stop = true)
   }
 }
-private fun isTeacher(username: String) = false && setOf("dbarashev").contains(username)
+private fun isTeacher(username: String) = setOf("dbarashev").contains(username)
 
 private const val INBOX_CHAT_ID = "-585161267"
 private val LOGGER = LoggerFactory.getLogger("Bot")
+private const val ACTION_ROTATE_TEAMS = 2
+private const val ACTION_PRINT_PEER_REVIEW_SCORES = 3
+private const val ACTION_GREET_STUDENT = 4
+private const val ACTION_FINISH_ITERATION = 5

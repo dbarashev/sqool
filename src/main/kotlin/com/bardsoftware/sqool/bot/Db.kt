@@ -42,7 +42,7 @@ val dataSource = HikariDataSource().apply {
   password = System.getenv("PG_PASSWORD") ?: ""
   //  password = "qq6wYuiYNhyEBTup7kVm9i_W_8lrYMPU"
   jdbcUrl = "jdbc:postgresql://$host:5432/$database"
-  maximumPoolSize = 4
+  maximumPoolSize = 3
 }
 
 fun <T> executeQuery(query: String, code: (ResultSet) -> T): T {

@@ -1,6 +1,6 @@
 buildscript {
 	ext {
-		kotlinVersion = '1.6.+'
+		kotlinVersion = '1.7.10'
 	}
 	repositories {
 		google()
@@ -35,7 +35,7 @@ dependencies {
 	implementation "com.fasterxml.jackson.module:jackson-module-kotlin:2.+"
 	implementation "org.postgresql:postgresql:42.+"
 	implementation 'com.zaxxer:HikariCP:5.+'
-	implementation "org.jooq:jooq:3.+"
+	implementation "org.jooq:jooq:3.16.+"
 	implementation 'javax.xml.bind:jaxb-api:2.3.1'
 
 }

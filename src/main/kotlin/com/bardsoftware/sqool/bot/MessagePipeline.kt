@@ -183,7 +183,7 @@ open class ChainBuilder(internal val update: Update, internal val sendMessage: M
       replies.add(SendMessage().apply {
         chatId = this@ChainBuilder.replyChatId.toString()
         enableMarkdownV2(isMarkdown)
-        text = msg
+        text = msg.ifBlank { "ПУСТОЙ ОТВЕТ" }
         if (buttons.isNotEmpty()) {
           if (isInlineKeyboard) {
             replyMarkup = InlineKeyboardMarkup(
@@ -207,7 +207,7 @@ open class ChainBuilder(internal val update: Update, internal val sendMessage: M
         messageId = editMessageId
         chatId = this@ChainBuilder.replyChatId.toString()
         enableMarkdown(isMarkdown)
-        text = msg
+        text = msg.ifBlank { "ПУСТОЙ ОТВЕТ" }
         if (buttons.isNotEmpty()) {
           replyMarkup = InlineKeyboardMarkup(
               buttons.map {

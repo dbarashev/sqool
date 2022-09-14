@@ -33,12 +33,12 @@ select T1.sprint_num, t1.team_num, t1.ord AS ord_to, t1.tg_username AS tg_userna
 from team t1 LEFT JOIN Score s on (tg_username_to=t1.tg_username and t1.sprint_num=s.sprint_num)
 LEFT JOIN team t on (tg_username_from=t.tg_username and t.sprint_num=s.sprint_num)
 where t1.tg_username != t.tg_username OR t.tg_username is null;
-order by t1.sprint_num, t1.team_num, ord_to, ord_from;
+--order by t1.sprint_num, t1.team_num, ord_to, ord_from;
 
-select *
-from team t1 LEFT JOIN Score s on (tg_username_to=t1.tg_username and t1.sprint_num=s.sprint_num)
-LEFT JOIN team t on (tg_username_from=t.tg_username and t.sprint_num=s.sprint_num)
-where t1.tg_username != IFNULL(t.tg_username, "")
-
-
-select team_num, name from Team T JOIN Student S USING (tg_username) WHERE sprint_num = 0 ORDER BY team_num, ord
+-- select *
+-- from team t1 LEFT JOIN Score s on (tg_username_to=t1.tg_username and t1.sprint_num=s.sprint_num)
+-- LEFT JOIN team t on (tg_username_from=t.tg_username and t.sprint_num=s.sprint_num)
+-- where t1.tg_username != IFNULL(t.tg_username, "")
+--
+--
+-- select team_num, name from Team T JOIN Student S USING (tg_username) WHERE sprint_num = 0 ORDER BY team_num, ord
