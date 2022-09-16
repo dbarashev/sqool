@@ -1,6 +1,6 @@
 #!/bin/bash
 # This PostgreSQL instance is used by the grader to run student queries and compare the results against author queries. It is basically stateless.
-docker rm -f grader-postgres && docker run -d -p 5432:5433 --name grader-postgres -e POSTGRES_HOST_AUTH_METHOD=trust postgres:11
+docker rm -f grader-postgres && docker run -d -p 5433:5432 --name grader-postgres -e POSTGRES_HOST_AUTH_METHOD=trust postgres:11
 
 # This runs a grader instance
 docker rm -f grader-server && \
