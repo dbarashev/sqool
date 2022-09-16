@@ -1,0 +1,67 @@
+buildscript {
+	ext {
+		kotlinVersion = '1.7.10'
+	}
+	repositories {
+		google()
+		mavenCentral()
+	}
+	dependencies {
+		classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:${kotlinVersion}")
+		classpath("org.jetbrains.kotlin:kotlin-allopen:${kotlinVersion}")
+	}
+}
+plugins {
+	id 'com.google.cloud.tools.jib' version '3.1.4'
+}
+
+apply plugin: 'application'
+apply plugin: 'kotlin'
+
+ext {
+	buildMode = findProperty('buildMode') ?: 'development'
+}
+repositories {
+	mavenCentral()
+}
+
+mainClassName = 'com.bardsoftware.sqool.bot.SQoolBotKt'
+
+dependencies {
+	implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:${kotlinVersion}"
+	implementation "org.jetbrains.kotlin:kotlin-reflect:${kotlinVersion}"
+	implementation "org.telegram:telegrambots:5.3.+"
+	implementation "org.telegram:telegrambotsextensions:5.3.+"
+	implementation "com.fasterxml.jackson.module:jackson-module-kotlin:2.+"
+	implementation "org.postgresql:postgresql:42.+"
+	implementation 'com.zaxxer:HikariCP:5.+'
+	implementation "org.jooq:jooq:3.16.+"
+	implementation 'javax.xml.bind:jaxb-api:2.3.1'
+
+}
+
+sourceSets {
+	main {
+		kotlin {
+			include "**/bot/*.kt"
+		}
+	}
+	test {
+		kotlin {
+			exclude "**/*.kt"
+		}
+	}
+}
+
+compileKotlin {
+	kotlinOptions.jvmTarget = "11"
+}
+jib {
+	to.image = 'dbarashev/sqool-bot'
+	from.image = 'gcr.io/distroless/java'
+	container.ports = ["8080"]
+}
+
+application {
+	applicationDefaultJvmArgs = ["-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"]
+}
