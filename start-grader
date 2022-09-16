@@ -1,0 +1,16 @@
+#!/bin/bash
+# This PostgreSQL instance is used by the grader to run student queries and compare the results against author queries. It is basically stateless.
+docker rm -f grader-postgres && docker run -d -p 5432:5433 --name grader-postgres -e POSTGRES_HOST_AUTH_METHOD=trust postgres:11
+
+# This runs a grader instance
+docker rm -f grader-server && \
+docker run -d --link grader-postgres:postgres --name grader-server --restart unless-stopped \
+    -v contest-2022:/workspace                       `# In this volume we keep contest SQL code, such as schema and task definitions` \
+    -v /var/run/docker.sock:/var/run/docker.sock \
+    --cpus 0.2 --memory 384m \
+    dbarashev/sqool-grader:v20191029 \
+    --sub dbms2020-grader --pub dbms2019-results     `# We use PubSub to communicate with the frontend` \
+    --listen-stepik ''                               `# We can listen to Stepik task queue, but not in this case` \
+    --report-result-set true                         `# Shall we send back result sets produced by student queries` \
+    --pg-password ''                                 `# Password from grader-postgres`
+ 
