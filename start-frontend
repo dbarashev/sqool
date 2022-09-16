@@ -1,10 +1,11 @@
 #!/bin/bash
+echo "pwd=$SQOOL_POSTGRES_PASSWORD"
 docker rm -f sqool-postgres && docker run -d -p 54322:5432 --name sqool-postgres -e POSTGRES_PASSWORD=$SQOOL_POSTGRES_PASSWORD postgres 
 docker rm -f sqool-frontend && docker run -d  --name sqool-frontend --link sqool-postgres:postgres -p 80:8080 --cpus 0.3 --memory 384m --restart unless-stopped \
     -v /var/run/docker.sock:/var/run/docker.sock \
     dbarashev/sqool-frontend:20200922 \
-    --pg-address postgres \
-    --pub dbms2019-submissions \
-    --sub dbms2020-frontend \
+    --pg-address postgres --pg-password $SQOOL_POSTGRES_PASSWORD \
+    --pub dev-grader \
+    --sub dev-results \
     --pg-qa-container sqool-postgres \
     --mailgun-key $SQOOL_MAILGUN_KEY

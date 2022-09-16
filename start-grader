@@ -9,7 +9,7 @@ docker run -d --link grader-postgres:postgres --name grader-server --restart unl
     -v /var/run/docker.sock:/var/run/docker.sock \
     --cpus 0.2 --memory 384m \
     dbarashev/sqool-grader:v20191029 \
-    --sub dbms2020-grader --pub dbms2019-results     `# We use PubSub to communicate with the frontend` \
+    --sub dev-grader --pub dev-results     `# We use PubSub to communicate with the frontend` \
     --listen-stepik ''                               `# We can listen to Stepik task queue, but not in this case` \
     --report-result-set true                         `# Shall we send back result sets produced by student queries` \
     --pg-password ''                                 `# Password from grader-postgres`
