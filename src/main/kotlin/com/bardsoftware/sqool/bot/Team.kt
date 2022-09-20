@@ -51,24 +51,34 @@ fun getAllSprints(tgUsername: String): List<Int> {
 
 fun getTeammates(tgUsername: String, sprintNum: Int): Teammates {
   return db {
-    val mates = select(field("Student.name", String::class.java), field("Student.tg_username", String::class.java))
-        .from(table("Student")
-            .join(table("Team").`as`("t2")).using(field("tg_username"))
-            .join(table("Team").`as`("t1")).using(field("team_num")))
-        .where(field("t1.sprint_num").eq(sprintNum)
-            .and(field("t2.sprint_num").eq(sprintNum))
+    val studentRecord =
+        select(field("team_num", Int::class.java), field("ord", Int::class.java))
+            .from(table("Team"))
+            .where(field("sprint_num").eq(sprintNum)
+                .and(field("tg_username").eq(tgUsername)))
+            .fetchOne() ?: throw RuntimeException("Can't find team record fpr $tgUsername@sprint $sprintNum")
+
+    val mates =
+        select(
+            field("M.name", String::class.java),
+            field("M.tg_username", String::class.java),
+            field("M.ord", Int::class.java),
+            field("M.id", Int::class.java)
+        ).from(table("TeamDetails").`as`("m").join(table("Team").`as`("t1")).using(field("team_num")))
+            .where(field("t1.sprint_num").eq(sprintNum)
+            .and(field("M.sprint_num").eq(sprintNum))
             .and(field("t1.tg_username").eq(tgUsername))
         ).map {
-          it.value1() to it.value2()
+          TeamRecord(studentRecord.component1(), it.component2(), it.component3(), it.component1(), it.component4())
         }
-    val teamNum = select(field("team_num", Int::class.java)).from(table("Team"))
-        .where(field("sprint_num").eq(sprintNum).and(field("tg_username").eq(tgUsername))).fetchOne()?.value1() ?: -1
-    Teammates(sprintNum, teamNum, mates)
+    Teammates(sprintNum, studentRecord.component1(), mates)
   }
 }
 
 fun getCurrentTeammates(tgUsername: String) = getTeammates(tgUsername, 0)
-data class Teammates(val sprintNum: Int, val teamNum: Int, val members: List<Pair<String, String>>)
+data class Teammates(
+    val sprintNum: Int, val teamNum: Int,
+    val members: List<TeamRecord>)
 
 fun getPrevTeammates(tgUsername: String): Teammates {
   val allSprints = getAllSprints(tgUsername)
@@ -164,7 +174,7 @@ fun getAllScores(uni: Int): List<ScoreRecord> {
   }
 }
 
-data class TeamRecord(val teamNum: Int, val tgUsername: String, val ord: Int)
+data class TeamRecord(val teamNum: Int, val tgUsername: String, val ord: Int, val displayName: String = "", val id: Int = -1)
 
 fun rotateTeams(uni: Int): List<TeamRecord> {
   // Получаем информацию о нынешних составах команд.

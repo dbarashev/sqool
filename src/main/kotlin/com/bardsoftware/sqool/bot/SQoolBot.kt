@@ -133,48 +133,17 @@ private fun process(update: Update, sender: MessageSender) = chain(update, sende
       ACTION_PRINT_PEER_REVIEW_SCORES -> teacherPageGetPeerScores(tg, json)
       ACTION_GREET_STUDENT -> studentRegister(tg, json)
       ACTION_FINISH_ITERATION -> teacherPageFinishIteration(tg, json)
-      else -> {
-        val teammate = json["tg"]?.asText(null) ?: run {
-          reply("Внутренняя ошибка. Кажется, вам надо послать команду /t снова", isMarkdown = false, stop = true)
-          return@onCallback
-        }
-        val sprintNum = json["sprint"]?.asInt(0) ?: run {
-          reply("Внутренняя ошибка. Кажется, вам надо послать команду /t снова", isMarkdown = false, stop = true)
-          return@onCallback
-        }
-        db {
-          dialogState(tg.userId, 1, "$teammate:$sprintNum")
-          reply("Поставьте оценку $teammate. Вещественное число в диапазоне [0..1]", isMarkdown = false, stop = true)
-        }
-      }
     }
   }
+  TeammateScoringFlow(tg)
   if (update.message?.chatId == update.message?.from?.id) {
-    onRegexp(""".*""", whenState = 1) {
-      val score = it.value.toDoubleOrNull()
-      if (score == null) {
-        reply("Оценка должна быть вещественным числом", isMarkdown = false, stop = true)
-      } else {
-        if (score < 0 || score > 1) {
-          reply("Оценка должна быть в диапазоне [0..1]", isMarkdown = false, stop = true)
-        } else {
-          this.fromUser?.getDialogState()?.data?.let { data ->
-            val (tgUsernameTo, sprintNum) = data.split(':', limit = 2)
-            setScore(this.userName, tgUsernameTo, score, sprintNum.toInt())
-            reply("Вы поставили  $score товарищу ${tgUsernameTo}. Чтобы изменить оценку, пошлите команду /t", isMarkdown = false, stop = true)
-            db {
-              dialogState(tg.userId, null)
-            }
-          }
-        }
-      }
-    }
     onCommand("start", "help") {
       if (isTeacher(this.userName)) {
         reply("Выберите вуз", isMarkdown = false, stop = true, buttons = listOf(
             BtnData("JUB", """ {"u": 0, "p": 1} """)
         ))
         stop()
+        return@onCommand
       }
       val student = getStudent(this.userName)
       if (student == null) {
@@ -184,22 +153,13 @@ private fun process(update: Update, sender: MessageSender) = chain(update, sende
         ), isMarkdown = false, stop = true)
       } else {
         val curTeammates = getCurrentTeammates(this.userName)
-        reply("""Привет, ${student.name}!
-          |
-          | Ваша нынешняя команда №${curTeammates.teamNum}: ${curTeammates.members.map { it.first }.joinToString()}
-        """.trimMargin(), isMarkdown = false, stop = true)
+        reply("Привет, ${student.name}!", isMarkdown = false, stop = true)
+        landingMenu(this)
       }
       stop()
     }
 
-    onCommand("t") {
-      val curTeammates = getCurrentTeammates(this.userName)
-      reply("Ваша нынешняя команда №${curTeammates.teamNum}: ${curTeammates.members.map { it.first }.joinToString()}", isMarkdown = false)
-
-      val teammates = getPrevTeammates(this.userName)
-      val btns = teammates.members.map { BtnData(it.first, """{"tg": "${it.second}", "sprint": ${teammates.sprintNum}} """) }
-      reply("Ваша команда на прошлой итерации. Если ткнуть в кнопку, можно поставить оценку", stop = true, buttons = btns, isMarkdown = false, maxCols = 1)
-    }
+    StudentCommands(tg)
 //    onRegexp(".*") {
 //      sender.forward(update.message, INBOX_CHAT_ID)
 //    }
@@ -277,11 +237,12 @@ private fun studentRegister(tg: ChainBuilder, json: ObjectNode) {
     tg.reply("Ну штош, бывает.", isMarkdown = false, stop = true)
   }
 }
-private fun isTeacher(username: String) = setOf("dbarashev").contains(username)
+private fun isTeacher(username: String) = (System.getenv("SQOOL_TEACHERS") ?: "").split(",").contains(username)
 
 private const val INBOX_CHAT_ID = "-585161267"
 private val LOGGER = LoggerFactory.getLogger("Bot")
-private const val ACTION_ROTATE_TEAMS = 2
-private const val ACTION_PRINT_PEER_REVIEW_SCORES = 3
-private const val ACTION_GREET_STUDENT = 4
-private const val ACTION_FINISH_ITERATION = 5
+internal const val ACTION_ROTATE_TEAMS = 2
+internal const val ACTION_PRINT_PEER_REVIEW_SCORES = 3
+internal const val ACTION_GREET_STUDENT = 4
+internal const val ACTION_FINISH_ITERATION = 5
+internal const val ACTION_SCORE_TEAMMATE = 6

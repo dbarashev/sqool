@@ -70,7 +70,9 @@ fun setMessageSender(sender: MessageSender) {
   ourSender = sender
 }
 
-
+enum class MessageSource {
+  DIRECT
+}
 
 open class ChainBuilder(internal val update: Update, internal val sendMessage: MessageSender) {
   val escaper = Escapers.builder().let {
@@ -102,6 +104,7 @@ open class ChainBuilder(internal val update: Update, internal val sendMessage: M
 
   fun parseJson(code: (ObjectNode) -> Unit) {
     try {
+      println(this.update.callbackQuery.data)
       val jsonNode = OBJECT_MAPPER.readTree(this.update.callbackQuery.data)
       if (jsonNode.isObject) {
         code(jsonNode as ObjectNode)
@@ -125,7 +128,10 @@ open class ChainBuilder(internal val update: Update, internal val sendMessage: M
     }
   }
 
-  fun onCommand(vararg commands: String, code: MessageHandler) {
+  fun onCommand(vararg commands: String, messageSource: MessageSource = MessageSource.DIRECT, code: MessageHandler) {
+    if (messageSource == MessageSource.DIRECT && update.message?.chatId != update.message?.from?.id) {
+      return
+    }
     this.handlers += { msg ->
       commands.forEach { command ->
         val slashedCommand = "/$command"
@@ -145,7 +151,11 @@ open class ChainBuilder(internal val update: Update, internal val sendMessage: M
       }
     }
   }
-  fun onRegexp(pattern: String, options: Set<RegexOption> = setOf(RegexOption.MULTILINE), whenState: Int? = null, code: MatchHandler) {
+  fun onRegexp(pattern: String, options: Set<RegexOption> = setOf(RegexOption.MULTILINE), whenState: Int? = null,
+               messageSource: MessageSource = MessageSource.DIRECT, code: MatchHandler) {
+    if (messageSource == MessageSource.DIRECT && update.message?.chatId != update.message?.from?.id) {
+      return
+    }
     val regexp = pattern.toRegex(options)
     this.handlers += { msg ->
       regexp.matchEntire(msg.trim().replace("\n", ""))?.let {
@@ -326,7 +336,7 @@ fun (ArrayNode).item(builder: ObjectNode.() -> Unit) {
   this.add(OBJECT_MAPPER.createObjectNode().also(builder))
 }
 
-private val OBJECT_MAPPER = ObjectMapper()
+val OBJECT_MAPPER = ObjectMapper()
 
 data class DialogState(val state: Int, val data: String?) {
   fun asJson(): ObjectNode {
