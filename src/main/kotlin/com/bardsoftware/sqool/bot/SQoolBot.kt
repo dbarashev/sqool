@@ -133,6 +133,7 @@ private fun process(update: Update, sender: MessageSender) = chain(update, sende
       ACTION_PRINT_PEER_REVIEW_SCORES -> teacherPageGetPeerScores(tg, json)
       ACTION_GREET_STUDENT -> studentRegister(tg, json)
       ACTION_FINISH_ITERATION -> teacherPageFinishIteration(tg, json)
+      ACTION_PRINT_TEAMS -> teacherPagePrintTeams(tg, json)
     }
   }
   TeammateScoringFlow(tg)
@@ -174,8 +175,9 @@ private fun teacherPageChooseAction(tg: ChainBuilder, json: ObjectNode) {
   tg.reply("Чего изволите?", isMarkdown = false, stop = true, buttons = listOf(
       BtnData("Сделать ротацию в проектах", """ {"u": $uni, "p": $ACTION_ROTATE_TEAMS } """),
       BtnData("Узнать peer оценки последней итерации", """ {"u": $uni, "p": $ACTION_PRINT_PEER_REVIEW_SCORES } """),
-      BtnData("Завершить итерацию", """ {"u": $uni, "p": $ACTION_FINISH_ITERATION} """)
-  ))
+      BtnData("Завершить итерацию", """ {"u": $uni, "p": $ACTION_FINISH_ITERATION} """),
+      BtnData("Напечатать команды", """ {"u": $uni, "p": $ACTION_PRINT_TEAMS} """),
+  ), maxCols = 1)
 }
 
 private fun teacherPageRotateProjects(tg: ChainBuilder, json: ObjectNode) {
@@ -188,17 +190,7 @@ private fun teacherPageRotateProjects(tg: ChainBuilder, json: ObjectNode) {
   val newTeamRecords = rotateTeams(uni)
   println(newTeamRecords)
   insertNewRotation(newTeamRecords)
-  var teamNum = -1
-  val buf = StringBuffer()
-  getAllCurrentTeamRecords(uni).forEach {
-    if (it.first > teamNum) {
-      buf.append("\n\n")
-      teamNum = it.first
-      buf.append("__team ${teamNum}__\n")
-    }
-    buf.append(it.second.escapeMarkdown()).append("\n")
-  }
-  tg.reply(buf.toString(), isMarkdown = true)
+  teacherPagePrintTeams(tg, json)
 }
 
 private fun teacherPageGetPeerScores(tg: ChainBuilder, json: ObjectNode) {
@@ -228,6 +220,25 @@ private fun teacherPageFinishIteration(tg: ChainBuilder, json: ObjectNode) {
     tg.reply("Итерация завершена, новая итерация №$newIteration. Не забудь сделать ротацию.", isMarkdown = false, stop=true)
   }
 }
+
+private fun teacherPagePrintTeams(tg: ChainBuilder, json: ObjectNode) {
+  val uni = json["u"]?.asInt() ?: run {
+    tg.reply("Ошибка состояния: не найден университет", isMarkdown = false, stop = true)
+    return
+  }
+  var teamNum = -1
+  val buf = StringBuffer()
+  getAllCurrentTeamRecords(uni).forEach {
+    if (it.first > teamNum) {
+      buf.append("\n\n")
+      teamNum = it.first
+      buf.append("__team ${teamNum}__\n")
+    }
+    buf.append(it.second.escapeMarkdown()).append("\n")
+  }
+  tg.reply(buf.toString(), isMarkdown = true)
+}
+
 private fun studentRegister(tg: ChainBuilder, json: ObjectNode) {
   val answer = json["a"]?.asInt() ?: 0
   if (answer == 1) {
@@ -246,3 +257,4 @@ internal const val ACTION_PRINT_PEER_REVIEW_SCORES = 3
 internal const val ACTION_GREET_STUDENT = 4
 internal const val ACTION_FINISH_ITERATION = 5
 internal const val ACTION_SCORE_TEAMMATE = 6
+internal const val ACTION_PRINT_TEAMS = 7
