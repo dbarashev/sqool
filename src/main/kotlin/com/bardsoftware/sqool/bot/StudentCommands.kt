@@ -3,12 +3,12 @@ package com.bardsoftware.sqool.bot
 class StudentCommands(tg: ChainBuilder) {
     init {
         tg.onCommand("t") {
-            landingMenu(tg)
+            studentLandingMenu(tg)
         }
     }
 }
 
-fun landingMenu(tg: ChainBuilder) {
+fun studentLandingMenu(tg: ChainBuilder) {
     val curTeammates = getCurrentTeammates(tg.userName)
     tg.reply("Ваша нынешняя команда №${curTeammates.teamNum}: ${curTeammates.members.map { it.displayName }.joinToString()}", isMarkdown = false)
 

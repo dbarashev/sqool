@@ -137,14 +137,11 @@ private fun process(update: Update, sender: MessageSender) = chain(update, sende
     }
   }
   TeammateScoringFlow(tg)
+  TeacherScoringFlow(tg)
   if (update.message?.chatId == update.message?.from?.id) {
     onCommand("start", "help") {
       if (isTeacher(this.userName)) {
-        reply("Выберите вуз", isMarkdown = false, stop = true, buttons = listOf(
-            BtnData("JUB", """ {"u": 0, "p": 1} """)
-        ))
-        stop()
-        return@onCommand
+        return@onCommand teacherLanding(tg)
       }
       val student = getStudent(this.userName)
       if (student == null) {
@@ -155,16 +152,24 @@ private fun process(update: Update, sender: MessageSender) = chain(update, sende
       } else {
         val curTeammates = getCurrentTeammates(this.userName)
         reply("Привет, ${student.name}!", isMarkdown = false, stop = true)
-        landingMenu(this)
+        studentLandingMenu(this)
       }
       stop()
     }
 
+    ScoringReportFlow(tg)
     StudentCommands(tg)
 //    onRegexp(".*") {
 //      sender.forward(update.message, INBOX_CHAT_ID)
 //    }
   }
+}
+
+fun teacherLanding(tg: ChainBuilder) {
+  tg.reply("Выберите вуз", isMarkdown = false, stop = true, buttons = listOf(
+    BtnData("JUB", """ {"u": 0, "p": 1} """)
+  ))
+  tg.stop()
 }
 
 private fun teacherPageChooseAction(tg: ChainBuilder, json: ObjectNode) {
@@ -177,6 +182,7 @@ private fun teacherPageChooseAction(tg: ChainBuilder, json: ObjectNode) {
       BtnData("Узнать peer оценки последней итерации", """ {"u": $uni, "p": $ACTION_PRINT_PEER_REVIEW_SCORES } """),
       BtnData("Завершить итерацию", """ {"u": $uni, "p": $ACTION_FINISH_ITERATION} """),
       BtnData("Напечатать команды", """ {"u": $uni, "p": $ACTION_PRINT_TEAMS} """),
+      BtnData("Поставить оценки", """{"u": $uni, "p": $ACTION_SCORE_STUDENTS}""")
   ), maxCols = 1)
 }
 
@@ -229,12 +235,12 @@ private fun teacherPagePrintTeams(tg: ChainBuilder, json: ObjectNode) {
   var teamNum = -1
   val buf = StringBuffer()
   getAllCurrentTeamRecords(uni).forEach {
-    if (it.first > teamNum) {
+    if (it.teamNum > teamNum) {
       buf.append("\n\n")
-      teamNum = it.first
+      teamNum = it.teamNum
       buf.append("__team ${teamNum}__\n")
     }
-    buf.append(it.second.escapeMarkdown()).append("\n")
+    buf.append(it.displayName.escapeMarkdown()).append("\n")
   }
   tg.reply(buf.toString(), isMarkdown = true)
 }
@@ -248,7 +254,7 @@ private fun studentRegister(tg: ChainBuilder, json: ObjectNode) {
     tg.reply("Ну штош, бывает.", isMarkdown = false, stop = true)
   }
 }
-private fun isTeacher(username: String) = (System.getenv("SQOOL_TEACHERS") ?: "").split(",").contains(username)
+internal fun isTeacher(username: String) = (System.getenv("SQOOL_TEACHERS") ?: "").split(",").contains(username)
 
 private const val INBOX_CHAT_ID = "-585161267"
 private val LOGGER = LoggerFactory.getLogger("Bot")
@@ -258,3 +264,4 @@ internal const val ACTION_GREET_STUDENT = 4
 internal const val ACTION_FINISH_ITERATION = 5
 internal const val ACTION_SCORE_TEAMMATE = 6
 internal const val ACTION_PRINT_TEAMS = 7
+internal const val ACTION_SCORE_STUDENTS = 8

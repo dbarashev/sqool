@@ -288,13 +288,20 @@ fun insertNewRotation(records: List<TeamRecord>) {
   }
 }
 
-fun getAllCurrentTeamRecords(uni: Int): List<Pair<Int, String>> {
-  return db {
-    // select team_num, name from Team T JOIN Student S USING (tg_username) WHERE sprint_num = 0 ORDER BY team_num, ord
-    select(field("team_num", Int::class.java), field("name", String::class.java))
-        .from(table("team").join(table("student")).using(field("tg_username")))
-        .where(field("sprint_num").eq(0)).and(field("team_num", Int::class.java).between(uni * 100, (uni + 1) * 100))
-        .orderBy(field("team_num"), field("ord"))
-        .map { it.value1() to it.value2() }
-  }
+fun getAllCurrentTeamRecords(uni: Int): List<TeamRecord> = getAllSprintTeamRecords(uni, 0)
+
+fun getAllSprintTeamRecords(uni: Int, sprintNum: Int): List<TeamRecord> =
+    db {
+        // select team_num, name from Team T JOIN Student S USING (tg_username) WHERE sprint_num = 0 ORDER BY team_num, ord
+        select(field("team_num", Int::class.java), field("name", String::class.java), field("id", Int::class.java))
+            .from(table("team").join(table("student")).using(field("tg_username")))
+            .where(field("sprint_num").eq(sprintNum)).and(field("team_num", Int::class.java).between(uni * 100, (uni + 1) * 100))
+            .orderBy(field("team_num"), field("ord"))
+            .map { TeamRecord(it.component1(), "", 0, it.component2(), it.component3()) }
+    }
+
+fun lastSprint(uni: Int) =  db {
+    select(field("sprint_num", Int::class.java))
+        .from(table("LastSprint"))
+        .where(field("uni").eq(uni)).fetchOne()?.value1()
 }

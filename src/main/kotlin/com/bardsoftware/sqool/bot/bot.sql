@@ -30,6 +30,14 @@ create table ScoreDetails(
     primary key (tg_username_from, tg_username_to, sprint_num, scoring_pos)
 );
 
+alter table student add constraint unq_id unique(id);
+create table TeacherScores(
+  student_id int references Student(id),
+  sprint_num int,
+  score numeric,
+
+  primary key(student_id, sprint_num)
+);
 create table DialogState(tg_id bigint primary key, state_id int, data text);
 
 
@@ -48,6 +56,13 @@ select T1.sprint_num, t1.team_num, t1.ord AS ord_to, t1.tg_username AS tg_userna
 from team t1 LEFT JOIN Score s on (tg_username_to=t1.tg_username and t1.sprint_num=s.sprint_num)
 LEFT JOIN team t on (tg_username_from=t.tg_username and t.sprint_num=s.sprint_num)
 where t1.tg_username != t.tg_username OR t.tg_username is null;
+
+
+create or replace view TeamAndPeerScores AS
+    select s.sprint_num, t.team_num, s.tg_username_from, t.ord, s.tg_username_to, t.name, s.scoring_pos, s.score
+    from teamdetails t join scoredetails s on (tg_username=tg_username_to and t.sprint_num=s.sprint_num)
+    order by team_num, ord, scoring_pos;
+
 --order by t1.sprint_num, t1.team_num, ord_to, ord_from;
 
 -- select *

@@ -159,7 +159,6 @@ internal data class TeammateScoringState(
 class TeammateScoringFlow(tg: ChainBuilder) {
     init {
         tg.onCallback { json ->
-            println(json)
             when (json["p"]?.asInt() ?: 0) {
                 ACTION_SCORE_TEAMMATE -> {
                     val state = TeammateScoringState.fromJsonString(tg.userName, json)
@@ -190,7 +189,7 @@ class TeammateScoringFlow(tg: ChainBuilder) {
                             dialogState(tg.userId, null)
                         }
                         tg.reply("Вы поставили  $score товарищу ${state.studentTo.displayName}", isMarkdown = false)
-                        landingMenu(tg)
+                        studentLandingMenu(tg)
                     }
                 }
             }

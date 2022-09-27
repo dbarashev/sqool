@@ -93,6 +93,7 @@ open class ChainBuilder(internal val update: Update, internal val sendMessage: M
     this.fromUser?.getDialogState()
   }
 
+  val isTeacher: Boolean get() = isTeacher(userName)
   private var replyChatId = update.message?.chatId ?: -1
 
   private val callbackHandlers = mutableListOf<CallbackHandler>()
