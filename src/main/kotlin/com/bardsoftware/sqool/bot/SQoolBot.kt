@@ -130,7 +130,6 @@ private fun process(update: Update, sender: MessageSender) = chain(update, sende
     when (dialogPage) {
       1 -> teacherPageChooseAction(tg, json)
       ACTION_ROTATE_TEAMS -> teacherPageRotateProjects(tg, json)
-      ACTION_PRINT_PEER_REVIEW_SCORES -> teacherPageGetPeerScores(tg, json)
       ACTION_GREET_STUDENT -> studentRegister(tg, json)
       ACTION_FINISH_ITERATION -> teacherPageFinishIteration(tg, json)
       ACTION_PRINT_TEAMS -> teacherPagePrintTeams(tg, json)
@@ -178,11 +177,11 @@ private fun teacherPageChooseAction(tg: ChainBuilder, json: ObjectNode) {
     return
   }
   tg.reply("Чего изволите?", isMarkdown = false, stop = true, buttons = listOf(
-      BtnData("Сделать ротацию в проектах", """ {"u": $uni, "p": $ACTION_ROTATE_TEAMS } """),
-      BtnData("Узнать peer оценки последней итерации", """ {"u": $uni, "p": $ACTION_PRINT_PEER_REVIEW_SCORES } """),
-      BtnData("Завершить итерацию", """ {"u": $uni, "p": $ACTION_FINISH_ITERATION} """),
-      BtnData("Напечатать команды", """ {"u": $uni, "p": $ACTION_PRINT_TEAMS} """),
-      BtnData("Поставить оценки", """{"u": $uni, "p": $ACTION_SCORE_STUDENTS}""")
+    BtnData("Напечатать команды", """ {"u": $uni, "p": $ACTION_PRINT_TEAMS} """),
+    BtnData("Поставить оценки", """{"u": $uni, "p": $ACTION_SCORE_STUDENTS}"""),
+    BtnData("Посмотреть ведомость", """ {"u": $uni, "p": $ACTION_PRINT_PEER_REVIEW_SCORES } """),
+    BtnData("Завершить итерацию", """ {"u": $uni, "p": $ACTION_FINISH_ITERATION} """),
+    BtnData("Сделать ротацию в проектах", """ {"u": $uni, "p": $ACTION_ROTATE_TEAMS } """),
   ), maxCols = 1)
 }
 
@@ -256,6 +255,13 @@ private fun studentRegister(tg: ChainBuilder, json: ObjectNode) {
 }
 internal fun isTeacher(username: String) = (System.getenv("SQOOL_TEACHERS") ?: "").split(",").contains(username)
 
+internal fun withUniversity(tg: ChainBuilder, json: ObjectNode, code: (tg: ChainBuilder, json: ObjectNode, uni: Int) -> Unit) {
+  val uni = json["u"]?.asInt() ?: run {
+    tg.reply("Ошибка состояния: не найден университет", isMarkdown = false, stop = true)
+    return
+  }
+  code(tg, json, uni)
+}
 private const val INBOX_CHAT_ID = "-585161267"
 private val LOGGER = LoggerFactory.getLogger("Bot")
 internal const val ACTION_ROTATE_TEAMS = 2

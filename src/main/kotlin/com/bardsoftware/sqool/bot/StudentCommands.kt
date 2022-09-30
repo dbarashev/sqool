@@ -1,5 +1,7 @@
 package com.bardsoftware.sqool.bot
 
+import java.math.BigDecimal
+
 class StudentCommands(tg: ChainBuilder) {
     init {
         tg.onCommand("t") {
@@ -10,7 +12,15 @@ class StudentCommands(tg: ChainBuilder) {
 
 fun studentLandingMenu(tg: ChainBuilder) {
     val curTeammates = getCurrentTeammates(tg.userName)
-    tg.reply("Ваша нынешняя команда №${curTeammates.teamNum}: ${curTeammates.members.map { it.displayName }.joinToString()}", isMarkdown = false)
+    val sumScore = getSumScore(tg.userName)
+    tg.reply("""
+        |Привет ${tg.userName}!
+        |--------
+        |
+        |**Текущая сумма баллов**: ${sumScore.first.toString()}/${sumScore.second.multiply(BigDecimal.valueOf(10))}
+        |**Текущая команда №${curTeammates.teamNum}**: ${curTeammates.members.map { it.displayName }.joinToString()}
+        |
+    """.trimMargin(), isMarkdown = false)
 
     val teammates = getPrevTeammates(tg.userName)
     val btns = teammates.members.sortedBy { it.ord }.map {mate ->
