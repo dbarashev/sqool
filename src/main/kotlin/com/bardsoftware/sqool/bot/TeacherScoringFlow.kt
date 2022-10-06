@@ -11,7 +11,22 @@ class TeacherScoringFlow(tg: ChainBuilder) {
             tg.onCallback { json ->
                 when (json["p"]?.asInt() ?: 0) {
                     ACTION_SCORE_STUDENTS -> {
-                        studentList(tg, json)
+                        val uni = json["u"]?.asInt() ?: run {
+                            tg.reply("Ошибка состояния: не найден университет", isMarkdown = false, stop = true)
+                            return@onCallback
+                        }
+                        if (json["s"] != null) {
+                            studentList(tg, uni, json)
+                        } else {
+
+                            val buttons = sprintNumbers(uni).map {
+                                BtnData(
+                                    "№${it.component1()}",
+                                    """{"p": $ACTION_SCORE_STUDENTS, "s": ${it.component1()}, "u": $uni } """
+                                )
+                            }
+                            tg.reply("Выберите итерацию", buttons = buttons, maxCols = 4, isMarkdown = false, stop = true)
+                        }
                     }
                 }
             }
@@ -60,29 +75,24 @@ class TeacherScoringFlow(tg: ChainBuilder) {
         }
     }
 
-    private fun studentList(tg: ChainBuilder, json: ObjectNode) {
-        val uni = json["u"]?.asInt() ?: run {
-            tg.reply("Ошибка состояния: не найден университет", isMarkdown = false, stop = true)
+    private fun studentList(tg: ChainBuilder, uni: Int, json: ObjectNode) {
+        val sprintNum = json["s"]?.asInt() ?: run {
+            tg.reply("Отсутствует номер итерации", isMarkdown = false, stop = true)
             return
         }
-
-        val lastSprint = lastSprint(uni) ?: run {
-            tg.reply("Не получилось узнать номер последней итерации", isMarkdown = false, stop = true)
-            return
-        }
-        val teamRecords = getAllSprintTeamRecords(uni, lastSprint).sortedBy { it.displayName.lastNameFirst() }
+        val teamRecords = getAllSprintTeamRecords(uni, sprintNum).sortedBy { it.displayName.lastNameFirst() }
         val student = json["m"]?.asInt()?.let { studentId -> teamRecords.first { it.id == studentId } }
         if (student != null) {
             tg.reply("Поставьте оценку для ${student.displayName} по вещественной шкале 0..10", isMarkdown = false)
             db {
-                dialogState(tg.userId, 2, """ {"m": ${student.id}, "s": $lastSprint } """)
+                dialogState(tg.userId, 2, """ {"m": ${student.id}, "s": $sprintNum } """)
             }
         } else {
             val btns = teamRecords.map {
                 println(it)
                 BtnData(
                     it.displayName,
-                    """{"p": $ACTION_SCORE_STUDENTS, "m": ${it.id}, "u": $uni } """
+                    """{"p": $ACTION_SCORE_STUDENTS, "m": ${it.id}, "u": $uni, "s": $sprintNum } """
                 )
             }
             tg.reply("Выберите студента", buttons = btns, isMarkdown = false, stop = false, maxCols = 1)

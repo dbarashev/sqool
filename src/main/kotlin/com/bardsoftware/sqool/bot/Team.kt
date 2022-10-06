@@ -305,3 +305,13 @@ fun lastSprint(uni: Int) =  db {
         .from(table("LastSprint"))
         .where(field("uni").eq(uni)).fetchOne()?.value1()
 }
+
+fun sprintNumbers(uni: Int) = db {
+    select(field("sprint_num", Int::class.java))
+        .from(table("team"))
+        .where(
+            field("team_num", Int::class.java).between(uni*100, (uni+1)*100)
+                .and(field("sprint_num", Int::class.java).ne(0))
+        )
+        .toSortedSet()
+}
