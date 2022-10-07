@@ -18,7 +18,6 @@ class TeacherScoringFlow(tg: ChainBuilder) {
                         if (json["s"] != null) {
                             studentList(tg, uni, json)
                         } else {
-
                             val buttons = sprintNumbers(uni).map {
                                 BtnData(
                                     "№${it.component1()}",

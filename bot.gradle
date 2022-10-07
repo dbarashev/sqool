@@ -37,7 +37,7 @@ dependencies {
 	implementation 'com.zaxxer:HikariCP:5.+'
 	implementation "org.jooq:jooq:3.16.+"
 	implementation 'javax.xml.bind:jaxb-api:2.3.1'
-
+	implementation "com.michael-bull.kotlin-result:kotlin-result:1.1.16"
 }
 
 sourceSets {

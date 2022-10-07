@@ -19,6 +19,8 @@
 package com.bardsoftware.sqool.bot
 
 import com.fasterxml.jackson.databind.node.ObjectNode
+import com.github.michaelbull.result.Err
+import com.github.michaelbull.result.Ok
 import org.slf4j.LoggerFactory
 import org.telegram.telegrambots.bots.DefaultBotOptions
 import org.telegram.telegrambots.bots.TelegramLongPollingBot
@@ -35,6 +37,7 @@ import org.telegram.telegrambots.meta.api.objects.Update
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession
 import org.telegram.telegrambots.updatesreceivers.DefaultWebhook
 import java.io.Serializable
+import com.github.michaelbull.result.Result as Res
 
 fun main(args: Array<String>) {
   if (args.isNotEmpty() && args[0] == "poll") {
@@ -128,7 +131,7 @@ private fun process(update: Update, sender: MessageSender) = chain(update, sende
   onCallback { json ->
     val dialogPage = json["p"]?.asInt() ?: 0
     when (dialogPage) {
-      1 -> teacherPageChooseAction(tg, json)
+      ACTION_TEACHER_LANDING -> teacherPageChooseAction(tg, json)
       ACTION_ROTATE_TEAMS -> teacherPageRotateProjects(tg, json)
       ACTION_GREET_STUDENT -> studentRegister(tg, json)
       ACTION_FINISH_ITERATION -> teacherPageFinishIteration(tg, json)
@@ -255,13 +258,42 @@ private fun studentRegister(tg: ChainBuilder, json: ObjectNode) {
 }
 internal fun isTeacher(username: String) = (System.getenv("SQOOL_TEACHERS") ?: "").split(",").contains(username)
 
-internal fun withUniversity(tg: ChainBuilder, json: ObjectNode, code: (tg: ChainBuilder, json: ObjectNode, uni: Int) -> Unit) {
-  val uni = json["u"]?.asInt() ?: run {
-    tg.reply("Ошибка состояния: не найден университет", isMarkdown = false, stop = true)
-    return
+data class ArgFlow(val tg: ChainBuilder, val json: ObjectNode, val action: Int)
+data class ArgUni(val value: Int, val flow: ArgFlow)
+data class ArgSprint(val value: Int, val uni: ArgUni)
+
+fun ChainBuilder.withFlow(json: ObjectNode, action: Int) = Ok(ArgFlow(this, json, action))
+
+internal fun Ok<ArgFlow>.withUniversity(): Res<ArgUni, String> {
+  val uni = this.component1().json["u"]?.asInt() ?: run {
+    this.component1().tg.reply("Выберите вуз", isMarkdown = false, stop = true, buttons = listOf(
+      BtnData("JUB", """ {"u": 0, "p": 1} """)
+    ))
+    return Err("")
   }
-  code(tg, json, uni)
+  return Ok(ArgUni(uni, this.component1()))
 }
+
+internal fun ArgUni.withSprint(): Res<ArgSprint, Int> {
+  val sprint = this.flow.json["s"]?.asInt()
+  if (sprint != null) {
+    return Ok(ArgSprint(sprint, this))
+  }
+  val uni = this.value
+  val buttons = sprintNumbers(uni).map {
+    BtnData(
+      "№${it.component1()}",
+      """{"p": ${this.flow.action}, "s": ${it.component1()}, "u": $uni } """
+    )
+  }
+  this.flow.tg.reply("Выберите итерацию", buttons = buttons, maxCols = 4, isMarkdown = false, stop = true)
+  return Err(0)
+}
+
+internal fun ArgSprint.execute(code: (tg: ChainBuilder, json: ObjectNode, uni: Int, sprintNum: Int) -> Unit) {
+  code(this.uni.flow.tg, this.uni.flow.json, this.uni.value, this.value)
+}
+
 private const val INBOX_CHAT_ID = "-585161267"
 private val LOGGER = LoggerFactory.getLogger("Bot")
 internal const val ACTION_ROTATE_TEAMS = 2
@@ -271,3 +303,5 @@ internal const val ACTION_FINISH_ITERATION = 5
 internal const val ACTION_SCORE_TEAMMATE = 6
 internal const val ACTION_PRINT_TEAMS = 7
 internal const val ACTION_SCORE_STUDENTS = 8
+internal const val ACTION_FIX_REVIEW_SCORES = 9
+internal const val ACTION_TEACHER_LANDING = 1

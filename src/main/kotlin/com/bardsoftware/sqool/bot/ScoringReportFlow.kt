@@ -1,5 +1,7 @@
 package com.bardsoftware.sqool.bot
 
+import com.github.michaelbull.result.andThen
+import com.github.michaelbull.result.onSuccess
 import org.jooq.impl.DSL.*
 import java.math.BigDecimal
 import kotlin.math.max
@@ -7,14 +9,30 @@ import kotlin.math.max
 class ScoringReportFlow(tg: ChainBuilder) {
     init {
         if (tg.isTeacher) {
-            tg.onCommand("scores") {
-                printLastSprintScores(tg, 0)
-            }
             tg.onCallback { json ->
                 when (json["p"]?.asInt() ?: 0) {
                     ACTION_PRINT_PEER_REVIEW_SCORES -> {
-                        withUniversity(tg, json) { tg, _, uni ->
-                            printLastSprintScores(tg, uni)
+                        tg.withFlow(json, ACTION_PRINT_PEER_REVIEW_SCORES).withUniversity().andThen {
+                            it.withSprint()
+                        }.onSuccess {
+                            it.execute { tg, json, uni, sprintNum ->
+                                printLastSprintScores(tg, uni, sprintNum, false)
+                                tg.reply("Зафиксировать оценки? Это сделает их видимыми для студентов", buttons = listOf(
+                                    BtnData("Да", """{"p": $ACTION_FIX_REVIEW_SCORES, "u": $uni, "s": $sprintNum}"""),
+                                    BtnData("Нет", """{"p": $ACTION_TEACHER_LANDING, "u": $uni}""")
+                                ))
+                            }
+                        }
+                    }
+                    ACTION_FIX_REVIEW_SCORES -> {
+                        tg.withFlow(json, ACTION_FIX_REVIEW_SCORES).withUniversity().andThen {
+                            it.withSprint()
+                        }.onSuccess {
+                            it.execute { tg, json, uni, sprintNum ->
+                                printLastSprintScores(tg, uni, sprintNum, true)
+                            }
+                            tg.reply("Done")
+                            teacherLanding(tg)
                         }
                     }
                 }
@@ -22,6 +40,7 @@ class ScoringReportFlow(tg: ChainBuilder) {
         }
     }
 }
+
 
 private data class Scores(var ord: Int = 0, val scores: MutableList<BigDecimal> = mutableListOf()) {
     private val coderSummary: Double
@@ -78,9 +97,9 @@ private data class Scores(var ord: Int = 0, val scores: MutableList<BigDecimal> 
 
 }
 
-fun printLastSprintScores(tg: ChainBuilder, uni: Int) {
+fun printLastSprintScores(tg: ChainBuilder, uni: Int, sprintNum: Int, writeSummaryScores: Boolean = false) {
     val idToResultScore = mutableMapOf<Int, Double>()
-    val lastSprint = lastSprint(uni)
+
     db {
         val rawRecords = select(
             field("name", String::class.java),
@@ -89,7 +108,7 @@ fun printLastSprintScores(tg: ChainBuilder, uni: Int) {
             field("score", BigDecimal::class.java),
             field("id", Int::class.java)
         ).from(table("TeamAndPeerScores")).where(
-            field("sprint_num", Int::class.java).eq(lastSprint)
+            field("sprint_num", Int::class.java).eq(sprintNum)
         ).orderBy(
             field("team_num"), field("ord"), field("scoring_pos")
         ).toList()
@@ -118,7 +137,7 @@ fun printLastSprintScores(tg: ChainBuilder, uni: Int) {
             coalesce(field("score", BigDecimal::class.java), BigDecimal.valueOf(-1.0)),
             field("name", String::class.java)
         ).from(table("Student").leftJoin(table("TeacherScores")).on("id = student_id"))
-            .where(field("sprint_num", Int::class.java).eq(lastSprint))
+            .where(field("sprint_num", Int::class.java).eq(sprintNum))
             .forEach { teacherRecord ->
                 val sumScores = mutableListOf<Double>()
 
@@ -146,16 +165,19 @@ fun printLastSprintScores(tg: ChainBuilder, uni: Int) {
 
     }
 
-    txn {
-        idToResultScore.forEach { id, score ->
-            insertInto(table("Score"),
-                field("student_id", Int::class.java),
-                field("sprint_num", Int::class.java),
-                field("score", BigDecimal::class.java)
-            ).values(id, lastSprint, BigDecimal.valueOf(score))
-                .onConflict(field("student_id"), field("sprint_num"))
-                .doUpdate().set(field("score", BigDecimal::class.java), BigDecimal.valueOf(score))
-                .execute()
+    if (writeSummaryScores) {
+        txn {
+            idToResultScore.forEach { (id, score) ->
+                insertInto(
+                    table("Score"),
+                    field("student_id", Int::class.java),
+                    field("sprint_num", Int::class.java),
+                    field("score", BigDecimal::class.java)
+                ).values(id, sprintNum, BigDecimal.valueOf(score))
+                    .onConflict(field("student_id"), field("sprint_num"))
+                    .doUpdate().set(field("score", BigDecimal::class.java), BigDecimal.valueOf(score))
+                    .execute()
+            }
         }
     }
 }

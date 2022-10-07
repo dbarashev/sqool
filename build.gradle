@@ -62,6 +62,7 @@ dependencies {
 	implementation 'com.vladsch.flexmark:flexmark-all:0.+'
 	implementation "org.telegram:telegrambots:5.+"
 	implementation "org.telegram:telegrambotsextensions:5.+"
+	implementation "com.michael-bull.kotlin-result:kotlin-result:1.1.16"
 
 	testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: '5.+'
 	testImplementation group: 'com.nhaarman', name: 'mockito-kotlin', version: '1.+'
