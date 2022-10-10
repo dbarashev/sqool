@@ -18,6 +18,7 @@ fun studentLandingMenu(tg: ChainBuilder) {
         |--------
         |
         |**Текущая сумма баллов**: ${sumScore.first.toString()}/${sumScore.second.multiply(BigDecimal.valueOf(10))}
+        |**По итерациям:** ${getScoreList(tg.userName)}
         |**Текущая команда №${curTeammates.teamNum}**: ${curTeammates.members.map { it.displayName }.joinToString()}
         |
     """.trimMargin(), isMarkdown = false)

@@ -13,3 +13,14 @@ fun getSumScore(tgUsername: String): Pair<BigDecimal, BigDecimal> =
             it.component1() to BigDecimal.valueOf(it.component2())
           } ?: BigDecimal.ZERO to BigDecimal.ZERO
     }
+
+fun getScoreList(tgUsername: String): List<BigDecimal> =
+    db {
+        select(field("score", BigDecimal::class.java))
+            .from(table("Score").join(table("Student")).on("id=student_id"))
+            .where(field("tg_username", String::class.java).eq(tgUsername))
+            .orderBy(field("sprint_num"))
+            .map {
+                it.component1()
+            }
+    }
