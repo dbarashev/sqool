@@ -221,7 +221,8 @@ fun rotateTeams(uni: Int): List<TeamRecord> {
   // Ищем команды, где джунов было больше чем 2. В них один из джунов станет лузером и останется в новой итерации
   // джуном, переместившись в случайно выбранный проект под номером 5.
   // У этого джуна должен быть номер 3 или 4, потому что номер 5 случайно переместился в этот проект в прошлый раз и ждет повышения.
-  val randomLosers = records.filter { it.ord == 5 }.associate { it.teamNum to Random.nextInt(3, 5) }
+  //val randomLosers = records.filter { it.ord == 5 }.associate { it.teamNum to Random.nextInt(3, 5) }
+    val randomLosers = records.filter { it.ord == 3 }.associate { it.teamNum to 2 }
 
   // Производим ротацию. Джуны (это те у кого ord > 2) остаются в нынешней команде, а сеньоры перемещаются в новые.
   // Сеньор 1 в команду, стоящую в массиве новой перестановки на той же позиции, что и сейчас.
@@ -242,7 +243,7 @@ fun rotateTeams(uni: Int): List<TeamRecord> {
       2 ->
         // Если ты лузер, тебе ищут новую команду, а иначе идешь на повышение
         if (it.ord == randomLosers[it.teamNum]) {
-          TeamRecord(teamNum = randomTeam(newTeamNums, listOf(it.teamNum)), tgUsername = it.tgUsername, ord = 5)
+          TeamRecord(teamNum = randomTeam(newTeamNums, listOf(it.teamNum)), tgUsername = it.tgUsername, ord = 3)
         } else {
           TeamRecord(teamNum = it.teamNum, tgUsername = it.tgUsername, ord = 1)
         }
@@ -251,6 +252,7 @@ fun rotateTeams(uni: Int): List<TeamRecord> {
 //        // стать сеньором вместо него.
 //        TeamRecord(teamNum = it.teamNum, tgUsername = it.tgUsername, ord = if (loser == 3) 2 else 1)
 //      }
+        3 -> TeamRecord(teamNum = it.teamNum, tgUsername = it.tgUsername, ord = 1)
       else -> {
         println("unexpected ordinal number: ${it}")
         it
