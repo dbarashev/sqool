@@ -16,11 +16,20 @@ class ScoringReportFlow(tg: ChainBuilder) {
                             it.withSprint()
                         }.onSuccess {
                             it.execute { tg, json, uni, sprintNum ->
-                                printLastSprintScores(tg, uni, sprintNum, false)
-                                tg.reply("Зафиксировать оценки? Это сделает их видимыми для студентов", buttons = listOf(
-                                    BtnData("Да", """{"p": $ACTION_FIX_REVIEW_SCORES, "u": $uni, "s": $sprintNum}"""),
-                                    BtnData("Нет", """{"p": $ACTION_TEACHER_LANDING, "u": $uni}""")
-                                ))
+                                if (sprintNum == -1) {
+                                    printAllScores(tg, uni)
+                                } else {
+                                    printSprintScores(tg, uni, sprintNum, false)
+                                    tg.reply(
+                                        "Зафиксировать оценки? Это сделает их видимыми для студентов", buttons = listOf(
+                                            BtnData(
+                                                "Да",
+                                                """{"p": $ACTION_FIX_REVIEW_SCORES, "u": $uni, "s": $sprintNum}"""
+                                            ),
+                                            BtnData("Нет", """{"p": $ACTION_TEACHER_LANDING, "u": $uni}""")
+                                        )
+                                    )
+                                }
                             }
                         }
                     }
@@ -29,7 +38,7 @@ class ScoringReportFlow(tg: ChainBuilder) {
                             it.withSprint()
                         }.onSuccess {
                             it.execute { tg, json, uni, sprintNum ->
-                                printLastSprintScores(tg, uni, sprintNum, true)
+                                printSprintScores(tg, uni, sprintNum, true)
                             }
                             tg.reply("Done")
                             teacherLanding(tg)
@@ -97,7 +106,45 @@ private data class Scores(var ord: Int = 0, val scores: MutableList<BigDecimal> 
 
 }
 
-fun printLastSprintScores(tg: ChainBuilder, uni: Int, sprintNum: Int, writeSummaryScores: Boolean = false) {
+fun printAllScores(tg: ChainBuilder, uni: Int) {
+    val scoredSprints = mutableMapOf<String, Int>()
+    val nameSprintScore  = db {
+        select(
+            field("Student.name", String::class.java),
+            field("sprint_num", Int::class.java),
+            field("score", BigDecimal::class.java),
+            field("scored_sprints", Int::class.java)
+        ).from(table("Student").leftJoin(table("Score")).on("id=student_id").leftJoin("ScoreSummary").using(field("id")))
+            .orderBy(
+                field("Student.name", String::class.java),
+                field("sprint_num", Int::class.java),
+
+            )
+            .map {
+                scoredSprints[it.component1()] = it.component4()
+                it
+            }
+            .associate { (it.component1() to it.component2()) to it.component3()  }
+    }
+
+    val lastSprint = lastSprint(uni) ?: 0
+    val names = nameSprintScore.keys.map { it.first }.toSet()
+    val result = StringBuilder()
+    names.forEach {name ->
+        result.append(name.escapeMarkdown()).append(',').append(scoredSprints[name]).append(',')
+        (1..lastSprint).forEach { sprint ->
+            result.append(nameSprintScore[name to sprint]?.toString() ?: "").append(',')
+        }
+        result.append('\n')
+    }
+    tg.reply("""
+        ```
+        $result
+        ```
+    """.trimIndent())
+
+}
+fun printSprintScores(tg: ChainBuilder, uni: Int, sprintNum: Int, writeSummaryScores: Boolean = false) {
     val idToResultScore = mutableMapOf<Int, Double>()
 
     db {

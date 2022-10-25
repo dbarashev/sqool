@@ -285,7 +285,7 @@ internal fun ArgUni.withSprint(): Res<ArgSprint, Int> {
       "№${it.component1()}",
       """{"p": ${this.flow.action}, "s": ${it.component1()}, "u": $uni } """
     )
-  }
+  } + listOf(BtnData("Весь курс", """{"p": ${this.flow.action}, "s": -1, "u": $uni } """))
   this.flow.tg.reply("Выберите итерацию", buttons = buttons, maxCols = 4, isMarkdown = false, stop = true)
   return Err(0)
 }
