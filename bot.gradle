@@ -1,6 +1,6 @@
 buildscript {
 	ext {
-		kotlinVersion = '1.7.10'
+		kotlinVersion = '1.8.0'
 	}
 	repositories {
 		google()
@@ -12,7 +12,7 @@ buildscript {
 	}
 }
 plugins {
-	id 'com.google.cloud.tools.jib' version '3.1.4'
+	id 'com.google.cloud.tools.jib' version '3.3.1'
 }
 
 apply plugin: 'application'
@@ -54,11 +54,11 @@ sourceSets {
 }
 
 compileKotlin {
-	kotlinOptions.jvmTarget = "11"
+	kotlinOptions.jvmTarget = "17"
 }
 jib {
 	to.image = 'dbarashev/sqool-bot'
-	from.image = 'gcr.io/distroless/java'
+	from.image = 'eclipse-temurin:17'
 	container.ports = ["8080"]
 }
 

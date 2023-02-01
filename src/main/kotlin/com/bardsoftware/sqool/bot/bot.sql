@@ -43,8 +43,8 @@ create view ScoreSummary as
     from student left join score on id=student_id
     group by id, name, tg_username;
 
-select sum(score), count(score), tg_username_to, name, array_agg(tg_username_from || ': ' || score)
-from score join student on tg_username_to=tg_username group by sprint_num, tg_username_to, name order by name;
+-- select sum(score), count(score), tg_username_to, name, array_agg(tg_username_from || ': ' || score)
+-- from score join student on score.tg_username_to=tg_username group by sprint_num, tg_username_to, name order by name;
 
 CREATE OR REPLACE VIEW LastSprint AS
 WITH T1 AS (

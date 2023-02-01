@@ -215,15 +215,17 @@ fun printSprintScores(tg: ChainBuilder, uni: Int, sprintNum: Int, writeSummarySc
     if (writeSummaryScores) {
         txn {
             idToResultScore.forEach { (id, score) ->
-                insertInto(
-                    table("Score"),
-                    field("student_id", Int::class.java),
-                    field("sprint_num", Int::class.java),
-                    field("score", BigDecimal::class.java)
-                ).values(id, sprintNum, BigDecimal.valueOf(score))
-                    .onConflict(field("student_id"), field("sprint_num"))
-                    .doUpdate().set(field("score", BigDecimal::class.java), BigDecimal.valueOf(score))
-                    .execute()
+                if (!score.isNaN()) {
+                    insertInto(
+                        table("Score"),
+                        field("student_id", Int::class.java),
+                        field("sprint_num", Int::class.java),
+                        field("score", BigDecimal::class.java)
+                    ).values(id, sprintNum, BigDecimal.valueOf(score))
+                        .onConflict(field("student_id"), field("sprint_num"))
+                        .doUpdate().set(field("score", BigDecimal::class.java), BigDecimal.valueOf(score))
+                        .execute()
+                }
             }
         }
     }
