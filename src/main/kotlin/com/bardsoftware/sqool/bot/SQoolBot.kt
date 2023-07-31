@@ -58,7 +58,7 @@ class SQoolBot : TelegramLongPollingBot(
     }),
     MessageSender {
   init {
-    println("Started SQooL 2022 under name $botUsername")
+    println("Started SQooL 2023 under name $botUsername")
     setMessageSender(this)
   }
   override fun getBotUsername() = System.getenv("TG_BOT_USERNAME") ?: "sqool_bot"
@@ -147,7 +147,7 @@ private fun process(update: Update, sender: MessageSender) = chain(update, sende
       }
       val student = getStudent(this.userName)
       if (student == null) {
-        reply("Вы студент JUB и посещаете курс Database Internals 2022?", buttons = listOf(
+        reply("Вы студент CUB и посещаете курс BDSE'23?", buttons = listOf(
             BtnData("Да!", """ {"tg": "${this.userName}", "p": $ACTION_GREET_STUDENT, "a": 1} """),
             BtnData("Нет :(", """ {"tg": "${this.userName}", "p": $ACTION_GREET_STUDENT, "a": 0} """),
         ), isMarkdown = false, stop = true)
@@ -169,7 +169,7 @@ private fun process(update: Update, sender: MessageSender) = chain(update, sende
 
 fun teacherLanding(tg: ChainBuilder) {
   tg.reply("Выберите вуз", isMarkdown = false, stop = true, buttons = listOf(
-    BtnData("JUB", """ {"u": 0, "p": 1} """)
+    BtnData("CUB", """ {"u": 0, "p": 1} """)
   ))
   tg.stop()
 }
@@ -267,7 +267,7 @@ fun ChainBuilder.withFlow(json: ObjectNode, action: Int) = Ok(ArgFlow(this, json
 internal fun Ok<ArgFlow>.withUniversity(): Res<ArgUni, String> {
   val uni = this.component1().json["u"]?.asInt() ?: run {
     this.component1().tg.reply("Выберите вуз", isMarkdown = false, stop = true, buttons = listOf(
-      BtnData("JUB", """ {"u": 0, "p": 1} """)
+      BtnData("CUB", """ {"u": 0, "p": 1} """)
     ))
     return Err("")
   }

@@ -70,8 +70,8 @@ internal data class TeammateScoringState(
     var dialogStep: Int,
     val currentScore: Int = 0
 ) {
-    lateinit var studentFrom: TeamRecord
-    lateinit var studentTo: TeamRecord
+    lateinit var studentFrom: TeamMember
+    lateinit var studentTo: TeamMember
 
     fun load() {
         db {
@@ -85,10 +85,10 @@ internal data class TeammateScoringState(
                 .and(field("tg_username", String::class.java).eq(tgUsernameFrom).or(field("id", Int::class.java).eq(idTo)))
                 .toList()
             studentFrom = info.first { it.component1() == tgUsernameFrom }.let {
-                TeamRecord(-1, tgUsernameFrom, it.component4(), it.component3())
+                TeamMember(-1, tgUsernameFrom, it.component4(), it.component3())
             }
             studentTo = info.first { it.component2() == idTo }.let {
-                TeamRecord(-1, it.component1(), it.component4(), it.component3())
+                TeamMember(-1, it.component1(), it.component4(), it.component3())
             }
         }
     }

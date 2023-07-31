@@ -20,7 +20,8 @@ package com.bardsoftware.sqool.bot
 
 import org.jooq.impl.DSL.field
 import org.jooq.impl.DSL.table
-import kotlin.random.Random
+import java.util.*
+import java.util.concurrent.ConcurrentLinkedDeque
 
 //import org.jooq.impl.DSL.*
 data class Student(val tgUsername: String, val name: String)
@@ -69,7 +70,7 @@ fun getTeammates(tgUsername: String, sprintNum: Int): Teammates {
             .and(field("M.sprint_num").eq(sprintNum))
             .and(field("t1.tg_username").eq(tgUsername))
         ).map {
-          TeamRecord(studentRecord.component1(), it.component2(), it.component3(), it.component1(), it.component4())
+          TeamMember(studentRecord.component1(), it.component2(), it.component3(), it.component1(), it.component4())
         }
     Teammates(sprintNum, studentRecord.component1(), mates)
   }
@@ -78,7 +79,7 @@ fun getTeammates(tgUsername: String, sprintNum: Int): Teammates {
 fun getCurrentTeammates(tgUsername: String) = getTeammates(tgUsername, 0)
 data class Teammates(
     val sprintNum: Int, val teamNum: Int,
-    val members: List<TeamRecord>)
+    val members: List<TeamMember>)
 
 fun getPrevTeammates(tgUsername: String): Teammates {
   val allSprints = getAllSprints(tgUsername)
@@ -174,11 +175,20 @@ fun getAllScores(uni: Int): List<ScoreRecord> {
   }
 }
 
-data class TeamRecord(val teamNum: Int, val tgUsername: String, val ord: Int, val displayName: String = "", val id: Int = -1)
+data class TeamMember(val teamNum: Int, val tgUsername: String, val ord: Int, val displayName: String = "", val id: Int = -1, val relocatedFrom: Int = -1) {
+    val isActive = id != -42
+    fun isNewTeamOk(newTeamNum: Int)= if (relocatedFrom != -1) relocatedFrom != newTeamNum else teamNum != newTeamNum
+}
+data class Team(val teamNum: Int, val members: MutableList<TeamMember>) {
+    fun needsMember(ord: Int) = members.size > ord && !members[ord].isActive
+    fun hasActive(ord: Int) = members.size > ord && members[ord].isActive
+    val isActive: Boolean get() = members.all { it.isActive }
+}
 
-fun rotateTeams(uni: Int): List<TeamRecord> {
+
+fun rotateTeams(uni: Int): List<TeamMember> {
   // Получаем информацию о нынешних составах команд.
-  val records = db {
+  val actualMembers = db {
     val lastSprint = select(field("sprint_num", Int::class.java))
         .from(table("LastSprint"))
         .where(field("uni").eq(uni)).fetchOne()?.value1()
@@ -189,80 +199,110 @@ fun rotateTeams(uni: Int): List<TeamRecord> {
     ).from(table("Team")).where(field("sprint_num").eq(lastSprint)
         .and(field("team_num", Int::class.java).between(uni * 100, (uni + 1) * 100)))
         .orderBy(field("team_num", Int::class.java), field("ord", Int::class.java))
-        .map { TeamRecord(it.value1(), it.value2(), it.value3()) }.toList()
+        .map { TeamMember(it.value1(), it.value2(), it.value3()) }.toList()
   }
-  val teamNums = records.map { it.teamNum }.toSortedSet()
+  val activeStatuses = db {
+      select(field("tg_username", String::class.java), field("is_active", Boolean::class.java))
+          .from(table("student"))
+          .map { it.value1() to it.value2() }
+  }
+  val actualTeams = buildActualTeams(actualMembers, activeStatuses)
+  val packedActualTeams = packTeams(actualTeams)
+
+  val teamNums = packedActualTeams.map { it.teamNum }.sorted()
   println("Cur team nums=$teamNums")
   if (teamNums.isEmpty()) {
       val initialRecords = db {
         select(field("tg_username", String::class.java)).from(table("Student")).map { it.value1() }
       }.shuffled().mapIndexed { idx, tgUsername ->
-          TeamRecord(idx / 2 + 1, tgUsername, idx % 2 + 1)
+          TeamMember(idx / 2 + 1, tgUsername, idx % 2 + 1)
       }.toList()
       println(initialRecords)
       return initialRecords
   }
 
   // Генерируем новую перестанову номеров команд, пока не получим "хорошую".
-  // Хорошая перестановка -- это такая где одни и те же номера не стоят на одной и той же позиции и не стоят
-  // соседних позициях. Это нужно, чтобы сеньоры в новой ротации попали на новые проекты.
+  // Хорошая перестановка -- это такая где одни и те же номера не стоят на одной и той же позиции.
+  // Это нужно, чтобы сеньоры в новой ротации попали на новые проекты.
   val newTeamNums = teamNums.toMutableList()
   var doShuffle = true
   while (doShuffle) {
     newTeamNums.shuffle()
-    val matchedPair = teamNums.zip(newTeamNums).firstOrNull { it.first == it.second }
-    val matchedShiftedPair = newTeamNums.toMutableList().also {
-      it.add(0, it.removeLast())
-    }.zip(teamNums).firstOrNull { it.first == it.second }
-    doShuffle = matchedPair != null || matchedShiftedPair != null
+    doShuffle = !actualTeams.zip(newTeamNums).all { it.first.members[0].isNewTeamOk(it.second) }
   }
   println("New team nums=$newTeamNums")
 
-  // Ищем команды, где джунов было больше чем 2. В них один из джунов станет лузером и останется в новой итерации
-  // джуном, переместившись в случайно выбранный проект под номером 5.
-  // У этого джуна должен быть номер 3 или 4, потому что номер 5 случайно переместился в этот проект в прошлый раз и ждет повышения.
-  //val randomLosers = records.filter { it.ord == 5 }.associate { it.teamNum to Random.nextInt(3, 5) }
-    val randomLosers = records.filter { it.ord == 3 }.associate { it.teamNum to 2 }
+    return rotateTeamMembers2(packedActualTeams.flatMap { it.members }, teamNums, newTeamNums)
+}
 
-  // Производим ротацию. Джуны (это те у кого ord > 2) остаются в нынешней команде, а сеньоры перемещаются в новые.
-  // Сеньор 1 в команду, стоящую в массиве новой перестановки на той же позиции, что и сейчас.
-  // Сеньор 2 в команду, стоящую в закольцованном массиве новой перестановки на предыдущей позиции.
-  val newRecords: List<TeamRecord> = records.map {
-    val teamIdx = teamNums.indexOf(it.teamNum)
-    when (it.ord) {
-      1 -> TeamRecord(teamNum = newTeamNums[teamIdx], tgUsername = it.tgUsername, ord = 2)
-//      2 -> TeamRecord(teamNum = if (teamIdx == 0) newTeamNums.last() else newTeamNums[teamIdx-1],
-//          tgUsername = it.tgUsername, ord = 4)
-//      3 ->
-//        // Если ты лузер, тебе ищут новую команду, а иначе идешь на повышение
-//        if (it.ord == randomLosers[it.teamNum]) {
-//          TeamRecord(teamNum = randomTeam(newTeamNums, listOf(it.teamNum)), tgUsername = it.tgUsername, ord = 5)
-//        } else {
-//          TeamRecord(teamNum = it.teamNum, tgUsername = it.tgUsername, ord = 2)
-//        }
-      2 ->
-        // Если ты лузер, тебе ищут новую команду, а иначе идешь на повышение
-        if (it.ord == randomLosers[it.teamNum]) {
-          TeamRecord(teamNum = randomTeam(newTeamNums, listOf(it.teamNum)), tgUsername = it.tgUsername, ord = 3)
-        } else {
-          TeamRecord(teamNum = it.teamNum, tgUsername = it.tgUsername, ord = 1)
+fun rotateTeamMembers2(members: List<TeamMember>, teamNums: List<Int>, newTeamNums: List<Int>): List<TeamMember> {
+    val losers = members.filter { it.ord == 3 }.associate { it.teamNum to 2 }
+    val newRecords: List<TeamMember> = members.map {
+        val teamIdx = teamNums.indexOf(it.teamNum)
+        when (it.ord) {
+            1 -> TeamMember(teamNum = newTeamNums[teamIdx], tgUsername = it.tgUsername, ord = 2, displayName = it.displayName, id = it.id)
+            2 ->
+                // Если ты был вторым в команде из трех, то будешь третьим в другой команде, а иначе становишься первым
+                if (losers.containsKey(it.teamNum)) {
+                    TeamMember(teamNum = randomTeam(newTeamNums, listOf(it.teamNum)), tgUsername = it.tgUsername, ord = 3, displayName = it.displayName, id = it.id)
+                } else {
+                    TeamMember(teamNum = it.teamNum, tgUsername = it.tgUsername, ord = 1, displayName = it.displayName, id = it.id)
+                }
+            3 -> TeamMember(teamNum = it.teamNum, tgUsername = it.tgUsername, ord = 1, displayName = it.displayName, id = it.id)
+            else -> {
+                println("unexpected ordinal number: ${it}")
+                it
+            }
         }
-//      5 -> randomLosers[it.teamNum]!!.let { loser ->
-//        // Ты уже был лузером, поэтому сейчас лузер кто-то из твоих товарищей. Нужно выяснить, кто именно, чтобы
-//        // стать сеньором вместо него.
-//        TeamRecord(teamNum = it.teamNum, tgUsername = it.tgUsername, ord = if (loser == 3) 2 else 1)
-//      }
-        3 -> TeamRecord(teamNum = it.teamNum, tgUsername = it.tgUsername, ord = 1)
-      else -> {
-        println("unexpected ordinal number: ${it}")
-        it
-      }
     }
-  }
-  return newRecords.sortedWith { left, right ->
-    val byTeam = left.teamNum - right.teamNum
-    if (byTeam != 0) byTeam else left.ord - right.ord
-  }
+    return newRecords.sortedWith { left, right ->
+        val byTeam = left.teamNum - right.teamNum
+        if (byTeam != 0) byTeam else left.ord - right.ord
+    }
+}
+fun buildActualTeams(members: List<TeamMember>, activeStatuses: List<Pair<String, Boolean>>): List<Team> {
+    val activeMembers = activeStatuses.filter { it.second }.map { it.first }.toSet()
+    val result = mutableListOf<Team>()
+    members.groupBy { it.teamNum }.forEach { (teamNum, members) ->
+        val orderedMembers = members.sortedBy { it.ord }.map {
+            if (activeMembers.contains(it.tgUsername)) it else TeamMember(teamNum, it.tgUsername, it.ord, displayName = it.displayName, id = -42)
+        }.toMutableList()
+        result.add(Team(teamNum, orderedMembers))
+    }
+    return result
+}
+
+fun packTeams(teams: List<Team>): List<Team> {
+    val result = mutableListOf<Team>()
+    val needsMember0 = LinkedList<Team>()
+    val needsMember1 = LinkedList<Team>()
+
+    teams.forEach {team ->
+        println("Team ${team.teamNum}:\n$team")
+        when {
+            team.isActive -> result.add(team)
+            team.needsMember(0) -> needsMember0.add(team)
+            team.needsMember(1) -> needsMember1.add(team)
+        }
+    }
+
+    println("Teams with member0 dropped: $needsMember0")
+    println("Teams with member1 dropped: $needsMember1")
+    println("Active teams count=${result.size}")
+    val stillNeedsMember0 = LinkedList<Team>()
+    while (needsMember0.isNotEmpty()) {
+        val team = needsMember0.poll()
+        needsMember1.poll()?.also {
+            team.members[0] = TeamMember(team.teamNum, it.members[0].tgUsername, 1, it.members[0].displayName, it.members[0].id, it.teamNum)
+            result.add(team)
+        } ?: run {
+            stillNeedsMember0.add(team)
+        }
+    }
+
+    println("These teams need member 0: $stillNeedsMember0")
+    println("These teams need member 1: $needsMember1")
+    return result
 }
 
 fun finishIteration(uni: Int): Int? =
@@ -277,7 +317,7 @@ fun finishIteration(uni: Int): Int? =
 
 private fun randomTeam(teams: List<Int>, exceptions: List<Int>) = teams.toMutableList().subtract(exceptions).random()
 
-fun insertNewRotation(records: List<TeamRecord>) {
+fun insertNewRotation(records: List<TeamMember>) {
   txn {
     records.forEach {
       insertInto(table("team"),
@@ -290,16 +330,16 @@ fun insertNewRotation(records: List<TeamRecord>) {
   }
 }
 
-fun getAllCurrentTeamRecords(uni: Int): List<TeamRecord> = getAllSprintTeamRecords(uni, 0)
+fun getAllCurrentTeamRecords(uni: Int): List<TeamMember> = getAllSprintTeamRecords(uni, 0)
 
-fun getAllSprintTeamRecords(uni: Int, sprintNum: Int): List<TeamRecord> =
+fun getAllSprintTeamRecords(uni: Int, sprintNum: Int): List<TeamMember> =
     db {
         // select team_num, name from Team T JOIN Student S USING (tg_username) WHERE sprint_num = 0 ORDER BY team_num, ord
         select(field("team_num", Int::class.java), field("name", String::class.java), field("id", Int::class.java))
             .from(table("team").join(table("student")).using(field("tg_username")))
             .where(field("sprint_num").eq(sprintNum)).and(field("team_num", Int::class.java).between(uni * 100, (uni + 1) * 100))
             .orderBy(field("team_num"), field("ord"))
-            .map { TeamRecord(it.component1(), "", 0, it.component2(), it.component3()) }
+            .map { TeamMember(it.component1(), "", 0, it.component2(), it.component3()) }
     }
 
 fun lastSprint(uni: Int) =  db {
