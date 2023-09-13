@@ -20,23 +20,33 @@ package com.bardsoftware.sqool.bot
 
 import org.jooq.impl.DSL.field
 import org.jooq.impl.DSL.table
+import java.math.BigDecimal
 import java.util.*
-import java.util.concurrent.ConcurrentLinkedDeque
 
 //import org.jooq.impl.DSL.*
-data class Student(val tgUsername: String, val name: String)
-fun getStudent(tgUsername: String): Student? {
-  return db {
-    select(field("name", String::class.java))
-        .from(table("Student"))
-        .where(field("tg_username").eq(tgUsername))
-        .fetchOne()?.let { Student(tgUsername, it.value1()) }
+data class Student(val tgUsername: String, val name: String, val tgUserid: BigDecimal) {
+  fun updateTgUserId(userId: Long) {
+    db {
+      update(table("Student")).set(field("tg_userid", BigDecimal::class.java), userId.toBigDecimal())
+        .where(field("tg_username", String::class.java).eq(tgUsername))
+        .execute()
+    }
   }
 }
 
-fun insertStudent(tgUsername: String, name: String) {
+fun getStudent(tgUsername: String): Student? {
+  return db {
+    select(field("name", String::class.java), field("tg_userid", BigDecimal::class.java))
+        .from(table("Student"))
+        .where(field("tg_username").eq(tgUsername))
+        .fetchOne()?.let { Student(tgUsername, it.value1(), it.value2() ?: BigDecimal.ZERO) }
+  }
+}
+
+fun insertStudent(tgUsername: String, name: String, tgUserId: Long) {
   db {
-    insertInto(table("Student"), field("tg_username"), field("name")).values(tgUsername, name)
+    insertInto(table("Student"), field("tg_username"), field("name"), field("tg_userid"))
+      .values(tgUsername, name, tgUserId.toBigDecimal())
         .onConflict(field("tg_username")).doUpdate().set(field("name"), name)
         .execute()
   }
@@ -50,14 +60,14 @@ fun getAllSprints(tgUsername: String): List<Int> {
   }
 }
 
-fun getTeammates(tgUsername: String, sprintNum: Int): Teammates {
+fun getTeammates(tgUsername: String, sprintNum: Int): Result<Teammates> {
   return db {
     val studentRecord =
         select(field("team_num", Int::class.java), field("ord", Int::class.java))
             .from(table("Team"))
             .where(field("sprint_num").eq(sprintNum)
                 .and(field("tg_username").eq(tgUsername)))
-            .fetchOne() ?: throw RuntimeException("Can't find team record fpr $tgUsername@sprint $sprintNum")
+            .fetchOne() ?: return@db Result.failure(RuntimeException("Can't find team record fpr $tgUsername@sprint $sprintNum"))
 
     val mates =
         select(
@@ -72,7 +82,7 @@ fun getTeammates(tgUsername: String, sprintNum: Int): Teammates {
         ).map {
           TeamMember(studentRecord.component1(), it.component2(), it.component3(), it.component1(), it.component4())
         }
-    Teammates(sprintNum, studentRecord.component1(), mates)
+    Result.success(Teammates(sprintNum, studentRecord.component1(), mates))
   }
 }
 
@@ -81,9 +91,9 @@ data class Teammates(
     val sprintNum: Int, val teamNum: Int,
     val members: List<TeamMember>)
 
-fun getPrevTeammates(tgUsername: String): Teammates {
+fun getPrevTeammates(tgUsername: String): Result<Teammates> {
   val allSprints = getAllSprints(tgUsername)
-  val maxSprint = allSprints.maxOrNull() ?: return Teammates(-1, 0, listOf())
+  val maxSprint = allSprints.maxOrNull() ?: return Result.failure(RuntimeException("No team on the last sprint"))
   return getTeammates(tgUsername, maxSprint)
 }
 

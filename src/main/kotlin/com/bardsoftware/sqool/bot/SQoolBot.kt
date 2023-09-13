@@ -37,6 +37,7 @@ import org.telegram.telegrambots.meta.api.objects.Update
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession
 import org.telegram.telegrambots.updatesreceivers.DefaultWebhook
 import java.io.Serializable
+import java.math.BigDecimal
 import com.github.michaelbull.result.Result as Res
 
 fun main(args: Array<String>) {
@@ -142,31 +143,45 @@ private fun process(update: Update, sender: MessageSender) = chain(update, sende
   TeacherScoringFlow(tg)
   if (update.message?.chatId == update.message?.from?.id) {
     onCommand("start", "help") {
-      if (isTeacher(this.userName)) {
-        return@onCommand teacherLanding(tg)
-      }
-      val student = getStudent(this.userName)
-      if (student == null) {
-        reply("Вы студент CUB и посещаете курс BDSE'23?", buttons = listOf(
-            BtnData("Да!", """ {"tg": "${this.userName}", "p": $ACTION_GREET_STUDENT, "a": 1} """),
-            BtnData("Нет :(", """ {"tg": "${this.userName}", "p": $ACTION_GREET_STUDENT, "a": 0} """),
-        ), isMarkdown = false, stop = true)
-      } else {
-        val curTeammates = getCurrentTeammates(this.userName)
-        reply("Привет, ${student.name}!", isMarkdown = false, stop = true)
-        studentLandingMenu(this)
-      }
-      stop()
+      onStart()
     }
 
     ScoringReportFlow(tg)
     StudentCommands(tg)
-//    onRegexp(".*") {
-//      sender.forward(update.message, INBOX_CHAT_ID)
-//    }
+    onText("pingme") {
+      getStudent(this.userName)?.let {student ->
+        sender.send(SendMessage().also {
+          it.chatId = student.tgUserid.toLong().toString()
+          it.text = "Ping you!"
+        } as BotApiMethod<Serializable>)
+        stop()
+      }
+    }
+    onRegexp(".*") {
+      onStart()
+    }
   }
 }
 
+fun ChainBuilder.onStart() {
+  if (isTeacher(this.userName)) {
+    return teacherLanding(this)
+  }
+  val student = getStudent(this.userName)
+  if (student == null) {
+    reply("Вы студент CUB и посещаете курс Database Internals '23?", buttons = listOf(
+      BtnData("Да!", """ {"tg": "${this.userName}", "p": $ACTION_GREET_STUDENT, "a": 1} """),
+      BtnData("Нет :(", """ {"tg": "${this.userName}", "p": $ACTION_GREET_STUDENT, "a": 0} """),
+    ), isMarkdown = false, stop = true)
+  } else {
+    if (student.tgUserid == BigDecimal.ZERO) {
+      student.updateTgUserId(update.message.from.id)
+    }
+    reply("Привет, ${student.name}!", isMarkdown = false, stop = true)
+    studentLandingMenu(this)
+  }
+  stop()
+}
 fun teacherLanding(tg: ChainBuilder) {
   tg.reply("Выберите вуз", isMarkdown = false, stop = true, buttons = listOf(
     BtnData("CUB", """ {"u": 0, "p": 1} """)
@@ -247,15 +262,6 @@ private fun teacherPagePrintTeams(tg: ChainBuilder, json: ObjectNode) {
   tg.reply(buf.toString(), isMarkdown = true)
 }
 
-private fun studentRegister(tg: ChainBuilder, json: ObjectNode) {
-  val answer = json["a"]?.asInt() ?: 0
-  if (answer == 1) {
-    insertStudent(tg.userName, tg.fromUser?.displayName() ?: tg.userName)
-    tg.reply("Окей, мы теперь с вами знакомы.", isMarkdown = false, stop = true)
-  } else {
-    tg.reply("Ну штош, бывает.", isMarkdown = false, stop = true)
-  }
-}
 internal fun isTeacher(username: String) = (System.getenv("SQOOL_TEACHERS") ?: "").split(",").contains(username)
 
 data class ArgFlow(val tg: ChainBuilder, val json: ObjectNode, val action: Int)
