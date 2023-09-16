@@ -86,7 +86,7 @@ open class ChainBuilder(internal val update: Update, internal val sendMessage: M
   val messageId = update.callbackQuery?.message?.messageId ?: update.message?.messageId
 
   val userId = (this.fromUser?.id ?: -1).toLong()
-  val userName = this.fromUser?.userName ?: ""
+  var userName = this.fromUser?.userName ?: ""
   val chatId = update.message?.chatId
 
   val dialogState: DialogState? by lazy {

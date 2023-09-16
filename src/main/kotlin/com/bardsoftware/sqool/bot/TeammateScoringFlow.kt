@@ -189,7 +189,7 @@ class TeammateScoringFlow(tg: ChainBuilder) {
                             dialogState(tg.userId, null)
                         }
                         tg.reply("Вы поставили  $score товарищу ${state.studentTo.displayName}", isMarkdown = false)
-                        studentLandingMenu(tg)
+                        studentLandingMenu(tg, getStudent(tg.userName)!!)
                     }
                 }
             }

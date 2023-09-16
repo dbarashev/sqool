@@ -19,8 +19,7 @@
 package com.bardsoftware.sqool.bot
 
 import com.fasterxml.jackson.databind.node.ObjectNode
-import com.github.michaelbull.result.Err
-import com.github.michaelbull.result.Ok
+import com.github.michaelbull.result.*
 import org.slf4j.LoggerFactory
 import org.telegram.telegrambots.bots.DefaultBotOptions
 import org.telegram.telegrambots.bots.TelegramLongPollingBot
@@ -96,13 +95,13 @@ class SQooLWebhookBot : TelegramWebhookBot(), MessageSender {
   }
 
   override fun onWebhookUpdateReceived(update: Update): BotApiMethod<*>? {
-    try {
+    return try {
       LOGGER.info("Received update: $update")
       process(update, this)
-      return null
+      null
     } catch (ex: Exception) {
       LOGGER.error("Failed to process update", ex)
-      return SendMessage().apply {
+      SendMessage().apply {
         chatId = update.message?.chatId?.toString() ?: ""
         text = "ERROR"
 
@@ -136,7 +135,14 @@ private fun process(update: Update, sender: MessageSender) = chain(update, sende
       ACTION_ROTATE_TEAMS -> teacherPageRotateProjects(tg, json)
       ACTION_GREET_STUDENT -> studentRegister(tg, json)
       ACTION_FINISH_ITERATION -> teacherPageFinishIteration(tg, json)
-      ACTION_PRINT_TEAMS -> teacherPagePrintTeams(tg, json)
+      ACTION_PRINT_TEAMS -> {
+        json.getUniversity().map {
+          getAllCurrentTeamRecords(it).print(tg)
+        }.onFailure {msg ->
+          tg.reply(msg, isMarkdown = false)
+        }
+
+      }
     }
   }
   TeammateScoringFlow(tg)
@@ -153,6 +159,19 @@ private fun process(update: Update, sender: MessageSender) = chain(update, sende
         sender.send(SendMessage().also {
           it.chatId = student.tgUserid.toLong().toString()
           it.text = "Ping you!"
+        } as BotApiMethod<Serializable>)
+        stop()
+      }
+    }
+    onText("git") {
+      getStudent(this.userName)?.let { student ->
+        updateRepositoryPermissions(
+          listOf(TeamMember(teamNum = 2, tgUsername = "dbarashev", ord = 1, githubUsername = "dbarashev")),
+          listOf(TeamMember(teamNum = 1, tgUsername = "dbarashev", ord = 1, githubUsername = "dbarashev"))
+        )
+        sender.send(SendMessage().also {
+          it.chatId = student.tgUserid.toLong().toString()
+          it.text = "yo, trying..."
         } as BotApiMethod<Serializable>)
         stop()
       }
@@ -177,8 +196,7 @@ fun ChainBuilder.onStart() {
     if (student.tgUserid == BigDecimal.ZERO) {
       student.updateTgUserId(update.message.from.id)
     }
-    reply("Привет, ${student.name}!", isMarkdown = false, stop = true)
-    studentLandingMenu(this)
+    studentLandingMenu(this, student)
   }
   stop()
 }
@@ -190,10 +208,10 @@ fun teacherLanding(tg: ChainBuilder) {
 }
 
 private fun teacherPageChooseAction(tg: ChainBuilder, json: ObjectNode) {
-  val uni = json["u"]?.asInt() ?: run {
-    tg.reply("Ошибка состояния: не найден университет", isMarkdown = false, stop = true)
-    return
-  }
+  val uni = json.getUniversity().onFailure {
+    tg.reply(it, isMarkdown = false, stop = true)
+  }.unwrap()
+
   tg.reply("Чего изволите?", isMarkdown = false, stop = true, buttons = listOf(
     BtnData("Напечатать команды", """ {"u": $uni, "p": $ACTION_PRINT_TEAMS} """),
     BtnData("Поставить оценки", """{"u": $uni, "p": $ACTION_SCORE_STUDENTS}"""),
@@ -204,23 +222,32 @@ private fun teacherPageChooseAction(tg: ChainBuilder, json: ObjectNode) {
 }
 
 private fun teacherPageRotateProjects(tg: ChainBuilder, json: ObjectNode) {
-  val uni = json["u"]?.asInt() ?: run {
-    tg.reply("Ошибка состояния: не найден университет", isMarkdown = false, stop = true)
-    return
-  }
+  val uni = json.getUniversity().onFailure {
+    tg.reply(it, isMarkdown = false, stop = true)
+  }.unwrap()
 
   tg.reply("Произведём ротацию в университете $uni", isMarkdown = false, stop = true)
-  val newTeamRecords = rotateTeams(uni)
-  println(newTeamRecords)
+  val actualMembers = lastSprint(uni)?.let {
+    getAllSprintTeamRecords(uni, it)
+  } ?: listOf()
+  val newTeamRecords = if (actualMembers.isEmpty()) {
+    initialTeams().also {
+      println("Initial teams: $it")
+    }
+  } else {
+    rotateTeams(actualMembers).also {
+      println("Rotated teams: $it")
+    }
+  }
+  updateRepositoryPermissions(newTeamRecords, actualMembers)
   insertNewRotation(newTeamRecords)
-  teacherPagePrintTeams(tg, json)
+  newTeamRecords.print(tg)
 }
 
 private fun teacherPageGetPeerScores(tg: ChainBuilder, json: ObjectNode) {
-  val uni = json["u"]?.asInt() ?: run {
-    tg.reply("Ошибка состояния: не найден университет", isMarkdown = false, stop = true)
-    return
-  }
+  val uni = json.getUniversity().onFailure {
+    tg.reply(it, isMarkdown = false, stop = true)
+  }.unwrap()
   val table = getAllScores(uni).joinToString("\n") {
     """${it.name.escapeMarkdown()}:${it.scoreSumFormula.escapeMarkdown()}:${it.scoreSources.entries.toString().escapeMarkdown()}"""
   }
@@ -232,34 +259,15 @@ private fun teacherPageGetPeerScores(tg: ChainBuilder, json: ObjectNode) {
 }
 
 private fun teacherPageFinishIteration(tg: ChainBuilder, json: ObjectNode) {
-  val uni = json["u"]?.asInt() ?: run {
-    tg.reply("Ошибка состояния: не найден университет", isMarkdown = false, stop = true)
-    return
-  }
+  val uni = json.getUniversity().onFailure {
+    tg.reply(it, isMarkdown = false, stop = true)
+  }.unwrap()
   val newIteration = finishIteration(uni)
   if (newIteration == -1) {
     tg.reply("Done")
   } else {
     tg.reply("Итерация завершена, новая итерация №$newIteration. Не забудь сделать ротацию.", isMarkdown = false, stop=true)
   }
-}
-
-private fun teacherPagePrintTeams(tg: ChainBuilder, json: ObjectNode) {
-  val uni = json["u"]?.asInt() ?: run {
-    tg.reply("Ошибка состояния: не найден университет", isMarkdown = false, stop = true)
-    return
-  }
-  var teamNum = -1
-  val buf = StringBuffer()
-  getAllCurrentTeamRecords(uni).forEach {
-    if (it.teamNum > teamNum) {
-      buf.append("\n\n")
-      teamNum = it.teamNum
-      buf.append("__team ${teamNum}__\n")
-    }
-    buf.append(it.displayName.escapeMarkdown()).append("\n")
-  }
-  tg.reply(buf.toString(), isMarkdown = true)
 }
 
 internal fun isTeacher(username: String) = (System.getenv("SQOOL_TEACHERS") ?: "").split(",").contains(username)
@@ -270,15 +278,14 @@ data class ArgSprint(val value: Int, val uni: ArgUni)
 
 fun ChainBuilder.withFlow(json: ObjectNode, action: Int) = Ok(ArgFlow(this, json, action))
 
-internal fun Ok<ArgFlow>.withUniversity(): Res<ArgUni, String> {
-  val uni = this.component1().json["u"]?.asInt() ?: run {
+internal fun Ok<ArgFlow>.withUniversity(): Res<ArgUni, String> =
+  this.component1().json.getUniversity().mapError {
     this.component1().tg.reply("Выберите вуз", isMarkdown = false, stop = true, buttons = listOf(
       BtnData("CUB", """ {"u": 0, "p": 1} """)
     ))
-    return Err("")
-  }
-  return Ok(ArgUni(uni, this.component1()))
-}
+    ""
+  }.map { ArgUni(it, this.component1())  }
+
 
 internal fun ArgUni.withSprint(): Res<ArgSprint, Int> {
   val sprint = this.flow.json["s"]?.asInt()

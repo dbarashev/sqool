@@ -2,28 +2,21 @@ package com.bardsoftware.sqool.bot
 
 import java.math.BigDecimal
 
-class StudentCommands(tg: ChainBuilder) {
-    init {
-        tg.onCommand("t") {
-            studentLandingMenu(tg)
-        }
-    }
-}
-
-fun studentLandingMenu(tg: ChainBuilder) {
+class StudentCommands(tg: ChainBuilder)
+fun studentLandingMenu(tg: ChainBuilder, student: Student) {
     getCurrentTeammates(tg.userName).onSuccess { curTeammates ->
         val sumScore = getSumScore(tg.userName)
         tg.reply("""
-        |Привет ${tg.userName}!
-        |--------
+        |*Hello ${student.name.escapeMarkdown()}\!*
         |
-        |**Текущая сумма баллов**: ${sumScore.first.toString()}/${sumScore.second.multiply(BigDecimal.valueOf(10))}
-        |**По итерациям:** ${getScoreList(tg.userName)}
-        |**Текущая команда №${curTeammates.teamNum}**: ${curTeammates.members.map { it.displayName }.joinToString()}
+        |*Total score*: ${sumScore.first}/${sumScore.second.multiply(BigDecimal.valueOf(10))}
+        |*Breakdown by sprints:* ${getScoreList(tg.userName)}
+        |*Current Team №${curTeammates.teamNum}*: ${curTeammates.members.map { it.displayName.escapeMarkdown() }.joinToString()}
+        |[Current repository](https://github.com/dbms-class-2023/project${curTeammates.teamNum})
         |
-    """.trimMargin(), isMarkdown = false)
+    """.trimMargin(), isMarkdown = true)
     }.onFailure {
-        tg.reply("У вас пока нет команды", isMarkdown = false)
+        tg.reply("You are not yet a member of any team", isMarkdown = false)
     }
 
     getPrevTeammates(tg.userName).onSuccess {teammates ->
@@ -32,8 +25,8 @@ fun studentLandingMenu(tg: ChainBuilder) {
                 """${TeammateScoringState(tg.userName, mate.id, teammates.sprintNum, DIALOG_STARTED).toJsonString()}"""
             )
         }
-        tg.reply("Ваша команда на прошлой итерации. Если ткнуть в кнопку, можно поставить оценку", stop = true, buttons = btns, isMarkdown = false, maxCols = 1)
+        tg.reply("Your team during the last sprint. Click a button to assess your team-mate", stop = true, buttons = btns, isMarkdown = false, maxCols = 1)
     }.onFailure {
-        tg.reply("Кажется, вы не участвовали в прошлой итерации", isMarkdown = false)
+        tg.reply("It seems that you didn't participate in the last sprint", isMarkdown = false)
     }
 }

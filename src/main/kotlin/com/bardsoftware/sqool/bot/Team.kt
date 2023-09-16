@@ -18,10 +18,20 @@
 
 package com.bardsoftware.sqool.bot
 
+import com.bardsoftware.sqool.bot.db.tables.references.*
+import com.fasterxml.jackson.databind.node.ObjectNode
 import org.jooq.impl.DSL.field
 import org.jooq.impl.DSL.table
 import java.math.BigDecimal
 import java.util.*
+import io.ktor.client.*
+import io.ktor.client.engine.cio.*
+import io.ktor.client.request.*
+import io.ktor.http.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.launch
+import java.util.concurrent.Executors
 
 //import org.jooq.impl.DSL.*
 data class Student(val tgUsername: String, val name: String, val tgUserid: BigDecimal) {
@@ -71,16 +81,20 @@ fun getTeammates(tgUsername: String, sprintNum: Int): Result<Teammates> {
 
     val mates =
         select(
-            field("M.name", String::class.java),
-            field("M.tg_username", String::class.java),
-            field("M.ord", Int::class.java),
-            field("M.id", Int::class.java)
-        ).from(table("TeamDetails").`as`("m").join(table("Team").`as`("t1")).using(field("team_num")))
-            .where(field("t1.sprint_num").eq(sprintNum)
-            .and(field("M.sprint_num").eq(sprintNum))
-            .and(field("t1.tg_username").eq(tgUsername))
-        ).map {
-          TeamMember(studentRecord.component1(), it.component2(), it.component3(), it.component1(), it.component4())
+            TEAMDETAILS.NAME, TEAMDETAILS.TG_USERNAME, TEAMDETAILS.ORD, TEAMDETAILS.ID, TEAMDETAILS.GH_USERNAME
+        ).from(TEAMDETAILS.join(TEAM).using(field("team_num")))
+            .where(TEAM.SPRINT_NUM.eq(sprintNum)
+            .and(TEAMDETAILS.SPRINT_NUM.eq(sprintNum))
+            .and(TEAM.TG_USERNAME.eq(tgUsername))
+        ).map {row ->
+          TeamMember(
+            teamNum = studentRecord.component1(),
+            tgUsername = row[TEAMDETAILS.TG_USERNAME]!!,
+            ord = row[TEAMDETAILS.ORD]!!,
+            displayName = row[TEAMDETAILS.NAME]!!,
+            id = row[TEAMDETAILS.ID]!!,
+            githubUsername = row[TEAMDETAILS.GH_USERNAME]!!
+          )
         }
     Result.success(Teammates(sprintNum, studentRecord.component1(), mates))
   }
@@ -185,7 +199,14 @@ fun getAllScores(uni: Int): List<ScoreRecord> {
   }
 }
 
-data class TeamMember(val teamNum: Int, val tgUsername: String, val ord: Int, val displayName: String = "", val id: Int = -1, val relocatedFrom: Int = -1) {
+data class TeamMember(
+  val teamNum: Int,
+  val tgUsername: String,
+  val ord: Int,
+  val githubUsername: String = "",
+  val displayName: String = "",
+  val id: Int = -1,
+  val relocatedFrom: Int = -1) {
     val isActive = id != -42
     fun isNewTeamOk(newTeamNum: Int)= if (relocatedFrom != -1) relocatedFrom != newTeamNum else teamNum != newTeamNum
 }
@@ -195,22 +216,31 @@ data class Team(val teamNum: Int, val members: MutableList<TeamMember>) {
     val isActive: Boolean get() = members.all { it.isActive }
 }
 
+fun initialTeams(): List<TeamMember> {
+  val initialRecords = db {
+    select().from(STUDENT).where(STUDENT.IS_ACTIVE.isTrue).toList()
+  }.shuffled().mapIndexed { idx, row ->
+    TeamMember(
+      teamNum = idx / 2 + 1,
+      tgUsername = row[STUDENT.TG_USERNAME]!!,
+      ord =idx % 2 + 1,
+      githubUsername = row[STUDENT.GH_USERNAME]!!,
+      displayName = row[STUDENT.NAME]!!
+    )
+  }.toList()
+  return initialRecords
+}
 
-fun rotateTeams(uni: Int): List<TeamMember> {
-  // Получаем информацию о нынешних составах команд.
-  val actualMembers = db {
-    val lastSprint = select(field("sprint_num", Int::class.java))
-        .from(table("LastSprint"))
-        .where(field("uni").eq(uni)).fetchOne()?.value1()
-    select(
-        field("team_num", Int::class.java),
-        field("tg_username", String::class.java),
-        field("ord", Int::class.java)
-    ).from(table("Team")).where(field("sprint_num").eq(lastSprint)
-        .and(field("team_num", Int::class.java).between(uni * 100, (uni + 1) * 100)))
-        .orderBy(field("team_num", Int::class.java), field("ord", Int::class.java))
-        .map { TeamMember(it.value1(), it.value2(), it.value3()) }.toList()
-  }
+fun rotateTeams(actualMembers: List<TeamMember>): List<TeamMember> {
+//    select(
+//        field("team_num", Int::class.java),
+//        field("tg_username", String::class.java),
+//        field("ord", Int::class.java)
+//    ).from(table("Team")).where(field("sprint_num").eq(lastSprint)
+//        .and(field("team_num", Int::class.java).between(uni * 100, (uni + 1) * 100)))
+//        .orderBy(field("team_num", Int::class.java), field("ord", Int::class.java))
+//        .map { TeamMember(it.value1(), it.value2(), it.value3()) }.toList()
+
   val activeStatuses = db {
       select(field("tg_username", String::class.java), field("is_active", Boolean::class.java))
           .from(table("student"))
@@ -221,15 +251,6 @@ fun rotateTeams(uni: Int): List<TeamMember> {
 
   val teamNums = packedActualTeams.map { it.teamNum }.sorted()
   println("Cur team nums=$teamNums")
-  if (teamNums.isEmpty()) {
-      val initialRecords = db {
-        select(field("tg_username", String::class.java)).from(table("Student")).map { it.value1() }
-      }.shuffled().mapIndexed { idx, tgUsername ->
-          TeamMember(idx / 2 + 1, tgUsername, idx % 2 + 1)
-      }.toList()
-      println(initialRecords)
-      return initialRecords
-  }
 
   // Генерируем новую перестанову номеров команд, пока не получим "хорошую".
   // Хорошая перестановка -- это такая где одни и те же номера не стоят на одной и той же позиции.
@@ -250,15 +271,27 @@ fun rotateTeamMembers2(members: List<TeamMember>, teamNums: List<Int>, newTeamNu
     val newRecords: List<TeamMember> = members.map {
         val teamIdx = teamNums.indexOf(it.teamNum)
         when (it.ord) {
-            1 -> TeamMember(teamNum = newTeamNums[teamIdx], tgUsername = it.tgUsername, ord = 2, displayName = it.displayName, id = it.id)
+            1 -> TeamMember(
+              teamNum = newTeamNums[teamIdx], tgUsername = it.tgUsername, ord = 2, displayName = it.displayName, id = it.id,
+              githubUsername = it.githubUsername
+            )
             2 ->
                 // Если ты был вторым в команде из трех, то будешь третьим в другой команде, а иначе становишься первым
                 if (losers.containsKey(it.teamNum)) {
-                    TeamMember(teamNum = randomTeam(newTeamNums, listOf(it.teamNum)), tgUsername = it.tgUsername, ord = 3, displayName = it.displayName, id = it.id)
+                    TeamMember(
+                      teamNum = randomTeam(newTeamNums, listOf(it.teamNum)), tgUsername = it.tgUsername, ord = 3, displayName = it.displayName, id = it.id,
+                      githubUsername = it.githubUsername
+                    )
                 } else {
-                    TeamMember(teamNum = it.teamNum, tgUsername = it.tgUsername, ord = 1, displayName = it.displayName, id = it.id)
+                    TeamMember(
+                      teamNum = it.teamNum, tgUsername = it.tgUsername, ord = 1, displayName = it.displayName, id = it.id,
+                      githubUsername = it.githubUsername
+                    )
                 }
-            3 -> TeamMember(teamNum = it.teamNum, tgUsername = it.tgUsername, ord = 1, displayName = it.displayName, id = it.id)
+            3 -> TeamMember(
+              teamNum = it.teamNum, tgUsername = it.tgUsername, ord = 1, displayName = it.displayName, id = it.id,
+              githubUsername = it.githubUsername
+            )
             else -> {
                 println("unexpected ordinal number: ${it}")
                 it
@@ -275,7 +308,8 @@ fun buildActualTeams(members: List<TeamMember>, activeStatuses: List<Pair<String
     val result = mutableListOf<Team>()
     members.groupBy { it.teamNum }.forEach { (teamNum, members) ->
         val orderedMembers = members.sortedBy { it.ord }.map {
-            if (activeMembers.contains(it.tgUsername)) it else TeamMember(teamNum, it.tgUsername, it.ord, displayName = it.displayName, id = -42)
+            if (activeMembers.contains(it.tgUsername)) it
+            else TeamMember(teamNum, it.tgUsername, it.ord, displayName = it.displayName, id = -42, githubUsername = it.githubUsername)
         }.toMutableList()
         result.add(Team(teamNum, orderedMembers))
     }
@@ -303,7 +337,15 @@ fun packTeams(teams: List<Team>): List<Team> {
     while (needsMember0.isNotEmpty()) {
         val team = needsMember0.poll()
         needsMember1.poll()?.also {
-            team.members[0] = TeamMember(team.teamNum, it.members[0].tgUsername, 1, it.members[0].displayName, it.members[0].id, it.teamNum)
+            team.members[0] = TeamMember(
+              teamNum = team.teamNum,
+              tgUsername = it.members[0].tgUsername,
+              ord = 1,
+              displayName = it.members[0].displayName,
+              id = it.members[0].id,
+              relocatedFrom = it.teamNum,
+              githubUsername = it.members[0].githubUsername
+            )
             result.add(team)
         } ?: run {
             stillNeedsMember0.add(team)
@@ -340,16 +382,55 @@ fun insertNewRotation(records: List<TeamMember>) {
   }
 }
 
+fun updateRepositoryPermissions(currentTeamMembers: List<TeamMember>, pastTeamMembers: List<TeamMember>) {
+  val client = HttpClient(CIO)
+  val baseUrl = """https://api.github.com/repos/${System.getenv("GIT_ORG")}"""
+  httpScope.launch {
+    pastTeamMembers.forEach {
+      val url = "$baseUrl/project${it.teamNum}/collaborators/${it.githubUsername}"
+      val status = client.delete(url) {
+        headers {
+          append(HttpHeaders.Accept, "application/vnd.github+json")
+          append(HttpHeaders.Authorization, "Bearer ${System.getenv("GIT_TOKEN")}")
+          append("X-GitHub-Api-Version", "2022-11-28")
+        }
+      }.status
+      println("Student ${it.githubUsername} removed from repo project${it.teamNum}, status=$status, url=$url")
+    }
+    currentTeamMembers.filter { it.isActive }.forEach {
+      val url = "$baseUrl/project${it.teamNum}/collaborators/${it.githubUsername}"
+      val status = client.put(url) {
+        headers {
+          append(HttpHeaders.Accept, "application/vnd.github+json")
+          append(HttpHeaders.Authorization, "Bearer ${System.getenv("GIT_TOKEN")}")
+          append("X-GitHub-Api-Version", "2022-11-28")
+        }
+        setBody("""{"permission":"write"}""")
+      }.status
+      println("Student ${it.githubUsername} was granted access to repository project${it.teamNum}, status=$status, url=$url")
+    }
+  }
+}
 fun getAllCurrentTeamRecords(uni: Int): List<TeamMember> = getAllSprintTeamRecords(uni, 0)
 
 fun getAllSprintTeamRecords(uni: Int, sprintNum: Int): List<TeamMember> =
     db {
         // select team_num, name from Team T JOIN Student S USING (tg_username) WHERE sprint_num = 0 ORDER BY team_num, ord
-        select(field("team_num", Int::class.java), field("name", String::class.java), field("id", Int::class.java))
-            .from(table("team").join(table("student")).using(field("tg_username")))
-            .where(field("sprint_num").eq(sprintNum)).and(field("team_num", Int::class.java).between(uni * 100, (uni + 1) * 100))
-            .orderBy(field("team_num"), field("ord"))
-            .map { TeamMember(it.component1(), "", 0, it.component2(), it.component3()) }
+        select(TEAM.TEAM_NUM, STUDENT.NAME, STUDENT.ID, STUDENT.GH_USERNAME)
+            .from(TEAM.join(STUDENT).using(field("tg_username")))
+            .where(
+              TEAM.SPRINT_NUM.eq(sprintNum)
+            ).and(
+              TEAM.TEAM_NUM.between(uni * 100, (uni + 1) * 100)
+            )
+            .orderBy(TEAM.TEAM_NUM, TEAM.ORD)
+            .map { TeamMember(
+              teamNum = it[TEAM.TEAM_NUM]!!,
+              tgUsername = "", ord = 0,
+              displayName = it[STUDENT.NAME]!!,
+              id = it[STUDENT.ID]!!,
+              githubUsername = it[STUDENT.GH_USERNAME]!!
+            ) }
     }
 
 fun lastSprint(uni: Int) =  db {
@@ -367,3 +448,19 @@ fun sprintNumbers(uni: Int) = db {
         )
         .toSortedSet()
 }
+
+fun List<TeamMember>.print(tg: ChainBuilder) {
+  var teamNum = -1
+  val buf = StringBuffer()
+  this.forEach {
+    if (it.teamNum > teamNum) {
+      buf.append("\n\n")
+      teamNum = it.teamNum
+      buf.append("__team ${teamNum}__\n")
+    }
+    buf.append(it.displayName.escapeMarkdown()).append("\n")
+  }
+  tg.reply(buf.toString(), isMarkdown = true)
+}
+
+private val httpScope = CoroutineScope(Executors.newFixedThreadPool(3).asCoroutineDispatcher())
