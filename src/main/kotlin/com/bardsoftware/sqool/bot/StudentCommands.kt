@@ -20,7 +20,7 @@ fun studentLandingMenu(tg: ChainBuilder, student: Student) {
     }
 
     getPrevTeammates(tg.userName).onSuccess {teammates ->
-        val btns = teammates.members.sortedBy { it.ord }.map {mate ->
+        val btns = teammates.members.sortedBy { it.ord }.filter { it.tgUsername != tg.userName }.map {mate ->
             BtnData(mate.displayName,
                 """${TeammateScoringState(tg.userName, mate.id, teammates.sprintNum, DIALOG_STARTED).toJsonString()}"""
             )

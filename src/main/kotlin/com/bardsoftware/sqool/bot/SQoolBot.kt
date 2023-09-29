@@ -163,19 +163,19 @@ private fun process(update: Update, sender: MessageSender) = chain(update, sende
         stop()
       }
     }
-    onText("git") {
-      getStudent(this.userName)?.let { student ->
-        updateRepositoryPermissions(
-          listOf(TeamMember(teamNum = 2, tgUsername = "dbarashev", ord = 1, githubUsername = "dbarashev")),
-          listOf(TeamMember(teamNum = 1, tgUsername = "dbarashev", ord = 1, githubUsername = "dbarashev"))
-        )
-        sender.send(SendMessage().also {
-          it.chatId = student.tgUserid.toLong().toString()
-          it.text = "yo, trying..."
-        } as BotApiMethod<Serializable>)
-        stop()
-      }
-    }
+//    onText("git") {
+//      getStudent(this.userName)?.let { student ->
+//        updateRepositoryPermissions(
+//          listOf(TeamMember(teamNum = 2, tgUsername = "dbarashev", ord = 1, githubUsername = "dbarashev")),
+//          listOf(TeamMember(teamNum = 1, tgUsername = "dbarashev", ord = 1, githubUsername = "dbarashev"))
+//        )
+//        sender.send(SendMessage().also {
+//          it.chatId = student.tgUserid.toLong().toString()
+//          it.text = "yo, trying..."
+//        } as BotApiMethod<Serializable>)
+//        stop()
+//      }
+//    }
     onRegexp(".*") {
       onStart()
     }

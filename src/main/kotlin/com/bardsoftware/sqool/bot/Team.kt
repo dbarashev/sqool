@@ -211,7 +211,7 @@ data class TeamMember(
     fun isNewTeamOk(newTeamNum: Int)= if (relocatedFrom != -1) relocatedFrom != newTeamNum else teamNum != newTeamNum
 }
 data class Team(val teamNum: Int, val members: MutableList<TeamMember>) {
-    fun needsMember(ord: Int) = members.size > ord && !members[ord].isActive
+    fun needsMember(ord: Int) = (members.size > ord && !members[ord].isActive) || (members.size <= ord)
     fun hasActive(ord: Int) = members.size > ord && members[ord].isActive
     val isActive: Boolean get() = members.all { it.isActive }
 }
@@ -306,6 +306,7 @@ fun rotateTeamMembers2(members: List<TeamMember>, teamNums: List<Int>, newTeamNu
 fun buildActualTeams(members: List<TeamMember>, activeStatuses: List<Pair<String, Boolean>>): List<Team> {
     val activeMembers = activeStatuses.filter { it.second }.map { it.first }.toSet()
     val result = mutableListOf<Team>()
+  println("active students: $activeMembers")
     members.groupBy { it.teamNum }.forEach { (teamNum, members) ->
         val orderedMembers = members.sortedBy { it.ord }.map {
             if (activeMembers.contains(it.tgUsername)) it
@@ -324,9 +325,9 @@ fun packTeams(teams: List<Team>): List<Team> {
     teams.forEach {team ->
         println("Team ${team.teamNum}:\n$team")
         when {
-            team.isActive -> result.add(team)
-            team.needsMember(0) -> needsMember0.add(team)
-            team.needsMember(1) -> needsMember1.add(team)
+          team.needsMember(0) -> needsMember0.add(team)
+          team.needsMember(1) -> needsMember1.add(team)
+          team.isActive -> result.add(team)
         }
     }
 
@@ -359,12 +360,11 @@ fun packTeams(teams: List<Team>): List<Team> {
 
 fun finishIteration(uni: Int): Int? =
     txn {
-        val lastSprint = select(field("sprint_num", Int::class.java))
-            .from(table("LastSprint"))
-            .where(field("uni").eq(uni)).fetchOne()?.value1() ?: return@txn -1
-        update(table("Team")).set(field("sprint_num", Int::class.java), lastSprint + 1)
-            .where(field("team_num").lessThan((uni+1)*100)).and(field("sprint_num").eq(0)).execute()
-        lastSprint + 1
+      val lastSprint = lastSprint(uni) ?: return@txn -1
+      update(TEAM).set(TEAM.SPRINT_NUM, lastSprint + 1)
+        .where(TEAM.TEAM_NUM.lessThan((uni+1)*100)).and(TEAM.SPRINT_NUM.eq(0))
+        .execute()
+      lastSprint + 1
     }
 
 private fun randomTeam(teams: List<Int>, exceptions: List<Int>) = teams.toMutableList().subtract(exceptions).random()
@@ -416,7 +416,7 @@ fun getAllCurrentTeamRecords(uni: Int): List<TeamMember> = getAllSprintTeamRecor
 fun getAllSprintTeamRecords(uni: Int, sprintNum: Int): List<TeamMember> =
     db {
         // select team_num, name from Team T JOIN Student S USING (tg_username) WHERE sprint_num = 0 ORDER BY team_num, ord
-        select(TEAM.TEAM_NUM, STUDENT.NAME, STUDENT.ID, STUDENT.GH_USERNAME)
+        select(TEAM.TEAM_NUM, STUDENT.NAME, STUDENT.ID, STUDENT.GH_USERNAME, STUDENT.TG_USERNAME, TEAM.ORD)
             .from(TEAM.join(STUDENT).using(field("tg_username")))
             .where(
               TEAM.SPRINT_NUM.eq(sprintNum)
@@ -426,7 +426,8 @@ fun getAllSprintTeamRecords(uni: Int, sprintNum: Int): List<TeamMember> =
             .orderBy(TEAM.TEAM_NUM, TEAM.ORD)
             .map { TeamMember(
               teamNum = it[TEAM.TEAM_NUM]!!,
-              tgUsername = "", ord = 0,
+              tgUsername = it[STUDENT.TG_USERNAME]!!,
+              ord = it[TEAM.ORD]!!,
               displayName = it[STUDENT.NAME]!!,
               id = it[STUDENT.ID]!!,
               githubUsername = it[STUDENT.GH_USERNAME]!!

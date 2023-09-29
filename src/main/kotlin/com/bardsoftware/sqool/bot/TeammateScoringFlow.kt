@@ -32,35 +32,37 @@ object ReviewerDialog {
     val ANSWERS_HAS_PR = listOf(
         "Нет, пулреквеста не было",
         "Пулреквест был, но с серьезным нарушением дедлайна",
-        "Да. пулреквест пришел вовремя"
+        "Да, пулреквест пришел вовремя"
     )
     val ANSWERS_CODE_QUALITY = listOf(
         "Всё отлично, никаких замечаний",
-        "Были замечания, не относившиеся к сути решавшейся задачи",
-        "Небольшое количество замечаний по сути решавшейся задачи",
-        "Было существенное количество косяков, но всё рашаемо",
-        "Этот код нужно было переписать заново"
+        "Были замечания, не относившиеся к сути",
+        "Небольшое количество замечаний по сути",
+        "Было существенное количество исправимых косяков",
+        "Наверное, всё нужно было переписать заново"
     )
+    const val DIALOG_EXPECT_SCORE = 4
 }
 object CoderDialog {
-    const val DIALOG_STARTED = 0
-    const val EXPECT_REPLY_HAS_PR = 1
-    const val EXPECT_REPLY_HAS_REVIEW = 2
+    const val DIALOG_STARTED = ReviewerDialog.DIALOG_EXPECT_SCORE + 1
+    const val EXPECT_REPLY_HAS_PR = DIALOG_STARTED + 1
+    const val EXPECT_REPLY_HAS_REVIEW = EXPECT_REPLY_HAS_PR + 1
     val ANSWERS_HAS_REVIEW = listOf(
         "Нет, рецензии не было",
         "Рецензия была, но очень поздно, и отреагировать не успел",
         "Рецензия была вовремя, всё успели исправить"
     )
-    const val EXPECT_REPLY_REVIEW_QUALITY = 3
+    const val EXPECT_REPLY_REVIEW_QUALITY = EXPECT_REPLY_HAS_REVIEW + 1
     val ANSWERS_REVIEW_QUALITY = listOf(
         "Формальная рецензия без комментариев",
         "Мелкие замечания к форматированию",
         "Небольшие замечания по делу, несущественно улучшившие код",
         "Хорошее ревью, очень сильно улучшило код",
     )
+    const val DIALOG_EXPECT_SCORE = EXPECT_REPLY_REVIEW_QUALITY + 1
 }
-private val TEAMMMATE_CODER = setOf(2, 3)
-private val TEAMMMATE_REVIEWER = setOf(1)
+private val TEAMMMATE_CODER = setOf(1, 2)
+private val TEAMMMATE_REVIEWER = setOf(10, 20)
 
 
 internal data class TeammateScoringState(
@@ -85,10 +87,10 @@ internal data class TeammateScoringState(
                 .and(field("tg_username", String::class.java).eq(tgUsernameFrom).or(field("id", Int::class.java).eq(idTo)))
                 .toList()
             studentFrom = info.first { it.component1() == tgUsernameFrom }.let {
-                TeamMember(-1, tgUsernameFrom, it.component4(), it.component3())
+                TeamMember(-1, tgUsernameFrom, ord = it.component4(), displayName = it.component3())
             }
             studentTo = info.first { it.component2() == idTo }.let {
-                TeamMember(-1, it.component1(), it.component4(), it.component3())
+                TeamMember(-1, it.component1(), ord = it.component4(), displayName = it.component3())
             }
         }
     }
@@ -163,7 +165,8 @@ class TeammateScoringFlow(tg: ChainBuilder) {
                 ACTION_SCORE_TEAMMATE -> {
                     val state = TeammateScoringState.fromJsonString(tg.userName, json)
                     if (state.studentTo.ord in TEAMMMATE_CODER) {
-                        return@onCallback reviewerFlow(tg, state)
+                        reviewerFlow(tg, state)
+                        return@onCallback coderFlow(tg, state)
                     }
                     if (state.studentTo.ord in TEAMMMATE_REVIEWER) {
                         return@onCallback coderFlow(tg, state)
@@ -185,11 +188,22 @@ class TeammateScoringFlow(tg: ChainBuilder) {
                     tg.fromUser?.getDialogState()?.data?.let { data ->
                         val state = TeammateScoringState.fromJsonString(tg.userName, OBJECT_MAPPER.readTree(data) as ObjectNode)
                         state.writeScore(state.dialogStep, BigDecimal.valueOf(score))
+                        tg.reply("Вы поставили  $score товарищу ${state.studentTo.displayName}", isMarkdown = false)
                         txn {
                             dialogState(tg.userId, null)
                         }
-                        tg.reply("Вы поставили  $score товарищу ${state.studentTo.displayName}", isMarkdown = false)
-                        studentLandingMenu(tg, getStudent(tg.userName)!!)
+                        when (state.dialogStep) {
+                            CoderDialog.DIALOG_EXPECT_SCORE -> {
+                                tg.reply("Спасибо, на этом всё", isMarkdown = false)
+                                studentLandingMenu(tg, getStudent(tg.userName)!!)
+                            }
+                            ReviewerDialog.DIALOG_EXPECT_SCORE -> {
+                                state.dialogStep += 1
+                                tg.reply("Теперь перейдем к вашему коду", isMarkdown = false)
+                                coderFlow(tg, state)
+                            }
+                            else -> {}
+                        }
                     }
                 }
             }
@@ -199,7 +213,6 @@ class TeammateScoringFlow(tg: ChainBuilder) {
     private fun coderFlow(tg: ChainBuilder, state: TeammateScoringState) {
         when (state.dialogStep) {
             CoderDialog.DIALOG_STARTED -> {
-                state.clearScores()
                 tg.reply(
                     "Вы послали pull request ${state.name}?", buttons = state.buttonsYesNo(),
                     isMarkdown = false, stop = true
@@ -228,7 +241,7 @@ class TeammateScoringFlow(tg: ChainBuilder) {
             }
             CoderDialog.EXPECT_REPLY_REVIEW_QUALITY -> {
                 state.writeScores()
-                tg.reply("Ok. Общее впечатление от работы ${state.studentTo.displayName} по вещественной шкале 0..10?", isMarkdown = false)
+                tg.reply("Ok. Общее впечатление от рецензента ${state.studentTo.displayName} по вещественной шкале 0..10?", isMarkdown = false)
                 db {
                     state.dialogStep += 1
                     dialogState(tg.userId, 1, "${state.toJsonString()}")
@@ -240,6 +253,8 @@ class TeammateScoringFlow(tg: ChainBuilder) {
         when (state.dialogStep) {
             DIALOG_STARTED -> {
                 state.clearScores()
+                tg.reply("Мы будем отдельно оценивать работу ${state.name} как кодера и как рецензента.", isMarkdown = false)
+                tg.reply("Начнём с кода вашего товарища", isMarkdown = false)
                 tg.reply("Вы получили pull request от ${state.name}?", buttons = state.buttonsScore(ReviewerDialog.ANSWERS_HAS_PR),
                     isMarkdown = false, stop = true, maxCols = 1)
                 return
@@ -248,7 +263,9 @@ class TeammateScoringFlow(tg: ChainBuilder) {
                 state.writeScores()
                 when (state.currentScore) {
                     0 -> {
-                        tg.reply("Жаль! Больше вопросов нет.", isMarkdown = false, stop = true)
+                        tg.reply("Жаль! Больше вопросов про рецензента нет.", isMarkdown = false, stop = true)
+                        state.dialogStep = CoderDialog.DIALOG_STARTED
+                        tg.reply("Теперь перейдем к вашему коду", isMarkdown = false)
                         return
                     }
                     1 -> {
@@ -266,7 +283,7 @@ class TeammateScoringFlow(tg: ChainBuilder) {
             }
             ReviewerDialog.DIALOG_EXPECT_REPLY_REVIEW_PROGRESS -> {
                 state.writeScores()
-                tg.reply("Ok. Общее впечатление от работы ${state.studentTo.displayName} по вещественной шкале 0..10?", isMarkdown = false)
+                tg.reply("Ok. Общее впечатление от кодера ${state.studentTo.displayName} по вещественной шкале 0..10?", isMarkdown = false)
                 db {
                     state.dialogStep += 1
                     dialogState(tg.userId, 1, "${state.toJsonString()}")

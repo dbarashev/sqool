@@ -85,8 +85,10 @@ open class ChainBuilder(internal val update: Update, internal val sendMessage: M
   val fromUser = update.message?.from ?: update.callbackQuery?.from
   val messageId = update.callbackQuery?.message?.messageId ?: update.message?.messageId
 
-  val userId = (this.fromUser?.id ?: -1).toLong()
-  var userName = this.fromUser?.userName ?: ""
+  //val userId = if ((this.fromUser?.id ?: -1).toLong() == 189973428L) 1L else -1L
+  val userId = this.fromUser?.id ?: -1
+  //var userName = if ((this.fromUser?.userName ?: "") == "dbarashev") "foo" else ""
+  val userName = this.fromUser?.userName ?: ""
   val chatId = update.message?.chatId
 
   val dialogState: DialogState? by lazy {
@@ -356,7 +358,7 @@ data class DialogState(val state: Int, val data: String?) {
 fun User.displayName(): String = "${this.firstName} ${this.lastName}"
 
 fun User.getDialogState(): DialogState? {
-  val userId = this.id
+  val userId = this.getEffectiveId()
   return db {
     select(field("state_id", Int::class.java), field("data", String::class.java))
         .from("DialogState")
@@ -366,6 +368,9 @@ fun User.getDialogState(): DialogState? {
         }
   }
 }
+
+fun User.getEffectiveId() = this.id
+  //if (this.userName == "dbarashev") 1 else this.id
 
 fun jsonCallback(builder: ObjectNode.() -> Unit) =
     OBJECT_MAPPER.createObjectNode().also(builder).toString()
