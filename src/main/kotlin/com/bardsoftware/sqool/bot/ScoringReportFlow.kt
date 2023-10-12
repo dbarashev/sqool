@@ -1,5 +1,8 @@
 package com.bardsoftware.sqool.bot
 
+import com.bardsoftware.sqool.bot.db.tables.references.STUDENT
+import com.bardsoftware.sqool.bot.db.tables.references.TEACHERSCORES
+import com.bardsoftware.sqool.bot.db.tables.references.TEAMANDPEERSCORES
 import com.github.michaelbull.result.andThen
 import com.github.michaelbull.result.onSuccess
 import org.jooq.impl.DSL.*
@@ -50,58 +53,73 @@ class ScoringReportFlow(tg: ChainBuilder) {
     }
 }
 
-
+enum class ScoringPos {
+    CODER_SENT_PR, // 0
+    CODE_QUALITY,  // 1
+    RESPONSE_TO_REVIEW_NO_YES, //2
+    CODER_RATING,  // 3
+    UNUSED, // 4
+    YOU_SENT_PR, //5
+    YOU_RECEIVED_REVIEW, // 6
+    REVIEW_QUALITY, // 7
+    REVIEWER_RATING // 8
+}
 private data class Scores(var ord: Int = 0, val scores: MutableList<BigDecimal> = mutableListOf()) {
+    // Here we score the coder's work
     private val coderSummary: Double
         get() {
             var sum = 0.0
-            when (scores[0].toLong()) {
+            // If there was a PR
+            when (scores[ScoringPos.CODER_SENT_PR.ordinal].toLong()) {
                 0L -> return 0.0
                 1L -> sum += 0.75
                 2L -> sum += 0.9
             }
-            when (scores[1].toLong()) {
+            // Code quality
+            when (scores[ScoringPos.CODE_QUALITY.ordinal].toLong()) {
                 0L -> sum += 0.1
                 1L -> sum = sum
                 2L -> sum -= 0.1
                 3L -> sum -= 0.25
                 4L -> sum -= 0.4
             }
-            when (scores[2].toLong()) {
-                0L -> sum -= scores[1].toDouble() * 0.5
-                1L -> sum += 0.025 * scores[1].toDouble()
+            // Response to review
+            when (scores[ScoringPos.RESPONSE_TO_REVIEW_NO_YES.ordinal].toLong()) {
+                0L -> sum -= scores[1].toDouble() * 0.5 // no response
+                1L -> sum += 0.025 * scores[1].toDouble() // yes, responded and fixed
             }
             if (sum > 1.0) {
                 println(scores)
             }
             sum = max(sum, 1.0)
-            return (10*sum + scores[3].toDouble())/2
+            return (10*sum + scores[ScoringPos.CODER_RATING.ordinal].toDouble())/2
         }
+    // Here we score the reviewer work
     private val reviewerSummary: Double
         get() {
             var sum = 0.0
-            if (scores[0].toLong() == 0L) {
+            if (scores[ScoringPos.YOU_SENT_PR.ordinal].toLong() == 0L) {
                 return -1.0
             }
-            when (scores[1].toLong()) {
+            when (scores[ScoringPos.YOU_RECEIVED_REVIEW.ordinal].toLong()) {
                 0L -> return 0.0
                 1L -> sum += 0.6
                 2L -> sum += 0.75
             }
-            when (scores[2].toLong()) {
+            when (scores[ScoringPos.REVIEW_QUALITY.ordinal].toLong()) {
                 0L -> sum -= 0.05
                 1L -> sum -= 0.0
                 2L -> sum += 0.05
                 3L -> sum += 0.25
             }
-            return (sum*10 + scores[3].toDouble())/2
+            sum = max(sum, 1.0)
+            return (sum*10 + scores[ScoringPos.REVIEWER_RATING.ordinal].toDouble())/2
         }
     val summary: Double
         get() =
-            when (ord) {
-                1 -> reviewerSummary
-                2,3 -> coderSummary
-                else -> -1.0
+            when (reviewerSummary) {
+                -1.0 -> coderSummary
+                else -> (coderSummary + reviewerSummary)/2.0
             }
 
 }
@@ -149,15 +167,15 @@ fun printSprintScores(tg: ChainBuilder, uni: Int, sprintNum: Int, writeSummarySc
 
     db {
         val rawRecords = select(
-            field("name", String::class.java),
-            field("ord", Int::class.java),
-            field("scoring_pos", Int::class.java),
-            field("score", BigDecimal::class.java),
-            field("id", Int::class.java)
-        ).from(table("TeamAndPeerScores")).where(
-            field("sprint_num", Int::class.java).eq(sprintNum)
+            TEAMANDPEERSCORES.NAME,
+            TEAMANDPEERSCORES.ORD,
+            TEAMANDPEERSCORES.SCORING_POS,
+            TEAMANDPEERSCORES.SCORE,
+            TEAMANDPEERSCORES.ID
+        ).from(TEAMANDPEERSCORES).where(
+            TEAMANDPEERSCORES.SPRINT_NUM.eq(sprintNum)
         ).orderBy(
-            field("team_num"), field("ord"), field("scoring_pos")
+            TEAMANDPEERSCORES.TEAM_NUM, TEAMANDPEERSCORES.ORD, TEAMANDPEERSCORES.SCORING_POS
         ).toList()
 
         val mapUserIdScores = mutableMapOf<Int, Scores>()
@@ -165,41 +183,42 @@ fun printSprintScores(tg: ChainBuilder, uni: Int, sprintNum: Int, writeSummarySc
         var currentScores = Scores()
 
         rawRecords.forEach {
-            if (it.component5() != currentUserId) {
+            if (it[TEAMANDPEERSCORES.ID] != currentUserId) {
                 mapUserIdScores[currentUserId] = currentScores
-                currentUserId = it.component5()
+                currentUserId = it[TEAMANDPEERSCORES.ID]!!
                 currentScores = Scores()
-                currentScores.scores.addAll(List(4) { BigDecimal.valueOf(0) })
+                currentScores.scores.addAll(List(9) { BigDecimal.valueOf(0) })
             }
-            currentScores.ord = it.component2()
-            currentScores.scores[it.component3() - 1] = it.component4()
-            currentUserId = it.component5()
+            currentScores.ord = it[TEAMANDPEERSCORES.ORD]!!
+            currentScores.scores[it[TEAMANDPEERSCORES.SCORING_POS]!! - 1] = it[TEAMANDPEERSCORES.SCORE]!!.toBigDecimal()
+            currentUserId = it[TEAMANDPEERSCORES.ID]!!
         }
         mapUserIdScores[currentUserId] = currentScores
 
         val reply = StringBuilder()
 
         select(
-            field("student_id", Int::class.java),
-            coalesce(field("score", BigDecimal::class.java), BigDecimal.valueOf(-1.0)),
-            field("name", String::class.java)
-        ).from(table("Student").leftJoin(table("TeacherScores")).on("id = student_id"))
-            .where(field("sprint_num", Int::class.java).eq(sprintNum))
+            STUDENT.ID,
+            //field("student_id", Int::class.java),
+            coalesce(TEACHERSCORES.SCORE, BigDecimal.valueOf(-1.0)),
+            STUDENT.NAME
+        ).from(STUDENT.leftJoin(TEACHERSCORES).on(STUDENT.ID.eq(TEACHERSCORES.STUDENT_ID)))
+            .where(TEACHERSCORES.SPRINT_NUM.eq(sprintNum))
             .forEach { teacherRecord ->
                 val sumScores = mutableListOf<Double>()
 
-                print("${teacherRecord.component3()}: ")
-                mapUserIdScores[teacherRecord.component1()]?.let {
+                print("${teacherRecord[STUDENT.NAME]}: ")
+                mapUserIdScores[teacherRecord[STUDENT.ID]!!]?.let {
                     print("peers: ${it.summary}, ")
                     sumScores.add(it.summary)
                 }
-                if (teacherRecord.component2().toDouble() != -1.0) {
+                if (teacherRecord.component2()!!.toDouble() != -1.0) {
                     print("teachers: ${teacherRecord.component2()}, ")
-                    sumScores.add(teacherRecord.component2().toDouble())
+                    sumScores.add(teacherRecord.component2()!!.toDouble())
                 }
 
                 val result = sumScores.average().round(2)
-                idToResultScore[teacherRecord.component1()] = result
+                idToResultScore[teacherRecord[STUDENT.ID]!!] = result
                 println("result=$result")
                 reply.append("${teacherRecord.component3()}\t\t${result}\n".escapeMarkdown())
             }

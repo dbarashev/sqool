@@ -39,7 +39,7 @@ alter table student add constraint unq_id unique(id);
 create table TeacherScores(
   student_id int references Student(id),
   sprint_num int,
-  score numeric,
+  score numeric(4,2),
 
   primary key(student_id, sprint_num)
 );
