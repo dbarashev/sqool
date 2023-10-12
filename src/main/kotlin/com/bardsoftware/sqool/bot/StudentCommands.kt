@@ -9,8 +9,8 @@ fun studentLandingMenu(tg: ChainBuilder, student: Student) {
         tg.reply("""
         |*Hello ${student.name.escapeMarkdown()}\!*
         |
-        |*Total score*: ${sumScore.first}/${sumScore.second.multiply(BigDecimal.valueOf(10))}
-        |*Breakdown by sprints:* ${getScoreList(tg.userName)}
+        |*Total score*: ${sumScore.first.escapeMarkdown()}/${sumScore.second.multiply(BigDecimal.valueOf(10)).escapeMarkdown()}
+        |*Breakdown by sprints:* ${getScoreList(tg.userName).escapeMarkdown()}
         |*Current Team №${curTeammates.teamNum}*: ${curTeammates.members.map { it.displayName.escapeMarkdown() }.joinToString()}
         |[Current repository](https://github.com/dbms-class-2023/project${curTeammates.teamNum})
         |

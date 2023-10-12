@@ -334,6 +334,9 @@ private val ESCAPER = object : CharEscaper() {
 }
 
 fun (String).escapeMarkdown() = ESCAPER.escape(this)
+fun (BigDecimal).escapeMarkdown() = this.toString().escapeMarkdown()
+
+fun (List<BigDecimal>).escapeMarkdown() = this.map { it.escapeMarkdown() }.joinToString(separator = ", ")
 
 fun (ArrayNode).item(builder: ObjectNode.() -> Unit) {
   this.add(OBJECT_MAPPER.createObjectNode().also(builder))
