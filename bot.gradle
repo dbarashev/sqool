@@ -23,6 +23,7 @@ ext {
 	buildMode = findProperty('buildMode') ?: 'development'
 }
 repositories {
+	mavenLocal()
 	mavenCentral()
 }
 
@@ -31,8 +32,8 @@ mainClassName = 'com.bardsoftware.sqool.bot.SQoolBotKt'
 dependencies {
 	implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:${kotlinVersion}"
 	implementation "org.jetbrains.kotlin:kotlin-reflect:${kotlinVersion}"
-	implementation "org.telegram:telegrambots:5.3.+"
-	implementation "org.telegram:telegrambotsextensions:5.3.+"
+
+	implementation "com.bardsoftware:libbotanique:1.+"
 	implementation "com.fasterxml.jackson.module:jackson-module-kotlin:2.+"
 	implementation "org.postgresql:postgresql:42.+"
 	implementation 'com.zaxxer:HikariCP:5.+'
@@ -41,6 +42,7 @@ dependencies {
 	implementation "com.michael-bull.kotlin-result:kotlin-result:1.1.16"
 	implementation "io.ktor:ktor-client-core:2.3.4"
 	implementation "io.ktor:ktor-client-cio:2.3.4"
+	implementation "com.github.ajalt.clikt:clikt:4.2.0"
 	jooqGenerator 'org.jooq:jooq-meta-extensions'
 
 }

@@ -17,6 +17,7 @@
  */
 package com.bardsoftware.sqool.bot
 
+import com.bardsoftware.libbotanique.*
 import com.fasterxml.jackson.databind.node.ObjectNode
 import org.jooq.impl.DSL.field
 import org.jooq.impl.DSL.table
@@ -185,12 +186,12 @@ class TeammateScoringFlow(tg: ChainBuilder) {
                     tg.reply("Оценка должна быть в диапазоне [0..10]", isMarkdown = false, stop = true)
                 }
                 else -> {
-                    tg.fromUser?.getDialogState()?.data?.let { data ->
-                        val state = TeammateScoringState.fromJsonString(tg.userName, OBJECT_MAPPER.readTree(data) as ObjectNode)
+                    tg.userSession.state?.asJson()?.let { json ->
+                        val state = TeammateScoringState.fromJsonString(tg.userName, json)
                         state.writeScore(state.dialogStep, BigDecimal.valueOf(score))
                         tg.reply("Вы поставили  $score товарищу ${state.studentTo.displayName}", isMarkdown = false)
                         txn {
-                            dialogState(tg.userId, null)
+                            tg.userSession.reset()
                         }
                         when (state.dialogStep) {
                             CoderDialog.DIALOG_EXPECT_SCORE -> {
@@ -244,7 +245,7 @@ class TeammateScoringFlow(tg: ChainBuilder) {
                 tg.reply("Ok. Общее впечатление от рецензента ${state.studentTo.displayName} по вещественной шкале 0..10?", isMarkdown = false)
                 db {
                     state.dialogStep += 1
-                    dialogState(tg.userId, 1, "${state.toJsonString()}")
+                    tg.userSession.save(1, state.toJsonString())
                 }
             }
         }
@@ -286,7 +287,7 @@ class TeammateScoringFlow(tg: ChainBuilder) {
                 tg.reply("Ok. Общее впечатление от кодера ${state.studentTo.displayName} по вещественной шкале 0..10?", isMarkdown = false)
                 db {
                     state.dialogStep += 1
-                    dialogState(tg.userId, 1, "${state.toJsonString()}")
+                    tg.userSession.save(1, state.toJsonString())
                 }
             }
         }

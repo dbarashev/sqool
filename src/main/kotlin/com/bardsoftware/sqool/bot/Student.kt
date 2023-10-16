@@ -1,5 +1,6 @@
 package com.bardsoftware.sqool.bot
 
+import com.bardsoftware.libbotanique.*
 import com.fasterxml.jackson.databind.node.ObjectNode
 import org.jooq.impl.DSL.field
 import org.jooq.impl.DSL.table

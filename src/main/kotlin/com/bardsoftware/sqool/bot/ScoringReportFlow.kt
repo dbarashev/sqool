@@ -1,55 +1,18 @@
 package com.bardsoftware.sqool.bot
 
+import com.bardsoftware.libbotanique.*
 import com.bardsoftware.sqool.bot.db.tables.references.STUDENT
 import com.bardsoftware.sqool.bot.db.tables.references.TEACHERSCORES
 import com.bardsoftware.sqool.bot.db.tables.references.TEAMANDPEERSCORES
 import com.github.michaelbull.result.andThen
 import com.github.michaelbull.result.onSuccess
+import initContext
 import org.jooq.impl.DSL.*
 import java.math.BigDecimal
 import kotlin.math.max
 
 class ScoringReportFlow(tg: ChainBuilder) {
     init {
-        if (tg.isTeacher) {
-            tg.onCallback { json ->
-                when (json["p"]?.asInt() ?: 0) {
-                    ACTION_PRINT_PEER_REVIEW_SCORES -> {
-                        tg.withFlow(json, ACTION_PRINT_PEER_REVIEW_SCORES).withUniversity().andThen {
-                            it.withSprint()
-                        }.onSuccess {
-                            it.execute { tg, json, uni, sprintNum ->
-                                if (sprintNum == -1) {
-                                    printAllScores(tg, uni)
-                                } else {
-                                    printSprintScores(tg, uni, sprintNum, false)
-                                    tg.reply(
-                                        "Зафиксировать оценки? Это сделает их видимыми для студентов", buttons = listOf(
-                                            BtnData(
-                                                "Да",
-                                                """{"p": $ACTION_FIX_REVIEW_SCORES, "u": $uni, "s": $sprintNum}"""
-                                            ),
-                                            BtnData("Нет", """{"p": $ACTION_TEACHER_LANDING, "u": $uni}""")
-                                        )
-                                    )
-                                }
-                            }
-                        }
-                    }
-                    ACTION_FIX_REVIEW_SCORES -> {
-                        tg.withFlow(json, ACTION_FIX_REVIEW_SCORES).withUniversity().andThen {
-                            it.withSprint()
-                        }.onSuccess {
-                            it.execute { tg, json, uni, sprintNum ->
-                                printSprintScores(tg, uni, sprintNum, true)
-                            }
-                            tg.reply("Done")
-                            teacherLanding(tg)
-                        }
-                    }
-                }
-            }
-        }
     }
 }
 

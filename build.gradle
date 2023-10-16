@@ -20,12 +20,13 @@ apply plugin: 'application'
 apply plugin: 'kotlin'
 
 version = '1.0.4'
-sourceCompatibility = 1.8
+sourceCompatibility = 17
 
 ext {
 	buildMode = findProperty('buildMode') ?: 'development'
 }
 repositories {
+	mavenLocal()
 	mavenCentral()
 }
 
@@ -60,11 +61,11 @@ dependencies {
 
 	implementation group: 'com.squareup.okhttp3', name: 'okhttp', version: '4.2.2'
 	implementation 'com.vladsch.flexmark:flexmark-all:0.+'
-	implementation "org.telegram:telegrambots:5.+"
-	implementation "org.telegram:telegrambotsextensions:5.+"
 	implementation "com.michael-bull.kotlin-result:kotlin-result:1.1.16"
 	implementation "io.ktor:ktor-client-core:2.3.4"
 	implementation "io.ktor:ktor-client-cio:2.3.4"
+	implementation "com.bardsoftware:libbotanique:1.+"
+	implementation "com.github.ajalt.clikt:clikt:4.2.0"
 
 	testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: '5.+'
 	testImplementation group: 'com.nhaarman', name: 'mockito-kotlin', version: '1.+'
