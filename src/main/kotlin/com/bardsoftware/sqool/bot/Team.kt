@@ -19,6 +19,7 @@
 package com.bardsoftware.sqool.bot
 
 import com.bardsoftware.libbotanique.*
+import com.bardsoftware.sqool.bot.db.tables.records.TeampeerassessmentstatusRecord
 import com.bardsoftware.sqool.bot.db.tables.references.*
 import org.jooq.impl.DSL.field
 import org.jooq.impl.DSL.table
@@ -385,7 +386,7 @@ fun insertNewRotation(records: List<TeamMember>) {
 fun updateRepositoryPermissions(currentTeamMembers: List<TeamMember>, pastTeamMembers: List<TeamMember>) {
   val client = HttpClient(CIO)
   val baseUrl = """https://api.github.com/repos/${System.getenv("GIT_ORG")}"""
-  httpScope.launch {
+  backgroundTasks.launch {
     pastTeamMembers.forEach {
       val url = "$baseUrl/project${it.teamNum}/collaborators/${it.githubUsername}"
       val status = client.delete(url) {
@@ -434,6 +435,13 @@ fun getAllSprintTeamRecords(uni: Int, sprintNum: Int): List<TeamMember> =
             ) }
     }
 
+fun findMissingPeerAssessments(uni: Int): List<TeampeerassessmentstatusRecord> =
+  db {
+    selectFrom(TEAMPEERASSESSMENTSTATUS).where(TEAMPEERASSESSMENTSTATUS.IS_DONE.isFalse).and(TEAMPEERASSESSMENTSTATUS.SPRINT_NUM.eq(
+      lastSprint(uni)
+    )).toList()
+  }
+
 fun lastSprint(uni: Int) =  db {
     select(field("sprint_num", Int::class.java))
         .from(table("LastSprint"))
@@ -464,4 +472,4 @@ fun List<TeamMember>.print(tg: ChainBuilder) {
   tg.reply(buf.toString(), isMarkdown = true)
 }
 
-private val httpScope = CoroutineScope(Executors.newFixedThreadPool(3).asCoroutineDispatcher())
+private val backgroundTasks = CoroutineScope(Executors.newFixedThreadPool(3).asCoroutineDispatcher())

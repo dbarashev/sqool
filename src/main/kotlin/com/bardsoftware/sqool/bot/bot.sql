@@ -73,7 +73,11 @@ create or replace view TeamAndPeerScores AS
     join student st on (tg_username_to = st.tg_username)
     order by team_num, ord, scoring_pos;
 
---order by t1.sprint_num, t1.team_num, ord_to, ord_from;
+create or replace view TeamPeerAssessmentStatus AS
+  SELECT T.sprint_num, T.tg_username, ST.tg_userid, CASE WHEN COUNT(S.score) > 0 THEN true ELSE false END AS is_done
+  FROM TeamDetails T JOIN Student ST ON T.tg_username = ST.tg_username
+      LEFT JOIN ScoreDetails S on T.sprint_num = S.sprint_num AND T.tg_username = S.tg_username_from
+  GROUP BY T.tg_username, T.sprint_num, ST.tg_userid;
 
 -- select *
 -- from team t1 LEFT JOIN Score s on (tg_username_to=t1.tg_username and t1.sprint_num=s.sprint_num)

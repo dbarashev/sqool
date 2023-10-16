@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import com.github.michaelbull.result.*
 import execute
 import initContext
+import org.telegram.telegrambots.meta.api.methods.send.SendMessage
 import whenLanding
 import whenTeacher
 import withSprint
@@ -28,11 +29,12 @@ class TeacherCommands(tg: ChainBuilder) {
         ctx.flow.json.getAction().map { action ->
           println("action=$action")
           when (action) {
-            ACTION_TEACHER_LANDING -> teacherPageChooseAction(tg, ctx.flow.json)
+            ACTION_TEACHER_LANDING -> teacherPageChooseAction(tg, ctx)
             ACTION_ROTATE_TEAMS -> teacherPageRotateProjects(tg, ctx.flow.json)
             //ACTION_GREET_STUDENT -> studentRegister(tg, json)
             ACTION_FINISH_ITERATION -> teacherPageFinishIteration(tg, ctx.flow.json)
             ACTION_PRINT_TEAMS -> getAllCurrentTeamRecords(ctx.value).print(tg)
+            ACTION_SEND_REMINDERS -> teacherPageReminderList(tg, ctx)
             else -> actionsWithSprint(ctx, action)
           }
         }
@@ -69,6 +71,25 @@ class TeacherCommands(tg: ChainBuilder) {
     }
   }
 
+  private fun teacherPageReminderList(tg: ChainBuilder, ctx: UniContext) {
+    when (ctx.flow.json.getReminder()) {
+      0 -> {
+        tg.reply("О чем напомнить?", buttons = listOf(
+          BtnData("Провести peer assessment", callbackData = ctx.flow.json.put(REMINDER_FIELD, 1).toString())
+        ))
+      }
+      1 -> {
+        findMissingPeerAssessments(ctx.value).forEach {rec ->
+          getMessageSender().send(SendMessage().also {
+            it.chatId = rec.tgUserid.toString()
+            it.text = "Hello! Please complete peer assessment for your team mate on the last sprint."
+          })
+          tg.reply("Пнули пользователя ${rec.tgUsername}")
+        }
+      }
+    }
+  }
+
   private fun writeTeacherScore(studentId: Int, sprintNum: Int, score: Double) {
     txn {
       insertInto(
@@ -93,18 +114,15 @@ internal fun teacherLanding(tg: ChainBuilder) {
   tg.stop()
 }
 
-private fun teacherPageChooseAction(tg: ChainBuilder, json: ObjectNode) {
-  val uni = json.getUniversity().onFailure {
-    tg.reply(it, isMarkdown = false, stop = true)
-  }.unwrap()
-
+private fun teacherPageChooseAction(tg: ChainBuilder, ctx: UniContext) {
   tg.reply(
     "Чего изволите?", isMarkdown = false, stop = true, buttons = listOf(
-      BtnData("Напечатать команды", """ {"u": $uni, "p": $ACTION_PRINT_TEAMS} """),
-      BtnData("Поставить оценки", """{"u": $uni, "p": $ACTION_SCORE_STUDENTS}"""),
-      BtnData("Посмотреть ведомость", """ {"u": $uni, "p": $ACTION_PRINT_PEER_REVIEW_SCORES } """),
-      BtnData("Завершить итерацию", """ {"u": $uni, "p": $ACTION_FINISH_ITERATION} """),
-      BtnData("Сделать ротацию в проектах", """ {"u": $uni, "p": $ACTION_ROTATE_TEAMS } """),
+      BtnData("Напечатать команды", ctx.flow.json.put("p", ACTION_PRINT_TEAMS).toString()),
+      BtnData("Поставить оценки", ctx.flow.json.put("p", ACTION_SCORE_STUDENTS).toString()),
+      BtnData("Посмотреть ведомость", ctx.flow.json.put("p", ACTION_PRINT_PEER_REVIEW_SCORES).toString()),
+      BtnData("Завершить итерацию", ctx.flow.json.put("p", ACTION_FINISH_ITERATION).toString()),
+      BtnData("Сделать ротацию в проектах", ctx.flow.json.put("p", ACTION_ROTATE_TEAMS).toString()),
+      BtnData("Пнуть студентов", ctx.flow.json.put("p", ACTION_SEND_REMINDERS).toString())
     ), maxCols = 1
   )
 }
@@ -205,3 +223,6 @@ private fun String.lastNameFirst(): String {
   val (first, last) = this.split("\\s+".toRegex(), limit = 2)
   return "$last $first"
 }
+
+private fun ObjectNode.getReminder(): Int = this[REMINDER_FIELD]?.asInt() ?: 0
+private const val REMINDER_FIELD = "r"

@@ -133,6 +133,7 @@ internal fun isTeacher(username: String) = (System.getenv("SQOOL_TEACHERS") ?: "
 
 
 private val LOGGER = LoggerFactory.getLogger("Bot")
+internal const val ACTION_TEACHER_LANDING = 1
 internal const val ACTION_ROTATE_TEAMS = 2
 internal const val ACTION_PRINT_PEER_REVIEW_SCORES = 3
 internal const val ACTION_GREET_STUDENT = 4
@@ -141,4 +142,4 @@ internal const val ACTION_SCORE_TEAMMATE = 6
 internal const val ACTION_PRINT_TEAMS = 7
 internal const val ACTION_SCORE_STUDENTS = 8
 internal const val ACTION_FIX_REVIEW_SCORES = 9
-internal const val ACTION_TEACHER_LANDING = 1
+internal const val ACTION_SEND_REMINDERS = 10
