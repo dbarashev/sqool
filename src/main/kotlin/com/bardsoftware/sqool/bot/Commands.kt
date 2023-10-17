@@ -8,8 +8,13 @@ import com.github.michaelbull.result.Result
 fun ObjectNode.getAction(): Result<Int, String> =
   this["p"]?.asInt()?.let { Ok(it) } ?: Err("Действие не указано")
 
+fun ObjectNode.setAction(action: Int) = put("p", action)
+
 fun ObjectNode.getUniversity(): Result<Int, String> =
   this["u"]?.asInt()?.let { Ok(it) } ?: Err("Ошибка состояния: не найден университет")
 
-fun ObjectNode.getStudent(): Result<Int, String> =
-  this["m"]?.asInt()?.let { Ok(it) } ?: Err("ID студента не найден")
+fun ObjectNode.getStudent() = this["m"]?.asInt()
+
+fun ObjectNode.setStudent(studentId: Int) = put("m", studentId)
+fun ObjectNode.getSprint() = this["s"]?.asInt()
+fun ObjectNode.setSprint(sprintNum: Int) = put("s", sprintNum)

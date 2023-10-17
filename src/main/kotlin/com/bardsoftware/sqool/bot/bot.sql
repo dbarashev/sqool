@@ -43,6 +43,15 @@ create table TeacherScores(
 
   primary key(student_id, sprint_num)
 );
+
+CREATE TABLE TeacherReview(
+  student_id int references Student(id),
+  sprint_num int,
+  teacher_tgid bigint,
+  review text,
+  primary key(student_id, sprint_num, teacher_tgid)
+);
+
 create table DialogState(tg_id bigint primary key, state_id int, data text);
 
 create view ScoreSummary as

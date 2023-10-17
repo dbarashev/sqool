@@ -143,3 +143,5 @@ internal const val ACTION_PRINT_TEAMS = 7
 internal const val ACTION_SCORE_STUDENTS = 8
 internal const val ACTION_FIX_REVIEW_SCORES = 9
 internal const val ACTION_SEND_REMINDERS = 10
+internal const val ACTION_REVIEW_STUDENTS = 11
+internal const val ACTION_STUDENT_LIST = 12
