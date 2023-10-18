@@ -22,7 +22,10 @@ class TeacherCommands(tg: ChainBuilder) {
       println("TEACHER: ${tg.userName}")
       if (it.action == -1) {
         teacherLanding(tg)
-        Err(0)
+        STOP
+      }
+      else if (it.action >= ACTION_LAST) {
+        STOP
       }
       else {
         it.withUniversity()
@@ -46,79 +49,93 @@ class TeacherCommands(tg: ChainBuilder) {
 
     tg.messageText.let {
       if (it.isNotBlank()) {
-        when (action) {
-          ACTION_SCORE_STUDENTS -> {
-            it.toDoubleOrNull()?.let {
-              if (it < 0 || it > 10.0) {
-                tg.reply("Оценка должна быть в диапазоне [0..10]")
-              } else {
-                try {
-                  writeTeacherScore(studentId, sprint, it)
-                  tg.reply("Оценка записана!")
-                  teacherLanding(tg)
-                } finally {
-                  txn {
-                    tg.userSession.reset()
-                  }
-                }
-              }
-              Err(0)
-            } ?: run {
-              tg.reply("Оценка должна быть вещественным числом")
-              Err(0)
-            }
-          }
+        teacherStudentInput(action, it, tg, studentId, sprint)
+      } else {
+        teacherStudentMenu(uni, sprint, studentId, action, tg, json)
+      }
+    }
+    return Ok(it)
+  }
 
-          ACTION_REVIEW_STUDENTS -> {
+  private fun teacherStudentMenu(uni: Int, sprint: Int, studentId: Int, action: Int, tg: ChainBuilder, json: ObjectNode): Err<Int> {
+    val teamRecords = getAllSprintTeamRecords(uni, sprint)
+    val student = teamRecords.first { it.id == studentId }
+    when (action) {
+      ACTION_SCORE_STUDENTS -> {
+        tg.reply(
+          """Поставьте оценку для ${student.displayName} по вещественной шкале 0..10
+              | Оценка 8..10 означает, что недочёты были мелкие и легкоустранимые.
+              | Оценка 6..8 означает, что были серьезные недочёты, устранение которых потребует существенных изменений.
+              | Оценка 4..6 означает, что задание в принципе было выполнено неполностью, выполнено не то, что требовалось, и так далее.
+              """.trimMargin()
+        )
+        tg.userSession.save(ACTION_SCORE_STUDENTS, json.toString())
+      }
+
+      ACTION_REVIEW_STUDENTS -> {
+        tg.reply(
+          """Напишите текстовый отзыв для ${student.displayName}.  
+              | В отзыве хочется видеть: 
+              | - какие именно недостатки по существу решаемой задачи были обнаружены
+              | - имелась ли рецензия от товарища по команде и была ли она полезной с точки зрения решаемой задачи
+              | - реагировал ли студент на рецензию товарища
+              | """.trimMargin()
+        )
+        getReviews(student.tgUsername, sprint).let {
+          if (it.isNotEmpty()) {
+            tg.reply("Существующие рецензии:")
+          }
+          it.forEach {tg.reply("""Рецензент: ${it.first}
+            |
+            |${it.second}
+          """.trimMargin())}
+        }
+        tg.userSession.save(ACTION_REVIEW_STUDENTS, json.toString())
+      }
+    }
+    return STOP
+  }
+
+  private fun teacherStudentInput(action: Int, text: String, tg: ChainBuilder, studentId: Int, sprint: Int) =
+    when (action) {
+      ACTION_SCORE_STUDENTS -> {
+        text.toDoubleOrNull()?.let {
+          if (it < 0 || it > 10.0) {
+            tg.reply("Оценка должна быть в диапазоне [0..10]")
+          } else {
             try {
-              writeTeacherReview(tg.userId, studentId, sprint, it)
-              tg.reply("Отзыв записан!")
+              writeTeacherScore(studentId, sprint, it)
+              tg.reply("Оценка записана!")
               teacherLanding(tg)
             } finally {
               txn {
                 tg.userSession.reset()
               }
             }
-            Err(0)
           }
-
-          else -> Err(0)
+        } ?: run {
+          tg.reply("Оценка должна быть вещественным числом")
         }
-      } else {
-        val teamRecords = getAllSprintTeamRecords(uni, sprint)
-        val student = teamRecords.first { it.id == studentId }
-        when (action) {
-          ACTION_SCORE_STUDENTS -> {
-            tg.reply(
-              """Поставьте оценку для ${student.displayName} по вещественной шкале 0..10
-            | Оценка 8..10 означает, что недочёты были мелкие и легкоустранимые.
-            | Оценка 6..8 означает, что были серьезные недочёты, устранение которых потребует существенных изменений.
-            | Оценка 4..6 означает, что задание в принципе было выполнено неполностью, выполнено не то, что требовалось, и так далее.
-            """.trimMargin()
-            )
-            tg.userSession.save(ACTION_SCORE_STUDENTS, json.toString())
-          }
-
-          ACTION_REVIEW_STUDENTS -> {
-            tg.reply(
-              """Напишите текстовый отзыв для ${student.displayName}.  
-            | В отзыве хочется видеть: 
-            | - какие именно недостатки по существу решаемой задачи были обнаружены
-            | - имелась ли рецензия от товарища по команде и была ли она полезной с точки зрения решаемой задачи
-            | - реагировал ли студент на рецензию товарища
-            | """.trimMargin()
-            )
-            getReviews(studentId, sprint).forEach {
-              tg.reply(it)
-            }
-            tg.userSession.save(ACTION_REVIEW_STUDENTS, json.toString())
-          }
-        }
-        Err(0)
+        STOP
       }
+
+      ACTION_REVIEW_STUDENTS -> {
+        try {
+          getStudent(studentId)?.let {
+            writeTeacherReview(tg.userName, it.tgUsername, sprint, text)
+            tg.reply("Отзыв записан!")
+            teacherLanding(tg)
+          }
+        } finally {
+          txn {
+            tg.userSession.reset()
+          }
+        }
+        STOP
+      }
+
+      else -> STOP
     }
-    return Ok(it)
-  }
 
   private fun teacherWithSprint(it: SprintContext, tg: ChainBuilder): Result<StudentContext, Any> {
     println("Sprint: ${it.value}")
@@ -128,7 +145,7 @@ class TeacherCommands(tg: ChainBuilder) {
     return when (action) {
       ACTION_STUDENT_LIST -> {
         studentList(tg, it.uni.value, it.value, it.uni.flow.json)
-        Err(0)
+        STOP
       }
 
       ACTION_PRINT_PEER_REVIEW_SCORES -> {
@@ -148,14 +165,14 @@ class TeacherCommands(tg: ChainBuilder) {
             )
           )
         )
-        Err(0)
+        STOP
       }
 
       ACTION_FIX_REVIEW_SCORES -> {
         printSprintScores(tg, uni, sprint, true)
         tg.reply("Done")
         teacherLanding(tg)
-        Err(0)
+        STOP
       }
 
       else -> it.withStudent()
@@ -169,33 +186,33 @@ class TeacherCommands(tg: ChainBuilder) {
     return when (action) {
       ACTION_TEACHER_LANDING -> {
         teacherPageChooseAction(tg, it)
-        Err(0)
+        STOP
       }
 
       ACTION_ROTATE_TEAMS -> {
-        teacherPageRotateProjects(tg, it.flow.json)
-        Err(0)
+        teacherPageRotateProjects(tg, uni)
+        STOP
       }
       //ACTION_GREET_STUDENT -> studentRegister(tg, json)
       ACTION_FINISH_ITERATION -> {
-        teacherPageFinishIteration(tg, it.flow.json)
-        Err(0)
+        teacherPageFinishIteration(tg, uni)
+        STOP
       }
 
       ACTION_PRINT_TEAMS -> {
         getAllCurrentTeamRecords(it.value).print(tg)
-        Err(0)
+        STOP
       }
 
       ACTION_SEND_REMINDERS -> {
         teacherPageReminderList(tg, it)
-        Err(0)
+        STOP
       }
 
       ACTION_PRINT_PEER_REVIEW_SCORES -> {
         if (it.flow.json.getSprint() == -1) {
           printAllScores(tg, uni)
-          Err(0)
+          STOP
         } else {
           it.withSprint()
         }
@@ -233,23 +250,20 @@ internal fun teacherLanding(tg: ChainBuilder) {
 private fun teacherPageChooseAction(tg: ChainBuilder, ctx: UniContext) {
   tg.reply(
     "Чего изволите?", isMarkdown = false, stop = true, buttons = listOf(
-      BtnData("Напечатать команды", ctx.flow.json.put("p", ACTION_PRINT_TEAMS).toString()),
-      BtnData("Рецензии и оценки", ctx.flow.json.put("p", ACTION_STUDENT_LIST).toString()),
-      BtnData("Посмотреть ведомость", ctx.flow.json.put("p", ACTION_PRINT_PEER_REVIEW_SCORES).toString()),
-      BtnData("Завершить итерацию", ctx.flow.json.put("p", ACTION_FINISH_ITERATION).toString()),
-      BtnData("Сделать ротацию в проектах", ctx.flow.json.put("p", ACTION_ROTATE_TEAMS).toString()),
-      BtnData("Пнуть студентов", ctx.flow.json.put("p", ACTION_SEND_REMINDERS).toString())
+      BtnData("Напечатать команды", ctx.flow.json.setAction(ACTION_PRINT_TEAMS).toString()),
+      BtnData("Ввести рецензии и оценки", ctx.flow.json.setAction(ACTION_STUDENT_LIST).toString()),
+      BtnData("Посмотреть ведомость", ctx.flow.json.setAction(ACTION_PRINT_PEER_REVIEW_SCORES).toString()),
+      BtnData("Завершить итерацию", ctx.flow.json.setAction(ACTION_FINISH_ITERATION).toString()),
+      BtnData("Сделать ротацию в проектах", ctx.flow.json.setAction(ACTION_ROTATE_TEAMS).toString()),
+      BtnData("Пнуть студентов", ctx.flow.json.setAction(ACTION_SEND_REMINDERS).toString())
     ), maxCols = 1
   )
 }
 
 private fun studentList(tg: ChainBuilder, uni: Int, sprintNum: Int, json: ObjectNode) {
-  val teamRecords = getAllSprintTeamRecords(uni, sprintNum)
-  val student = json.getStudent()?.let { studentId ->
-    teamRecords.firstOrNull { it.id == studentId }
-  } ?: run {
-    teamRecords.forEach {
-      tg.reply("${it.displayName} (проект ${it.teamNum})", maxCols = 2, buttons = listOf(
+  getAllSprintTeamRecords(uni, sprintNum).forEach {
+    tg.reply("""*${it.displayName.escapeMarkdown()}* \(проект ${it.teamNum}\)""", maxCols = 2, isMarkdown = true,
+      buttons = listOf(
         BtnData("Отзыв", json.apply {
           setAction(ACTION_REVIEW_STUDENTS)
           setStudent(it.id)
@@ -260,33 +274,24 @@ private fun studentList(tg: ChainBuilder, uni: Int, sprintNum: Int, json: Object
           setStudent(it.id)
           setSprint(sprintNum)
         }.toString()),
-      ))
-    }
-    tg.reply("Выберите студента")
-    return
+      )
+    )
   }
-  json.getAction().onSuccess { action ->
-  }
+  tg.reply("Выберите студента")
+  return
 }
 
-private fun teacherPageFinishIteration(tg: ChainBuilder, json: ObjectNode) {
-  val uni = json.getUniversity().onFailure {
-    tg.reply(it, isMarkdown = false, stop = true)
-  }.unwrap()
+private fun teacherPageFinishIteration(tg: ChainBuilder, uni: Int) {
   val newIteration = finishIteration(uni)
   if (newIteration == -1) {
     tg.reply("Done")
   } else {
-    tg.reply("Итерация завершена, новая итерация №$newIteration. Не забудь сделать ротацию.", isMarkdown = false, stop=true)
+    tg.reply("Итерация завершена. Новая итерация №$newIteration. Не забудь сделать ротацию.")
   }
 }
 
 
-private fun teacherPageRotateProjects(tg: ChainBuilder, json: ObjectNode) {
-  val uni = json.getUniversity().onFailure {
-    tg.reply(it, isMarkdown = false, stop = true)
-  }.unwrap()
-
+private fun teacherPageRotateProjects(tg: ChainBuilder, uni: Int) {
   tg.reply("Произведём ротацию в университете $uni", isMarkdown = false, stop = true)
   val actualMembers = lastSprint(uni)?.let {
     getAllSprintTeamRecords(uni, it)
@@ -321,24 +326,24 @@ private fun writeTeacherScore(studentId: Int, sprintNum: Int, score: Double) {
   }
 }
 
-private fun writeTeacherReview(teacherId: Long, studentId: Int, sprintNum: Int, review: String) {
+private fun writeTeacherReview(teacherUsername: String, studentUsername: String, sprintNum: Int, review: String) {
   txn {
     insertInto(TEACHERREVIEW,
-      TEACHERREVIEW.STUDENT_ID, TEACHERREVIEW.SPRINT_NUM, TEACHERREVIEW.TEACHER_TGID, TEACHERREVIEW.REVIEW
+      TEACHERREVIEW.STUDENT_USERNAME, TEACHERREVIEW.SPRINT_NUM, TEACHERREVIEW.TEACHER_USERNAME, TEACHERREVIEW.REVIEW
     ).values(
-      studentId, sprintNum, teacherId, review
+      studentUsername, sprintNum, teacherUsername, review
     ).onConflict(
-      TEACHERREVIEW.STUDENT_ID, TEACHERREVIEW.SPRINT_NUM, TEACHERREVIEW.TEACHER_TGID
+      TEACHERREVIEW.STUDENT_USERNAME, TEACHERREVIEW.SPRINT_NUM, TEACHERREVIEW.TEACHER_USERNAME
     ).doUpdate().set(TEACHERREVIEW.REVIEW, review)
       .execute()
   }
 }
 
-private fun getReviews(studentId: Int, sprintNum: Int) =
+private fun getReviews(studentUsername: String, sprintNum: Int) =
   db {
-    selectFrom(TEACHERREVIEW).where(TEACHERREVIEW.STUDENT_ID.eq(studentId)).and(TEACHERREVIEW.SPRINT_NUM.eq(sprintNum))
+    selectFrom(TEACHERREVIEW).where(TEACHERREVIEW.STUDENT_USERNAME.eq(studentUsername)).and(TEACHERREVIEW.SPRINT_NUM.eq(sprintNum))
       .mapNotNull {
-        it.review
+        it.teacherUsername to it.review
       }
   }
 
@@ -349,3 +354,4 @@ private fun String.lastNameFirst(): String {
 
 private fun ObjectNode.getReminder(): Int = this[REMINDER_FIELD]?.asInt() ?: 0
 private const val REMINDER_FIELD = "r"
+private val STOP = Err(0)

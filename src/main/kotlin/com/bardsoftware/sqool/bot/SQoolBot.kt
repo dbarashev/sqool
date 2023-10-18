@@ -59,6 +59,7 @@ fun main(args: Array<String>) = BotLauncher().main(args)
 
 private fun processMessage(update: Update, sender: MessageSender) = chain(update, sender) {
   val tg = this
+  hatCommands(tg)
   TeammateScoringFlow(tg)
   TeacherCommands(tg)
   if (update.message?.chatId == update.message?.from?.id) {
@@ -145,3 +146,4 @@ internal const val ACTION_FIX_REVIEW_SCORES = 9
 internal const val ACTION_SEND_REMINDERS = 10
 internal const val ACTION_REVIEW_STUDENTS = 11
 internal const val ACTION_STUDENT_LIST = 12
+internal const val ACTION_LAST = 100

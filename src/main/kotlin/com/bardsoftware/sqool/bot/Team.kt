@@ -54,6 +54,11 @@ fun getStudent(tgUsername: String): Student? {
   }
 }
 
+fun getStudent(studentId: Int): Student? {
+  return db {
+    selectFrom(STUDENT).where(STUDENT.ID.eq(studentId)).fetchOne()?.let {Student(it.tgUsername!!, it.name!!, it.tgUserid!!.toBigDecimal())}
+  }
+}
 fun insertStudent(tgUsername: String, name: String, tgUserId: Long) {
   db {
     insertInto(table("Student"), field("tg_username"), field("name"), field("tg_userid"))

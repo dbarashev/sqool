@@ -16,40 +16,46 @@ const val NO_ACTION = -1
 fun ChainBuilder.initContext(
   json: ObjectNode = this.callbackJson ?: this.userSession.state?.asJson() ?: OBJECT_MAPPER.createObjectNode(),
   action: Int = json.getAction().getOr(-1)
-) = Ok(InitContext(this, json, action))
+): Result<InitContext, Any> = if (this.stopped) Err(-1) else Ok(InitContext(this, json, action))
 
-internal fun Ok<InitContext>.whenTeacher(): Result<InitContext, String> =
-  if (isTeacher(this.value.tg.userName)) this else Err("You are not a teacher")
+internal fun Result<InitContext, Any>.whenTeacher(): Result<InitContext, Any> =
+  this.andThen { if (isTeacher(it.tg.userName)) Ok(it) else Err(-1) }
+
 
 internal fun InitContext.whenLanding(code: () -> Unit) {
   json.getAction().mapError { code() }
 }
 
 internal fun InitContext.withUniversity(): Result<UniContext, Int> {
-  return this.json.getUniversity().map { uni -> UniContext(uni, this) }
-    .mapError {
-      this.tg.reply(
-        "Выберите вуз", buttons = listOf(
-          BtnData("CUB", """ {"u": 0, "p": 1} """)
-        )
-      )
-      0
-    }
+  return Ok(UniContext(0, this))
+//  return this.json.getUniversity().map { uni -> UniContext(uni, this) }
+//    .mapError {
+//      this.tg.reply(
+//        "Выберите вуз", buttons = listOf(
+//          BtnData("CUB", """ {"u": 0, "p": 1} """)
+//        )
+//      )
+//      0
+//    }
 }
 internal fun Result<InitContext, Any>.withUniversity() =
   this.andThen { it.withUniversity() }
 
 internal fun UniContext.withSprint(): Result<SprintContext, Any> =
-  flow.json["s"]?.asInt()?.let { sprint ->
+  flow.json.getSprint()?.let { sprint ->
     Ok(SprintContext(sprint, this))
   } ?: run {
     val uni = value
-    val buttons = sprintNumbers(uni).map {
+    val sprintNumbers = sprintNumbers(uni)
+    val buttons = sprintNumbers.map {rec ->
       BtnData(
-        "№${it.component1()}",
-        """{"p": ${flow.action}, "s": ${it.component1()}, "u": $uni } """
+        "№${rec.component1()}",
+        flow.json.apply { setSprint(rec.component1()) }.toString()
       )
-    } + listOf(BtnData("Весь курс", """{"p": ${flow.action}, "s": -1, "u": $uni } """))
+    } + listOf(
+      BtnData("Весь курс", flow.json.apply { setSprint(-1) }.toString()),
+      BtnData("Текущая итерация №${sprintNumbers.maxByOrNull { it.component1() }}", flow.json.apply { setSprint(0) }.toString()),
+    )
     flow.tg.reply("Выберите итерацию", buttons = buttons, maxCols = 4)
     Err(0)
   }
