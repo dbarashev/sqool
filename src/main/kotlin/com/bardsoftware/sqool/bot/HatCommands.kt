@@ -35,7 +35,7 @@ fun hatCommands(tg: ChainBuilder) {
         tg.reply("See you, ${tg.fromUser?.displayName()}!")
       }
       ACTION_ROUND_INIT -> {
-        val allPlayers = getHatPlayers()
+        val allPlayers = getHatPlayers().filter { it.tgUsername != "dbarashev" }
         val rounds = getHatRounds()
         var notPlayed: MutableList<HatplayerviewRecord> = allPlayers.filter { player ->
           rounds.find { it.leader == player.tgUsername || it.follower == player.tgUsername } == null
@@ -107,9 +107,10 @@ fun hatCommands(tg: ChainBuilder) {
         sendWord(tg, roundId)
       }
       ACTION_ROUND_STOP -> {
-        val roundId = ctx.json["r"].asInt()
-        stopHatRound(roundId)?.let {
-          tg.reply("The round was completed in ${it.resultSec} seconds")
+        ctx.json["r"]?.asInt()?.let {roundId ->
+          stopHatRound(roundId)?.let {
+            tg.reply("The round was completed in ${it.resultSec} seconds")
+          }
         }
         hatPlayerLanding(tg)
       }
@@ -152,14 +153,15 @@ fun sendWord(tg: ChainBuilder, roundId: Int) {
     select(STUDENT.TG_USERID)
       .from(HATROUND.join(STUDENT).on(HATROUND.LEADER.eq(STUDENT.TG_USERNAME)))
       .where(HATROUND.ID.eq(roundId))
-  }
-
+      .fetchOne()
+  }?.component1() ?: -1
   if (words.isEmpty()) {
     tg.reply("No more words, sir! Click STOP above")
     return
   }
   words.random().let {
     val wordId = it.id!!
+    println("word=$wordId leader=$leaderId")
     insertChallenge(wordId, roundId)
     tg.reply("Next word: ${it.value}", buttons = listOf(
       BtnData("Guessed!", callbackData = OBJECT_MAPPER.createObjectNode().apply {
@@ -173,7 +175,11 @@ fun sendWord(tg: ChainBuilder, roundId: Int) {
         put("w", wordId)
       }.toString()),
     ))
-    getMessageSender().send(SendMessage(leaderId.toString(), "Next word: ${it.value}"))
+    try {
+      getMessageSender().send(SendMessage(leaderId.toString(), "Next word: ${it.value}"))
+    } catch (ex: Exception) {
+      println("Can't send to $leaderId")
+    }
   }
 
 
