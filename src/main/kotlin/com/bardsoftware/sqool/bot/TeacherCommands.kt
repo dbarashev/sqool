@@ -22,7 +22,9 @@ class TeacherCommands(tg: ChainBuilder) {
       println("TEACHER: ${tg.userName}")
       if (it.action == -1) {
         teacherLanding(tg)
-        STOP
+        it.json.setAction(ACTION_TEACHER_LANDING)
+        it.action = ACTION_TEACHER_LANDING
+        it.withUniversity()
       }
       else if (it.action >= ACTION_LAST) {
         STOP
@@ -180,9 +182,9 @@ class TeacherCommands(tg: ChainBuilder) {
   }
 
   private fun teacherWithUniversity(it: UniContext, tg: ChainBuilder): Result<SprintContext, Any> {
-    println("UNI: ${it.value}")
     val uni = it.value
     val action = it.flow.action
+    println("UNI: $uni, action: $action")
     return when (action) {
       ACTION_TEACHER_LANDING -> {
         teacherPageChooseAction(tg, it)
@@ -242,9 +244,7 @@ class TeacherCommands(tg: ChainBuilder) {
 }
 
 internal fun teacherLanding(tg: ChainBuilder) {
-  tg.reply("Выберите вуз", buttons = listOf(
-    BtnData("CUB", """ {"u": 0, "p": $ACTION_TEACHER_LANDING} """)
-  ))
+  tg.reply("Привет ${tg.fromUser?.displayName()}! Вы ПРЕПОДАВАТЕЛЬ.")
 }
 
 private fun teacherPageChooseAction(tg: ChainBuilder, ctx: UniContext) {

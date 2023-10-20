@@ -97,8 +97,10 @@ private fun processMessage(update: Update, sender: MessageSender) = chain(update
 }
 
 fun ChainBuilder.onStart() {
-  withUser {user ->
-    println("user=$user")
+  withUser { user ->
+    if (isTeacher(this.userName)) {
+      return@withUser
+    }
     val student = getStudent(this.userName)
     if (student == null) {
       reply("Вы студент CUB и посещаете курс Database Internals '23?", buttons = listOf(

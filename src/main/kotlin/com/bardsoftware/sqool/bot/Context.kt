@@ -6,7 +6,7 @@ import com.bardsoftware.sqool.bot.isTeacher
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.github.michaelbull.result.*
 
-data class InitContext(val tg: ChainBuilder, val json: ObjectNode, val action: Int)
+data class InitContext(val tg: ChainBuilder, val json: ObjectNode, var action: Int)
 data class UniContext(val value: Int, val flow: InitContext)
 data class SprintContext(val value: Int, val uni: UniContext)
 
