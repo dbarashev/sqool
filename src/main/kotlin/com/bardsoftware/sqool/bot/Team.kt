@@ -35,7 +35,7 @@ import kotlinx.coroutines.launch
 import java.util.concurrent.Executors
 
 //import org.jooq.impl.DSL.*
-data class Student(val tgUsername: String, val name: String, val tgUserid: BigDecimal) {
+data class Student(val tgUsername: String, val name: String, val tgUserid: BigDecimal, val id: Int) {
   fun updateTgUserId(userId: Long) {
     db {
       update(table("Student")).set(field("tg_userid", BigDecimal::class.java), userId.toBigDecimal())
@@ -47,16 +47,17 @@ data class Student(val tgUsername: String, val name: String, val tgUserid: BigDe
 
 fun getStudent(tgUsername: String): Student? {
   return db {
-    select(field("name", String::class.java), field("tg_userid", BigDecimal::class.java))
-        .from(table("Student"))
-        .where(field("tg_username").eq(tgUsername))
-        .fetchOne()?.let { Student(tgUsername, it.value1(), it.value2() ?: BigDecimal.ZERO) }
+    selectFrom(STUDENT).where(STUDENT.TG_USERNAME.eq(tgUsername)).fetchOne()?.let {
+      Student(it.tgUsername!!, it.name!!, it.tgUserid!!.toBigDecimal(), it.id!!)
+    }
   }
 }
 
 fun getStudent(studentId: Int): Student? {
   return db {
-    selectFrom(STUDENT).where(STUDENT.ID.eq(studentId)).fetchOne()?.let {Student(it.tgUsername!!, it.name!!, it.tgUserid!!.toBigDecimal())}
+    selectFrom(STUDENT).where(STUDENT.ID.eq(studentId)).fetchOne()?.let {
+      Student(it.tgUsername!!, it.name!!, it.tgUserid!!.toBigDecimal(), it.id!!)
+    }
   }
 }
 fun insertStudent(tgUsername: String, name: String, tgUserId: Long) {

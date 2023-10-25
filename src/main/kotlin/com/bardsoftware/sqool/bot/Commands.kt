@@ -15,6 +15,7 @@ fun ObjectNode.getUniversity(): Result<Int, String> =
 
 fun ObjectNode.getStudent() = this["m"]?.asInt()
 
-fun ObjectNode.setStudent(studentId: Int) = put("m", studentId)
+fun ObjectNode.setStudent(studentId: Int?) = put("m", studentId)
+
 fun ObjectNode.getSprint() = this["s"]?.asInt()
 fun ObjectNode.setSprint(sprintNum: Int) = put("s", sprintNum)

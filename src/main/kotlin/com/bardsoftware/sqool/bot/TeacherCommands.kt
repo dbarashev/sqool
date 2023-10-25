@@ -81,17 +81,16 @@ class TeacherCommands(tg: ChainBuilder) {
               | - какие именно недостатки по существу решаемой задачи были обнаружены
               | - имелась ли рецензия от товарища по команде и была ли она полезной с точки зрения решаемой задачи
               | - реагировал ли студент на рецензию товарища
-              | """.trimMargin()
+              | 
+              | Ткните кнопку "Назад" если попали сюда по ошибке.
+              | """.trimMargin(),
+          buttons = listOf(
+            BtnData("Назад", json.deepCopy().apply {
+              setAction(ACTION_STUDENT_LIST)
+              setStudent(null)
+            }.toString())
+          )
         )
-        getReviews(student.tgUsername, sprint).let {
-          if (it.isNotEmpty()) {
-            tg.reply("Существующие рецензии:")
-          }
-          it.forEach {tg.reply("""Рецензент: ${it.first}
-            |
-            |${it.second}
-          """.trimMargin())}
-        }
         tg.userSession.save(ACTION_REVIEW_STUDENTS, json.toString())
       }
     }
@@ -248,36 +247,80 @@ internal fun teacherLanding(tg: ChainBuilder) {
 }
 
 private fun teacherPageChooseAction(tg: ChainBuilder, ctx: UniContext) {
+  val btns =
+    if (tg.userName == "dbarashev") {
+      listOf(
+        BtnData("Напечатать команды", ctx.flow.json.setAction(ACTION_PRINT_TEAMS).toString()),
+        BtnData("Ввести рецензии и оценки", ctx.flow.json.setAction(ACTION_STUDENT_LIST).toString()),
+        BtnData("Посмотреть ведомость", ctx.flow.json.setAction(ACTION_PRINT_PEER_REVIEW_SCORES).toString()),
+        BtnData("Завершить итерацию", ctx.flow.json.setAction(ACTION_FINISH_ITERATION).toString()),
+        BtnData("Сделать ротацию в проектах", ctx.flow.json.setAction(ACTION_ROTATE_TEAMS).toString()),
+        BtnData("Пнуть студентов", ctx.flow.json.setAction(ACTION_SEND_REMINDERS).toString())
+      )
+    } else {
+      listOf(
+        BtnData("Ввести рецензии и оценки", ctx.flow.json.setAction(ACTION_STUDENT_LIST).toString()),
+      )
+    }
   tg.reply(
-    "Чего изволите?", isMarkdown = false, stop = true, buttons = listOf(
-      BtnData("Напечатать команды", ctx.flow.json.setAction(ACTION_PRINT_TEAMS).toString()),
-      BtnData("Ввести рецензии и оценки", ctx.flow.json.setAction(ACTION_STUDENT_LIST).toString()),
-      BtnData("Посмотреть ведомость", ctx.flow.json.setAction(ACTION_PRINT_PEER_REVIEW_SCORES).toString()),
-      BtnData("Завершить итерацию", ctx.flow.json.setAction(ACTION_FINISH_ITERATION).toString()),
-      BtnData("Сделать ротацию в проектах", ctx.flow.json.setAction(ACTION_ROTATE_TEAMS).toString()),
-      BtnData("Пнуть студентов", ctx.flow.json.setAction(ACTION_SEND_REMINDERS).toString())
-    ), maxCols = 1
+    "Чего изволите?", isMarkdown = false, stop = true, buttons = btns, maxCols = 1
   )
 }
 
-private fun studentList(tg: ChainBuilder, uni: Int, sprintNum: Int, json: ObjectNode) {
-  getAllSprintTeamRecords(uni, sprintNum).forEach {
-    tg.reply("""*${it.displayName.escapeMarkdown()}* \(проект ${it.teamNum}\)""", maxCols = 2, isMarkdown = true,
-      buttons = listOf(
+private fun studentList(tg: ChainBuilder, uni: Int, sprintNum_: Int, json: ObjectNode) {
+  var sprintNum = sprintNum_
+  if (sprintNum != 0) {
+    tg.reply("Сорян, оценки и отзывы можно ставить только для последнего спринта. Выбрал его автоматически.")
+    sprintNum = 0
+  }
+  json.getStudent()?.let(::getStudent)?.let { student ->
+    getReviews(student.tgUsername, sprintNum).let {
+      if (it.isNotEmpty()) {
+        tg.reply("Существующие рецензии:")
+      }
+      it.forEach {tg.reply("""Рецензент: ${it.first}
+            |
+            |${it.second}
+          """.trimMargin())}
+    }
+    tg.reply("""*${student.name.escapeMarkdown()}*""", buttons = listOf(
         BtnData("Отзыв", json.apply {
           setAction(ACTION_REVIEW_STUDENTS)
-          setStudent(it.id)
+          setStudent(student.id)
           setSprint(sprintNum)
         }.toString()),
         BtnData("Оценка", json.apply {
           setAction(ACTION_SCORE_STUDENTS)
-          setStudent(it.id)
+          setStudent(student.id)
           setSprint(sprintNum)
         }.toString()),
-      )
-    )
+    ))
+  } ?: run {
+    val btns = getAllSprintTeamRecords(uni, sprintNum).map {
+      BtnData("${it.displayName} (проект ${it.teamNum})", json.apply {
+        setStudent(it.id)
+        setSprint(sprintNum)
+      }.toString())
+    }
+    tg.reply("Выберите студента", buttons = btns, maxCols = 1)
   }
-  tg.reply("Выберите студента")
+//  getAllSprintTeamRecords(uni, sprintNum).forEach {
+//    tg.reply("""*${it.displayName.escapeMarkdown()}* \(проект ${it.teamNum}\)""", maxCols = 2, isMarkdown = true,
+//      buttons = listOf(
+//        BtnData("Отзыв", json.apply {
+//          setAction(ACTION_REVIEW_STUDENTS)
+//          setStudent(it.id)
+//          setSprint(sprintNum)
+//        }.toString()),
+//        BtnData("Оценка", json.apply {
+//          setAction(ACTION_SCORE_STUDENTS)
+//          setStudent(it.id)
+//          setSprint(sprintNum)
+//        }.toString()),
+//      )
+//    )
+//  }
+//  tg.reply("Выберите студента")
   return
 }
 
