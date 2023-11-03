@@ -6,6 +6,7 @@ import UniContext
 import com.bardsoftware.libbotanique.*
 import com.bardsoftware.sqool.bot.db.tables.references.TEACHERREVIEW
 import com.bardsoftware.sqool.bot.db.tables.references.TEACHERSCORES
+import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.github.michaelbull.result.*
 import initContext
@@ -191,7 +192,12 @@ class TeacherCommands(tg: ChainBuilder) {
       }
 
       ACTION_ROTATE_TEAMS -> {
-        teacherPageRotateProjects(tg, uni)
+        teacherPageRotateProjects(it)
+        STOP
+      }
+
+      ACTION_FIX_ROTATION -> {
+        teacherPageFixRotation(it)
         STOP
       }
       //ACTION_GREET_STUDENT -> studentRegister(tg, json)
@@ -248,7 +254,7 @@ internal fun teacherLanding(tg: ChainBuilder) {
 
 private fun teacherPageChooseAction(tg: ChainBuilder, ctx: UniContext) {
   val btns =
-    if (tg.userName == "dbarashev") {
+    if (isSuperTeacher(tg.userName)) {
       listOf(
         BtnData("Напечатать команды", ctx.flow.json.setAction(ACTION_PRINT_TEAMS).toString()),
         BtnData("Ввести рецензии и оценки", ctx.flow.json.setAction(ACTION_STUDENT_LIST).toString()),
@@ -269,7 +275,7 @@ private fun teacherPageChooseAction(tg: ChainBuilder, ctx: UniContext) {
 
 private fun studentList(tg: ChainBuilder, uni: Int, sprintNum_: Int, json: ObjectNode) {
   var sprintNum = sprintNum_
-  if (sprintNum != 0) {
+  if (sprintNum != 0 && !isSuperTeacher(tg.userName)) {
     tg.reply("Сорян, оценки и отзывы можно ставить только для последнего спринта. Выбрал его автоматически.")
     sprintNum = 0
   }
@@ -304,23 +310,6 @@ private fun studentList(tg: ChainBuilder, uni: Int, sprintNum_: Int, json: Objec
     }
     tg.reply("Выберите студента", buttons = btns, maxCols = 1)
   }
-//  getAllSprintTeamRecords(uni, sprintNum).forEach {
-//    tg.reply("""*${it.displayName.escapeMarkdown()}* \(проект ${it.teamNum}\)""", maxCols = 2, isMarkdown = true,
-//      buttons = listOf(
-//        BtnData("Отзыв", json.apply {
-//          setAction(ACTION_REVIEW_STUDENTS)
-//          setStudent(it.id)
-//          setSprint(sprintNum)
-//        }.toString()),
-//        BtnData("Оценка", json.apply {
-//          setAction(ACTION_SCORE_STUDENTS)
-//          setStudent(it.id)
-//          setSprint(sprintNum)
-//        }.toString()),
-//      )
-//    )
-//  }
-//  tg.reply("Выберите студента")
   return
 }
 
@@ -334,10 +323,12 @@ private fun teacherPageFinishIteration(tg: ChainBuilder, uni: Int) {
 }
 
 
-private fun teacherPageRotateProjects(tg: ChainBuilder, uni: Int) {
-  tg.reply("Произведём ротацию в университете $uni", isMarkdown = false, stop = true)
+private fun teacherPageRotateProjects(ctx: UniContext) {
+  val uni = ctx.value
+
   val actualMembers = lastSprint(uni)?.let {
-    getAllSprintTeamRecords(uni, it)
+    //getAllSprintTeamRecords(uni, it)
+    getAllCurrentTeamRecords(uni)
   } ?: listOf()
   val newTeamRecords = if (actualMembers.isEmpty()) {
     initialTeams().also {
@@ -348,11 +339,53 @@ private fun teacherPageRotateProjects(tg: ChainBuilder, uni: Int) {
       println("Rotated teams: $it")
     }
   }
-  updateRepositoryPermissions(newTeamRecords, actualMembers)
-  insertNewRotation(newTeamRecords)
-  newTeamRecords.print(tg)
+  val jsonRecords = newTeamRecords.map {
+    OBJECT_MAPPER.createObjectNode().apply {
+      put("teamNum", it.teamNum)
+      put("tgUsername", it.tgUsername)
+      put("ord", it.ord)
+      put("githubUsername", it.githubUsername)
+    }
+  }.toList()
+  db {
+    ctx.flow.tg.userSession.save(ACTION_FIX_ROTATION, ctx.flow.json.deepCopy().apply {
+      putArray("teams").addAll(jsonRecords)
+    }.toString())
+  }
+  newTeamRecords.print(ctx.flow.tg)
+  ctx.flow.tg.reply("Зафиксировать ротацию?", buttons = listOf(
+    BtnData("Зафиксировать", callbackData = ctx.flow.json.deepCopy().apply {
+      setAction(ACTION_FIX_ROTATION)
+    }.toString()),
+    BtnData("Сгенерировать новую", callbackData = ctx.flow.json.toString()),
+  ))
 }
 
+private fun teacherPageFixRotation(ctx: UniContext) {
+  val uni = ctx.value
+  val actualMembers = lastSprint(uni)?.let {
+    getAllSprintTeamRecords(uni, it)
+  } ?: listOf()
+  ctx.flow.tg.userSession.state?.asJson()?.get("teams")?.let {teamsNode ->
+    if (teamsNode.isArray && teamsNode is ArrayNode) {
+      val newTeamRecords = teamsNode.map {
+        TeamMember(
+          teamNum = it["teamNum"]!!.asInt(),
+          tgUsername = it["tgUsername"]!!.asText(),
+          ord = it["ord"]!!.asInt(),
+          githubUsername = it["githubUsername"]!!.asText()
+        )
+      }.toList()
+      updateRepositoryPermissions(newTeamRecords, actualMembers)
+      insertNewRotation(newTeamRecords)
+      ctx.flow.tg.reply("Ротация записана")
+      ctx.flow.tg.userSession.reset()
+      return
+    }
+  }
+  ctx.flow.tg.reply("Rotation not found")
+
+}
 private fun writeTeacherScore(studentId: Int, sprintNum: Int, score: Double) {
   txn {
     insertInto(

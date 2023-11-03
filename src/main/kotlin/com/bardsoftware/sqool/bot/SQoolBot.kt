@@ -133,7 +133,7 @@ private fun teacherPageGetPeerScores(tg: ChainBuilder, json: ObjectNode) {
 }
 
 internal fun isTeacher(username: String) = (System.getenv("SQOOL_TEACHERS") ?: "").split(",").contains(username)
-
+internal fun isSuperTeacher(username: String) = (System.getenv("SQOOL_SUPERTEACHERS") ?: "").split(",").contains(username)
 
 private val LOGGER = LoggerFactory.getLogger("Bot")
 internal const val ACTION_TEACHER_LANDING = 1
@@ -148,4 +148,5 @@ internal const val ACTION_FIX_REVIEW_SCORES = 9
 internal const val ACTION_SEND_REMINDERS = 10
 internal const val ACTION_REVIEW_STUDENTS = 11
 internal const val ACTION_STUDENT_LIST = 12
+internal const val ACTION_FIX_ROTATION = 13
 internal const val ACTION_LAST = 100

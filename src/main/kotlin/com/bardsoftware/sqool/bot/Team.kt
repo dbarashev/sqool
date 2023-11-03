@@ -379,12 +379,16 @@ private fun randomTeam(teams: List<Int>, exceptions: List<Int>) = teams.toMutabl
 fun insertNewRotation(records: List<TeamMember>) {
   txn {
     records.forEach {
-      insertInto(table("team"),
-          field("sprint_num", Int::class.java),
-          field("team_num", Int::class.java),
-          field("tg_username", String::class.java),
-          field("ord", Int::class.java)
-      ).values(0, it.teamNum, it.tgUsername, it.ord).execute()
+      insertInto(
+        TEAM,
+          TEAM.SPRINT_NUM,
+          TEAM.TEAM_NUM,
+          TEAM.TG_USERNAME,
+          TEAM.ORD
+      ).values(0, it.teamNum, it.tgUsername, it.ord)
+        .onConflict().doUpdate()
+        .set(TEAM.TEAM_NUM, it.teamNum).set(TEAM.ORD, it.ord)
+
     }
   }
 }
