@@ -388,6 +388,7 @@ fun insertNewRotation(records: List<TeamMember>) {
       ).values(0, it.teamNum, it.tgUsername, it.ord)
         .onConflict().doUpdate()
         .set(TEAM.TEAM_NUM, it.teamNum).set(TEAM.ORD, it.ord)
+        .execute()
 
     }
   }

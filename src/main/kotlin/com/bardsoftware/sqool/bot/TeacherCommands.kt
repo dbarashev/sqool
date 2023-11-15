@@ -327,8 +327,8 @@ private fun teacherPageRotateProjects(ctx: UniContext) {
   val uni = ctx.value
 
   val actualMembers = lastSprint(uni)?.let {
-    //getAllSprintTeamRecords(uni, it)
-    getAllCurrentTeamRecords(uni)
+    getAllSprintTeamRecords(uni, it)
+    //getAllCurrentTeamRecords(uni)
   } ?: listOf()
   val newTeamRecords = if (actualMembers.isEmpty()) {
     initialTeams().also {
